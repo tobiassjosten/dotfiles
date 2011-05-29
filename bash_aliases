@@ -19,3 +19,5 @@ alias gco='git checkout'
 alias gb='git branch'
 alias gs='git status'
 alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
+
+function f() { find . -iname "*$@*.*" | grep --color "$@"; }
