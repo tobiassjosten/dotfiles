@@ -99,6 +99,9 @@ if [ -d "/var/lib/gems/1.8/bin" ] ; then
     PATH="$PATH:/var/lib/gems/1.8/bin"
 fi
 
+# Load RVM function
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
+
 export SYMFONY="/usr/local/lib/symfony/1.4/lib"
 
 # Configure colors, if available.
