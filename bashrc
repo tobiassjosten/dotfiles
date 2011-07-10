@@ -102,6 +102,11 @@ fi
 # Load RVM function
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
 
+# Include PEAR executables in PATH
+if [ -x pear ]; then
+    PATH="$PATH:`pear config-show|grep bin_dir|awk '{ print $5 }'`"
+fi
+
 export SYMFONY="/usr/local/lib/symfony/1.4/lib"
 
 # Configure colors, if available.
