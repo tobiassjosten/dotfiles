@@ -5,11 +5,17 @@ git clone -q https://github.com/tobiassjosten/dotfiles.git $DOTFILES
 
 [ ! -d $DOTFILES ] && { echo "Could not clone the dotfiles repository."; exit 1; }
 
-FILES=$(find "$DOTFILES" -type f | grep -Ev '(\.git|install|README)')
+FILES=$(find $DOTFILES -type f | grep -Ev '(\.git|install|README)')
 for FILE in $FILES; do
   FILENAME=".$(basename $FILE)"
+
   if [ -f "$HOME/$FILENAME" -a ! -f "$HOME/$FILENAME.bak" ]; then
     mv "$HOME/$FILENAME" "$HOME/$FILENAME.bak"
-    ln -s $FILE "$HOME/$FILENAME"
   fi
+
+  if [ -f "$HOME/$FILENAME" ]; then
+    rm "$HOME/$FILENAME"
+  fi
+
+  ln -s $FILE "$HOME/$FILENAME"
 done
