@@ -102,6 +102,11 @@ fi
 # Load RVM function
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
 
+# Include PEAR in PATH
+if [ -d "$HOME/.pear/bin" ]; then
+    PATH="$PATH:$HOME/.pear/bin/"
+fi
+
 # Include PEAR executables in PATH
 if [ -x pear ]; then
     PATH="$PATH:`pear config-show|grep bin_dir|awk '{ print $5 }'`"
