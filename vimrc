@@ -16,6 +16,9 @@ set gdefault    " Add the g flag to search/replace by default.
 set nowrap      " Dont wrap lines.
 set linebreak   " Wrap lines at convenient points.
 
+" Enable command line tab completion.
+set wildmenu
+
 set scrolloff=4 " Start scrolling three lines before the horizontal border.
 
 " Swapfiles are more annoying than helpful.
