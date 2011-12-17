@@ -26,6 +26,9 @@ set noswapfile
 set nobackup
 set nowb
 
+" %% expands to the path of the current file.
+cabbr <expr> %% expand('%:p:h')
+
 " From https://github.com/spf13/spf13-vim/blob/master/.vimrc.
 if has('statusline')
   set laststatus=2
