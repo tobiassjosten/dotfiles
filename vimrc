@@ -1,5 +1,8 @@
 set nocompatible
 
+call pathogen#infect()
+
+syntax on
 set number
 
 set incsearch   " Find the next match as we type the search.

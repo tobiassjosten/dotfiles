@@ -1,11 +1,17 @@
 DOTFILES="$HOME/.dotfiles"
 
 hash git 2>&- || { echo >&2 "Missing Git!"; exit 1; }
-git clone -q https://github.com/tobiassjosten/dotfiles.git $DOTFILES
 
-[ ! -d $DOTFILES ] && { echo "Could not clone the dotfiles repository."; exit 1; }
+if [ ! -d $DOTFILES ]; then
+  git clone -q https://github.com/tobiassjosten/dotfiles.git $DOTFILES
+  [ ! -d $DOTFILES ] && { echo "Could not clone the dotfiles repository."; exit 1; }
+else
+  cd $DOTFILES && git pull -q
+fi
 
-FILES=$(find $DOTFILES -type f | grep -Ev '(\.git|install|README)')
+cd $DOTFILES && git submodule -q update --init
+
+FILES=$(find $DOTFILES -mindepth 1 -maxdepth 1 | grep -Ev '(\.git|install|README)')
 for FILE in $FILES; do
   FILENAME=".$(basename $FILE)"
 
@@ -13,8 +19,8 @@ for FILE in $FILES; do
     mv "$HOME/$FILENAME" "$HOME/$FILENAME.bak"
   fi
 
-  if [ -f "$HOME/$FILENAME" ]; then
-    rm "$HOME/$FILENAME"
+  if [ -f "$HOME/$FILENAME" -o -d "$HOME/$FILENAME" ]; then
+    rm -r "$HOME/$FILENAME"
   fi
 
   ln -s $FILE "$HOME/$FILENAME"
