@@ -8,6 +8,7 @@ set number
 set incsearch   " Find the next match as we type the search.
 set hlsearch    " Hilight searches by default.
 set ignorecase  " Ignore case when searching.
+set gdefault    " Add the g flag to search/replace by default.
 
 set nowrap      " Dont wrap lines.
 set linebreak   " Wrap lines at convenient points.
