@@ -5,6 +5,9 @@ call pathogen#infect()
 syntax on
 set number
 
+" Use UTF-8 without BOM.
+set encoding=utf-8 nobomb
+
 set incsearch   " Find the next match as we type the search.
 set hlsearch    " Hilight searches by default.
 set ignorecase  " Ignore case when searching.
