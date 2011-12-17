@@ -17,6 +17,22 @@ set noswapfile
 set nobackup
 set nowb
 
+" From https://github.com/spf13/spf13-vim/blob/master/.vimrc.
+if has('statusline')
+  set laststatus=2
+
+  set statusline=%<%f\ 
+  set statusline+=%w%h%m%r
+  set statusline+=\ [%{&ff}/%Y]
+  set statusline+=%#warningmsg#
+  set statusline+=\ %{SyntasticStatuslineFlag()}\ 
+  set statusline+=%*
+
+  let g:syntastic_enable_signs=1
+
+  set statusline+=%=%-14.(%l,%c%V%)\ %p%%
+endif
+
 " Enable per filetype indentation.
 if has("autocmd")
   filetype plugin indent on
