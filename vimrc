@@ -12,6 +12,8 @@ set ignorecase  " Ignore case when searching.
 set nowrap      " Dont wrap lines.
 set linebreak   " Wrap lines at convenient points.
 
+set scrolloff=4 " Start scrolling three lines before the horizontal border.
+
 " Swapfiles are more annoying than helpful.
 set noswapfile
 set nobackup
