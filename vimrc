@@ -60,6 +60,10 @@ au InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 au InsertLeave * match ExtraWhiteSpace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
+" Lists for highlighting invisible characters.
+set lcs=tab:▸\ ,trail:·,nbsp:_,precedes:«,extends:»
+set list
+
 " Split windows more easily.
 nnoremap <silent> vv <C-w>v
 nnoremap <silent> ss <C-w>s
