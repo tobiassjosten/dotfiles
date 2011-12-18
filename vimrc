@@ -52,10 +52,6 @@ if has("autocmd")
   " Cases in a switch should be indented.
   let PHP_vintage_case_default_indent=1
 
-  " Automatically load .vimrc (and symlinked .dotfiles/vimrc) source when saved.
-  autocmd BufWritePost .vimrc source $MYVIMRC
-  autocmd BufWritePost vimrc source $MYVIMRC
-
   " Drupal PHP files.
   augroup module
     autocmd BufRead,BufNewFile *.module set filetype=php shiftwidth=2 softtabstop=2
