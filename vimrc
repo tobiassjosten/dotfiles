@@ -48,6 +48,10 @@ endif
 " Enable per filetype indentation.
 if has("autocmd")
   filetype plugin indent on
+
+  " Automatically load .vimrc (and symlinked .dotfiles/vimrc) source when saved.
+  autocmd BufWritePost .vimrc source $MYVIMRC
+  autocmd BufWritePost vimrc source $MYVIMRC
 endif
 
 " Mark current line.
