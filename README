@@ -1,2 +1,1 @@
-Installation:
-`bash < <(curl -s https://raw.github.com/tobiassjosten/dotfiles/master/install)`
+$ bash < <(curl -s https://raw.github.com/tobiassjosten/dotfiles/master/install)
