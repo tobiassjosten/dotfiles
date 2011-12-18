@@ -11,6 +11,7 @@ set encoding=utf-8 nobomb
 set incsearch   " Find the next match as we type the search.
 set hlsearch    " Hilight searches by default.
 set ignorecase  " Ignore case when searching.
+set smartcase   " ... unless query contains at least one capital letter.
 set gdefault    " Add the g flag to search/replace by default.
 
 set nowrap      " Dont wrap lines.
