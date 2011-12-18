@@ -45,13 +45,26 @@ if has('statusline')
   set statusline+=%=%-14.(%l,%c%V%)\ %p%%
 endif
 
-" Enable per filetype indentation.
 if has("autocmd")
+  " Enable per filetype indentation.
   filetype plugin indent on
+
+  " Cases in a switch should be indented.
+  let PHP_vintage_case_default_indent=1
 
   " Automatically load .vimrc (and symlinked .dotfiles/vimrc) source when saved.
   autocmd BufWritePost .vimrc source $MYVIMRC
   autocmd BufWritePost vimrc source $MYVIMRC
+
+  " Drupal *.module and *.install files.
+  augroup module
+    autocmd BufRead,BufNewFile *.module set filetype=php
+    autocmd BufRead,BufNewFile *.install set filetype=php
+    autocmd BufRead,BufNewFile *.test set filetype=php
+    autocmd BufRead,BufNewFile *.inc set filetype=php
+    autocmd BufRead,BufNewFile *.profile set filetype=php
+    autocmd BufRead,BufNewFile *.view set filetype=php
+  augroup END
 endif
 
 " Mark current line.

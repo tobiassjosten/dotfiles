@@ -7,3 +7,6 @@
 [submodule "vim/bundle/syntastic"]
 	path = vim/bundle/syntastic
 	url = https://github.com/scrooloose/syntastic.git
+[submodule "vim/bundle/php-indenting-for-vim"]
+	path = vim/bundle/php-indenting-for-vim
+	url = https://github.com/2072/PHP-Indenting-for-VIm.git
