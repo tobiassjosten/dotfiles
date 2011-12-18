@@ -10,3 +10,6 @@
 [submodule "vim/bundle/php-indenting-for-vim"]
 	path = vim/bundle/php-indenting-for-vim
 	url = https://github.com/2072/PHP-Indenting-for-VIm.git
+[submodule "vim/bundle/snipmate"]
+	path = vim/bundle/snipmate
+	url = https://github.com/msanders/snipmate.vim.git
