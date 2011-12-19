@@ -27,6 +27,9 @@ set noswapfile
 set nobackup
 set nowb
 
+" Allow backspacing over everything in insert mode.
+set backspace=indent,eol,start
+
 " %% expands to the path of the current file.
 cabbr <expr> %% expand('%:p:h')
 
