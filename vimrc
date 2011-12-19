@@ -98,3 +98,8 @@ nmap <silent> // :nohlsearch<CR>
 
 "Clear current search highlight by double tapping //
 nmap <silent> // :nohlsearch<CR>
+
+" Load local .vimrcl, if any.
+if filereadable($HOME.'/.vimrcl')
+  source $HOME/.vimrcl
+endif

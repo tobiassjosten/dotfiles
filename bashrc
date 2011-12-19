@@ -157,3 +157,6 @@ junk_check ()
 
 # Thy holy prompt.
 PROMPT_COMMAND='PS1="\[\e]2;\u@\h:\w\a\]${c_user}\u${c_reset}@${c_user}\h${c_reset}:${c_path}\w${c_reset}$(git_prompt)$(junk_check)\$ "'
+
+# Load local .bashrcl, if any.
+[[ -s "$HOME/.bashrcl" ]] && . "$HOME/.bashrcl"
