@@ -36,9 +36,9 @@ if has('statusline')
 
   set statusline=%<%f\ 
   set statusline+=%w%h%m%r
-  set statusline+=\ [%{&ff}/%Y]
+  set statusline+=\ [%{&ff}/%Y]\ 
   set statusline+=%#warningmsg#
-  set statusline+=\ %{SyntasticStatuslineFlag()}\ 
+  set statusline+=%{SyntasticStatuslineFlag()}
   set statusline+=%*
 
   let g:syntastic_enable_signs=1
