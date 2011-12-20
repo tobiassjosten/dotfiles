@@ -16,3 +16,6 @@
 [submodule "vim/bundle/dbgp-client"]
 	path = vim/bundle/dbgp-client
 	url = https://github.com/nocash/DBGp-client.git
+[submodule "vim/bundle/conque"]
+	path = vim/bundle/conque
+	url = https://github.com/rson/vim-conque.git
