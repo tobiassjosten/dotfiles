@@ -160,3 +160,6 @@ PROMPT_COMMAND='PS1="\[\e]2;\u@\h:\w\a\]${c_user}\u${c_reset}@${c_user}\h${c_res
 
 # Load local .bashrcl, if any.
 [[ -s "$HOME/.bashrcl" ]] && . "$HOME/.bashrcl"
+
+# Continously append commands to history file.
+PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
