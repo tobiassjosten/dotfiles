@@ -8,6 +8,9 @@ set number
 " Use UTF-8 without BOM.
 set encoding=utf-8 nobomb
 
+" We support 256 colors.
+set t_Co=256
+
 set incsearch   " Find the next match as we type the search.
 set hlsearch    " Hilight searches by default.
 set ignorecase  " Ignore case when searching.
@@ -65,6 +68,9 @@ if has("autocmd")
     autocmd BufRead,BufNewFile *.profile set filetype=php shiftwidth=2 softtabstop=2
   augroup END
 endif
+
+" Powerline settings
+let g:Powerline_symbols = 'fancy'
 
 " Mark current line.
 autocmd WinEnter * setlocal cursorline
