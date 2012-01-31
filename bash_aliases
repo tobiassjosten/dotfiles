@@ -1,3 +1,13 @@
+alias ls='ls --color=auto'
+
+alias grep='grep --color=always --exclude-dir=.svn'
+alias fgrep='fgrep --color=always --exclude-dir=.svn'
+alias egrep='egrep --color=always --exclude-dir=.svn'
+alias pgrep='grep --color=auto'
+
+# Allow ANSI colors.
+alias less='less -R'
+
 alias ll='ls -lhF'
 alias la='ls -aF'
 alias lla='ls -lahF'
