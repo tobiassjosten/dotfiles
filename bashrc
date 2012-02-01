@@ -114,6 +114,7 @@ if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
 	c_reset='\[\e[0m\]'
 	c_user='\[\033[1;33m\]'
 	c_path='\[\e[0;33m\]'
+        c_jobs='\[\e[0;32m\]'
 	c_git_clean='\[\e[0;36m\]'
 	c_git_dirty='\[\e[0;35m\]'
 else
@@ -142,6 +143,12 @@ git_prompt ()
 	echo " [$git_color$git_branch${c_reset}]"
 }
 
+# List number of background/suspended jobs.
+jobs_check () {
+	jobs_count=$(jobs | wc -l)
+	[[ $jobs_count -gt 0 ]] && echo " ($c_jobs$jobs_count$c_reset)"
+}
+
 # Find Mac/Windows junk and flag it.
 junk_check ()
 {
@@ -151,7 +158,7 @@ junk_check ()
 }
 
 # Thy holy prompt.
-PROMPT_COMMAND='PS1="\[\e]2;\u@\h:\w\a\]${c_user}\u${c_reset}@${c_user}\h${c_reset}:${c_path}\w${c_reset}$(git_prompt)$(junk_check)\$ "'
+PROMPT_COMMAND='PS1="\[\e]2;\u@\h:\w\a\]${c_user}\u${c_reset}@${c_user}\h${c_reset}:${c_path}\w${c_reset}$(git_prompt)$(jobs_check)$(junk_check)\$ "'
 
 # Load local .bashrcl, if any.
 [[ -s "$HOME/.bashrcl" ]] && . "$HOME/.bashrcl"
