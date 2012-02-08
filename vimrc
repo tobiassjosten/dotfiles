@@ -77,7 +77,7 @@ autocmd WinEnter * setlocal cursorline
 autocmd WinLeave * setlocal nocursorline
 autocmd BufWinEnter * setlocal cursorline
 autocmd BufWinLeave * setlocal cursorline
-hi CursorLine cterm=NONE ctermbg=darkgrey guibg=darkgrey
+hi CursorLine cterm=NONE ctermbg=234 guibg=234
 
 " Highlight trailing whitespace
 " http://stackoverflow.com/questions/356126/how-can-you-automatically-remove-trailing-whitespace-in-vim/7255709#7255709
