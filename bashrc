@@ -89,6 +89,11 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 	. /etc/bash_completion
 fi
 
+# Load xmodmap configuration.
+if [ -f $HOME/.xmodmaprc ]; then
+	xmodmap $HOME/.xmodmaprc
+fi
+
 # Include Ruby gems in PATH
 if [ -d "/var/lib/gems/1.8/bin" ] ; then
     PATH="$PATH:/var/lib/gems/1.8/bin"
