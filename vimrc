@@ -27,6 +27,9 @@ set linebreak   " Wrap lines at convenient points.
 " Enable command line tab completion.
 set wildmenu
 
+" Don't close buffers, just hide them to preserve history.
+set hidden
+
 set scrolloff=4 " Start scrolling three lines before the horizontal border.
 
 " Swapfiles are more annoying than helpful.
