@@ -17,6 +17,10 @@ set ignorecase  " Ignore case when searching.
 set smartcase   " ... unless query contains at least one capital letter.
 set gdefault    " Add the g flag to search/replace by default.
 
+" Center search matches when jumping.
+map N Nzz
+map n nzz
+
 set nowrap      " Dont wrap lines.
 set linebreak   " Wrap lines at convenient points.
 
