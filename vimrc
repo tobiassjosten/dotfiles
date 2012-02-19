@@ -105,6 +105,9 @@ nmap <silent> <C-D> :NERDTreeToggle<CR>
 set lcs=tab:▸\ ,trail:·,nbsp:_,precedes:«,extends:»
 set list
 
+" Faster commands on Swedish keyboards.
+nnoremap , :
+
 " Split windows more easily.
 nnoremap <silent> vv <C-w>v
 nnoremap <silent> ss <C-w>s
