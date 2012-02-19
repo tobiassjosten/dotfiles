@@ -92,6 +92,12 @@ au InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 au InsertLeave * match ExtraWhiteSpace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
+" Automatically close NERDTree if it's the last open window.
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+
+" Toggle NERDTree with Ctrl+D
+nmap <silent> <C-D> :NERDTreeToggle<CR>
+
 " Lists for highlighting invisible characters.
 set lcs=tab:▸\ ,trail:·,nbsp:_,precedes:«,extends:»
 set list
