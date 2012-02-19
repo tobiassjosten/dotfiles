@@ -99,8 +99,10 @@ nnoremap <silent> ss <C-w>s
 " Remap Q to close a window.
 nnoremap <silent> Q <C-w>c
 
-" Make :W act as :w.
-nnoremap W :w<CR>
+" Make :W and :Q aliases of :w and :q.
+command! W w
+command! Q q
+command! WQ wq
 
 "Clear current search highlight by double tapping //
 nmap <silent> // :nohlsearch<CR>
