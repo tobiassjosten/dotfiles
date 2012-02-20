@@ -25,3 +25,5 @@ for FILE in $FILES; do
 
   ln -s $FILE "$HOME/$FILENAME"
 done
+
+. "$HOME/.bashrc"
