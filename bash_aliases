@@ -31,3 +31,6 @@ alias gs='git status'
 alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
 
 function f() { find . -iname "*$@*.*" | grep --color "$@"; }
+
+# Start tmux with support for 256 colors.
+alias tmux='tmux -2'
