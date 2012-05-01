@@ -34,3 +34,4 @@ function f() { find . -iname "*$@*.*" | grep --color "$@"; }
 
 # Start tmux with support for 256 colors.
 alias tmux='tmux -2'
+alias tm='tmux attach || tmux new'
