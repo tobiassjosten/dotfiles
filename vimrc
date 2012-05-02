@@ -11,6 +11,16 @@ set encoding=utf-8 nobomb
 " We support 256 colors.
 set t_Co=256
 
+" When in tmux our terminal will be reported as 'screen' or 'screen-256color',
+" which will fool Vim into not accepting Ctrl+arrow keys. Let's rectify this
+" by binding those codes to the proper keys.
+if &term =~ '^screen'
+    execute "set <xUp>=\e[1;*A"
+    execute "set <xDown>=\e[1;*B"
+    execute "set <xRight>=\e[1;*C"
+    execute "set <xLeft>=\e[1;*D"
+endif
+
 set incsearch   " Find the next match as we type the search.
 set hlsearch    " Hilight searches by default.
 set ignorecase  " Ignore case when searching.
