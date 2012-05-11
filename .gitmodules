@@ -34,3 +34,6 @@
 [submodule "vim/bundle/surround"]
 	path = vim/bundle/surround
 	url = https://github.com/tpope/vim-surround.git
+[submodule "vim/bundle/matchindent"]
+	path = vim/bundle/matchindent
+	url = https://github.com/conormcd/matchindent.vim.git
