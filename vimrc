@@ -31,6 +31,10 @@ set gdefault    " Add the g flag to search/replace by default.
 map N Nzz
 map n nzz
 
+" Jump to the beginning of lines.
+map <c-f> <c-f>0
+map <c-b> <c-b>0
+
 set nowrap      " Dont wrap lines.
 set linebreak   " Wrap lines at convenient points.
 
