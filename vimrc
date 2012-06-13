@@ -35,6 +35,10 @@ map n nzz
 map <c-f> <c-f>0
 map <c-b> <c-b>0
 
+" Scroll viewport faster.
+nnoremap <C-e> 3<C-e>
+nnoremap <C-y> 3<C-y>
+
 set nowrap      " Dont wrap lines.
 set linebreak   " Wrap lines at convenient points.
 
