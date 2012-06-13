@@ -27,6 +27,9 @@ set ignorecase  " Ignore case when searching.
 set smartcase   " ... unless query contains at least one capital letter.
 set gdefault    " Add the g flag to search/replace by default.
 
+" Use , as leader key.
+let mapleader = ","
+
 " Center search matches when jumping.
 map N Nzz
 map n nzz
@@ -121,12 +124,12 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTree
 " Toggle NERDTree with Ctrl+D
 nmap <silent> <C-D> :NERDTreeToggle<CR>
 
+" Open NERDTree at current file with <leader>r.
+map <leader>r :NERDTreeFind<CR>
+
 " Lists for highlighting invisible characters.
 set lcs=tab:▸\ ,trail:·,nbsp:_,precedes:«,extends:»
 set list
-
-" Use , as leader key.
-let mapleader = ","
 
 " Delete without yanking.
 nnoremap <leader>d "_d
