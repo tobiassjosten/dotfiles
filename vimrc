@@ -119,8 +119,16 @@ nmap <silent> <C-D> :NERDTreeToggle<CR>
 set lcs=tab:▸\ ,trail:·,nbsp:_,precedes:«,extends:»
 set list
 
-" Faster commands on Swedish keyboards.
-nnoremap , :
+" Use , as leader key.
+let mapleader = ","
+
+" Delete without yanking.
+nnoremap <leader>d "_d
+vnoremap <leader>d "_d
+
+" Replace currently selected text with default register without yanking it.
+nnoremap <leader>p "_ddP
+vnoremap <leader>p "_dP
 
 " Split windows more easily.
 nnoremap <silent> vv <C-w>v
