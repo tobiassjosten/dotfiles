@@ -37,3 +37,6 @@
 [submodule "vim/bundle/matchindent"]
 	path = vim/bundle/matchindent
 	url = https://github.com/conormcd/matchindent.vim.git
+[submodule "vim/bundle/command-t"]
+	path = vim/bundle/command-t
+	url = git://git.wincent.com/command-t.git
