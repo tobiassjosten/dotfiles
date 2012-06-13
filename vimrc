@@ -144,3 +144,8 @@ nmap <silent> // :nohlsearch<CR>
 if filereadable($HOME.'/.vimrcl')
   source $HOME/.vimrcl
 endif
+
+" Load project .vimrc, if any.
+if filereadable('.vimrc') && getcwd() != $HOME
+  source .vimrc
+endif
