@@ -40,6 +40,8 @@ set linebreak   " Wrap lines at convenient points.
 
 " Enable command line tab completion.
 set wildmenu
+" Only complete up to the point of ambiguity.
+set wildmode=list:longest
 
 " Don't close buffers, just hide them to preserve history.
 set hidden
