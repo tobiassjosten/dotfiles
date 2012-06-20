@@ -37,6 +37,9 @@ map n nzz
 " Jump to the beginning of lines.
 map <c-f> <c-f>0
 map <c-b> <c-b>0
+map H H0
+map M M0
+map L L0
 
 " Scroll viewport faster.
 nnoremap <C-e> 3<C-e>
