@@ -152,6 +152,7 @@ nnoremap <silent> Q <C-w>c
 " Make :W and :Q aliases of :w and :q.
 command! W w
 command! Q q
+command! Wq wq
 command! WQ wq
 
 "Clear current search highlight by double tapping //
