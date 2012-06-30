@@ -160,6 +160,8 @@ nmap <silent> // :nohlsearch<CR>
 "Clear current search highlight by double tapping //
 nmap <silent> // :nohlsearch<CR>
 
+let g:debuggerMaxDepth = 10
+
 " Load local .vimrcl, if any.
 if filereadable($HOME.'/.vimrcl')
   source $HOME/.vimrcl
