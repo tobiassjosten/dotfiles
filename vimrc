@@ -172,3 +172,10 @@ endif
 if filereadable('.vimrc') && getcwd() != $HOME
   source .vimrc
 endif
+
+map <leader>, :DbgToggleBreakpoint<CR>
+map <f2> :DbgRun<CR>
+map <f3> :DbgStepOver<CR>
+map <f4> :DbgStepInto<CR>
+map <c-f4> :DbgStepOut<CR>
+map <c-f4> :DbgDetach<CR>
