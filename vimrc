@@ -92,8 +92,11 @@ if has("autocmd")
   " Cases in a switch should be indented.
   let PHP_vintage_case_default_indent=1
 
-  " Drupal PHP files.
   augroup module
+    " Markdown.
+    autocmd BufRead,BufNewFile *.md set filetype=markdown wrap linebreak
+    autocmd BufRead,BufNewFile *.markdown set wrap linebreak
+    " Drupal PHP files.
     autocmd BufRead,BufNewFile *.module set filetype=php shiftwidth=2 softtabstop=2
     autocmd BufRead,BufNewFile *.install set filetype=php shiftwidth=2 softtabstop=2
     autocmd BufRead,BufNewFile *.test set filetype=php shiftwidth=2 softtabstop=2
