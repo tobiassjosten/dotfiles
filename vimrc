@@ -124,14 +124,39 @@ au InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 au InsertLeave * match ExtraWhiteSpace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
+" A NERDTree toggle combined with the NERDTreeFind command.
+function! NERDTreeFindToggle()
+  if exists("t:NERDTreeBufName")
+    let s:ntree = bufwinnr(t:NERDTreeBufName)
+  else
+    let s:ntree = -1
+  endif
+  if (s:ntree != -1)
+    :NERDTreeClose
+  else
+    :NERDTreeFind
+  endif
+endfunction
+
 " Automatically close NERDTree if it's the last open window.
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 
-" Toggle NERDTree with Ctrl+D
-nmap <silent> <C-D> :NERDTreeToggle<CR>
+" Toggle NERDTree with Ctrl+d.
+map <silent> <c-d> :call NERDTreeFindToggle()<cr>
 
-" Open NERDTree at current file with <leader>r.
-map <leader>r :NERDTreeFind<CR>
+" NERDTree configuration.
+let g:NERDTreeQuitOnOpen = 1
+
+" Open taglist with Ctrl+j.
+map <silent> <c-j> :TlistToggle<cr>
+
+" Taglist configuration.
+let g:Tlist_GainFocus_On_ToggleOpen = 1
+let g:Tlist_Use_Right_Window = 1
+let g:Tlist_WinWidth = 40
+let g:Tlist_Exit_OnlyWindow = 1
+let g:Tlist_File_Fold_Auto_Close = 1
+let g:Tlist_Close_On_Select = 1
 
 " Lists for highlighting invisible characters.
 set lcs=tab:▸\ ,trail:·,nbsp:_,precedes:«,extends:»
