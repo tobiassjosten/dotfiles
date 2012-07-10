@@ -49,3 +49,6 @@
 [submodule "vim/bundle/debugger"]
 	path = vim/bundle/debugger
 	url = https://github.com/taxilian/VimDebugger.git
+[submodule "vim/bundle/taglist"]
+	path = vim/bundle/taglist
+	url = https://github.com/vim-scripts/taglist.vim.git
