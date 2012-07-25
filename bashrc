@@ -89,6 +89,9 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 	. /etc/bash_completion
 fi
 
+# User owned executables in ~/bin.
+PATH="$PATH:$HOME/bin"
+
 # Load xmodmap configuration.
 if [ -f $HOME/.xmodmaprc ]; then
 	xmodmap $HOME/.xmodmaprc
