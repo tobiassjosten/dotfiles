@@ -100,7 +100,7 @@ if [ -d "/var/lib/gems/1.8/bin" ] ; then
 fi
 
 # Load RVM function
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
+PATH=$PATH:$HOME/.rvm/bin
 
 # Include PEAR in PATH
 if [ -d "$HOME/.pear/bin" ]; then
