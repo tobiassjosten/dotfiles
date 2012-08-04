@@ -89,6 +89,9 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 	. /etc/bash_completion
 fi
 
+# User owned executables in ~/bin.
+PATH="$PATH:$HOME/bin"
+
 # Load xmodmap configuration.
 if [ -f $HOME/.xmodmaprc ]; then
 	xmodmap $HOME/.xmodmaprc
@@ -100,7 +103,7 @@ if [ -d "/var/lib/gems/1.8/bin" ] ; then
 fi
 
 # Load RVM function
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
+PATH=$PATH:$HOME/.rvm/bin
 
 # Include PEAR in PATH
 if [ -d "$HOME/.pear/bin" ]; then
