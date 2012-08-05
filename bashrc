@@ -97,13 +97,10 @@ if [ -f $HOME/.xmodmaprc ]; then
 	xmodmap $HOME/.xmodmaprc
 fi
 
-# Include Ruby gems in PATH
-if [ -d "/var/lib/gems/1.8/bin" ] ; then
-    PATH="$PATH:/var/lib/gems/1.8/bin"
+# Source RVM, if installed.
+if [ -f "$HOME/.rvm/scripts/rvm" ]; then
+	source "$HOME/.rvm/scripts/rvm"
 fi
-
-# Load RVM function
-PATH=$PATH:$HOME/.rvm/bin
 
 # Include PEAR in PATH
 if [ -d "$HOME/.pear/bin" ]; then
