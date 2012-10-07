@@ -174,6 +174,9 @@ vnoremap <leader>p "_dP
 nnoremap <silent> vv <C-w>v
 nnoremap <silent> ss <C-w>s
 
+" Jump to first entry in location list.
+nnoremap <leader>ll :llist<cr>:silent ll<space><cr><cr>
+
 " Remap Q to close a window.
 nnoremap <silent> Q <C-w>c
 
