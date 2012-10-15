@@ -192,6 +192,9 @@ nmap <silent> // :nohlsearch<CR>
 "Clear current search highlight by double tapping //
 nmap <silent> // :nohlsearch<CR>
 
+" Copy to clipboard with xclip.
+vmap <c-c> y: call system("xclip -i -selection clipboard", getreg("\""))<cr>
+
 let g:debuggerMaxDepth = 10
 
 " Load local .vimrcl, if any.
