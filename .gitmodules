@@ -52,3 +52,6 @@
 [submodule "vim/plugin/javascript"]
 	path = vim/plugin/javascript
 	url = https://github.com/pangloss/vim-javascript.git
+[submodule "vim/bundle/jslint"]
+	path = vim/bundle/jslint
+	url = https://github.com/hallettj/jslint.vim.git
