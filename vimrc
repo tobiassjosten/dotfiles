@@ -195,6 +195,9 @@ nmap <silent> // :nohlsearch<CR>
 " Copy to clipboard with xclip.
 vmap <c-c> y: call system("xclip -i -selection clipboard", getreg("\""))<cr>
 
+" Toggle pasting.
+map <leader>pp :setlocal paste!<cr>
+
 let g:debuggerMaxDepth = 10
 
 " Load local .vimrcl, if any.
