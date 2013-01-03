@@ -94,14 +94,16 @@ if has("autocmd")
 
   augroup module
     " Markdown.
-    autocmd BufRead,BufNewFile *.md set filetype=markdown wrap linebreak
-    autocmd BufRead,BufNewFile *.markdown set wrap linebreak
+    autocmd BufRead,BufNewFile *.md,*.markdown set filetype=markdown wrap linebreak
+    autocmd BufRead,BufNewFile *.md,*.markdown set wrap linebreak
     " Drupal PHP files.
     autocmd BufRead,BufNewFile *.module set filetype=php shiftwidth=2 softtabstop=2
     autocmd BufRead,BufNewFile *.install set filetype=php shiftwidth=2 softtabstop=2
     autocmd BufRead,BufNewFile *.test set filetype=php shiftwidth=2 softtabstop=2
     autocmd BufRead,BufNewFile *.inc set filetype=php shiftwidth=2 softtabstop=2
     autocmd BufRead,BufNewFile *.profile set filetype=php shiftwidth=2 softtabstop=2
+    " Jekyll YAML Front Matter.
+    autocmd BufRead,BufNewFile * syntax match Comment /\%^---\_.\{-}---$/
   augroup END
 endif
 
