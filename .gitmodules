@@ -55,3 +55,6 @@
 [submodule "vim/bundle/jslint"]
 	path = vim/bundle/jslint
 	url = https://github.com/hallettj/jslint.vim.git
+[submodule "vim/bundle/closetag"]
+	path = vim/bundle/closetag
+	url = https://github.com/docunext/closetag.vim.git
