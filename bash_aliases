@@ -26,7 +26,7 @@ alias gc='git commit'
 alias gca='git commit -a'
 alias gco='git checkout'
 alias gb='git branch'
-alias gs='git status'
+alias gs='git status -s'
 alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
 alias gl="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 
