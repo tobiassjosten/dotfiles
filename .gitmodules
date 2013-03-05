@@ -58,3 +58,6 @@
 [submodule "vim/bundle/closetag"]
 	path = vim/bundle/closetag
 	url = https://github.com/docunext/closetag.vim.git
+[submodule "vim/bundle/gitgutter"]
+	path = vim/bundle/gitgutter
+	url = git://github.com/airblade/vim-gitgutter.git
