@@ -1,3 +1,7 @@
+# The existance of .bash_profile disables loading .profile, so we forcibly load
+# it from here instead.
+. ~/.profile
+
 # This file is sometimes sourced instead of our .bashrc, specifically when
 # launching tmux. Let's keep all goodies in .bashrc and source it explicitly
 # from here.
