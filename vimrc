@@ -10,7 +10,6 @@ set nocompatible
 let mapleader = ','
 
 set rtp+=~/.vim/bundle/vundle/
-set rtp+=~/.powerline/powerline/bindings/vim
 
 filetype off
 
