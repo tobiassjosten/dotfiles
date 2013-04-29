@@ -1,0 +1,15 @@
+export NAME='Tobias Sjösten'
+export EMAIL='tobias@tobiassjosten.net'
+
+export PAGER=less
+export EDITOR=vim
+export VISUAL=$EDITOR
+
+# Make less more friendly for non-text input files, see lesspipe(1).
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+pathprepend ~/bin PATH
+pathremove . PATH
+pathremove "" PATH
+
+ssource ~/.login_local

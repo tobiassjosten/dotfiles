@@ -1,0 +1,7 @@
+export ENV=~/.sh/interactive
+
+export BASH_ENV=~/.bash/env
+
+. ~/.shell/env_functions
+
+ssource ~/.env_local

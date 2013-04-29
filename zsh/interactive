@@ -1,0 +1,12 @@
+. ~/.shell/interactive
+
+# Path to oh-my-zsh configuration.
+ZSH=$HOME/.oh-my-zsh
+
+# Set name of the theme to load.
+ZSH_THEME="robbyrussell"
+
+# Which plugins to load.
+plugins=(git bundler)
+
+. $ZSH/oh-my-zsh.sh

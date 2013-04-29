@@ -1,17 +1,15 @@
 alias ls='ls --color=auto'
+alias ll='ls -lhF'
+alias la='ls -aF'
+alias lla='ls -lahF'
+alias l='ls -CF'
 
 alias grep='grep --color=always --exclude-dir=.svn'
 alias fgrep='fgrep --color=always --exclude-dir=.svn'
 alias egrep='egrep --color=always --exclude-dir=.svn'
 alias pgrep='grep --color=auto'
 
-# Allow ANSI colors.
 alias less='less -R'
-
-alias ll='ls -lhF'
-alias la='ls -aF'
-alias lla='ls -lahF'
-alias l='ls -CF'
 
 alias ..='cd ..'
 alias ...='cd ../..'
@@ -19,6 +17,11 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 alias .......='cd ../../../../../..'
+
+function mcd () {
+	mkdir -p "$1"
+	cd "$1"
+}
 
 alias gp='git push'
 alias gd='git diff'
@@ -30,8 +33,15 @@ alias gs='git status -s'
 alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
 alias gl="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 
-function f() { find . -iname "*$@*.*" | grep --color "$@"; }
-
-# Start tmux with support for 256 colors.
-alias tmux='tmux -2'
 alias tm='tmux attach || tmux new'
+
+if [ -t 0 ]; then
+	mesg n
+fi
+
+# gnome-terminal doesn't advertise its 256 colour support.
+if [ "$COLORTERM" = gnome-terminal -a "$TERM" = xterm ]; then
+	export TERM=xterm-256color
+fi
+
+ssource ~/.interactive_local
