@@ -1,0 +1,10 @@
+[user]
+  name = Tobias Sjösten
+  email = tobias@tobiassjosten.net
+
+[color]
+  ui = always
+  branch = true
+  diff = true
+  pager = true
+  status = true
