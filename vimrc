@@ -283,26 +283,8 @@ set autoread
 "  the swap file
 " ----------------------------------------------------------------------------
 
-" Set swap file, backup and undo directories to sensible locations.
-" Taken from https://github.com/tpope/vim-sensible
-" The trailing double '//' on the filenames cause Vim to create undo, backup,
-" and swap filenames using the full path to the file, substituting '%' for
-" '/', e.g. '%Users%bob%foo.txt'.
-let s:dir = has('win32') ? '$APPDATA/Vim' : match(system('uname'), "Darwin") > -1 ? '~/Library/Vim' : empty($XDG_DATA_HOME) ? '~/.local/share/vim' : '$XDG_DATA_HOME/vim'
-if isdirectory(expand(s:dir))
-  if &directory =~# '^\.,'
-    let &directory = expand(s:dir) . '/swap//,' . &directory
-  endif
-  if &backupdir =~# '^\.,'
-    let &backupdir = expand(s:dir) . '/backup//,' . &backupdir
-  endif
-  if exists('+undodir') && &undodir =~# '^\.\%(,\|$\)'
-    let &undodir = expand(s:dir) . '/undo//,' . &undodir
-  endif
-endif
-if exists('+undofile')
-  set undofile
-endif
+" Do not use swapfiles.
+set noswapfile
 
 
 " ----------------------------------------------------------------------------
