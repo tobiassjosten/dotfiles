@@ -8,3 +8,6 @@
   diff = true
   pager = true
   status = true
+
+[push]
+  default = upstream
