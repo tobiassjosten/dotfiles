@@ -62,6 +62,9 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTree
 autocmd vimenter * if !argc() | NERDTree | endif
 Bundle 'scrooloose/nerdtree'
 
+" Puppet — Puppet niceties for your Vim setup.
+Bundle 'rodjek/vim-puppet'
+
 " Repeat — Enable repeating supported plugin maps with dot.
 Bundle 'tpope/vim-repeat'
 
@@ -73,6 +76,9 @@ Bundle 'tpope/vim-surround'
 
 " Syntastic — Syntax checking hacks for Vim.
 Bundle 'scrooloose/syntastic'
+
+" Tabular — Text filtering and alignment.
+Bundle 'godlygeek/tabular'
 
 " Tagbar — The Vim class outline viewer.
 let g:tagbar_autoclose = 1
