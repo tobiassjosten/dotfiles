@@ -31,6 +31,8 @@ nmap <c-ö> :CtrlPTag<cr>
 Bundle 'kien/ctrlp.vim'
 
 " DBGPavim — Enable PHP debug in Vim with Xdebug, with a new debug engine.
+let g:dbgPavimPort = 9000
+let g:dbgPavimBreakAtEntry = 1
 map <leader>, :Bp<cr>
 Bundle 'brookhong/DBGPavim'
 
