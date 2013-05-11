@@ -45,6 +45,9 @@ Bundle 'othree/html5.vim'
 " Matchindent — Set the indent style to what is in the file being edited.
 Bundle 'conormcd/matchindent.vim'
 
+" Multiple cursors — Live update in Insert mode.
+Bundle 'terryma/vim-multiple-cursors'
+
 " NERDTree — A tree explorer plugin for Vim.
 let g:NERDTreeQuitOnOpen = 1
 map <silent> <c-d> :call NERDTreeFindToggle()<cr>
