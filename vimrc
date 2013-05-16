@@ -162,6 +162,9 @@ if has('syntax') && !exists('g:syntax_on')
   syntax enable
 endif
 
+" Keep transperancy background for gutter in gnome-terminal.
+highlight SignColumn ctermfg=4 ctermbg=none guifg=darkblue guibg=none
+
 " Hilight searches by default.
 set hlsearch
 
