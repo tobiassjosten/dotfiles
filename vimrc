@@ -245,7 +245,7 @@ if v:version > 703 || v:version == 703 && has("patch541")
 endif
 
 " Better omni-complete menu.
-set completeopt+=longest
+set completeopt=menu,preview
 
 " Use one space after '.' when joining a line.
 set nojoinspaces
@@ -309,7 +309,7 @@ set noswapfile
 set history=200
 
 " List all matches and complete till the longest common string.
-set wildmode=list:longest
+set wildmode=list:longest,full
 
 " File tab completion ignores these file patterns
 set wildignore+=*.exe,*.swp,.DS_Store
