@@ -433,6 +433,11 @@ command! Q q
 command! Wq wq
 command! WQ wq
 
+" Reselect visual block after indent/outdent.
+vnoremap < <gv
+vnoremap > >gv
+vnoremap = =gv
+
 
 " ----------------------------------------------------------------------------
 "  miscellaneous
