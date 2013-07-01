@@ -98,6 +98,11 @@ Bundle 'evidens/vim-twig'
 
 " UtilSnips — The Ultimate Snippet Solution for Vim.
 Bundle 'SirVer/ultisnips'
+let g:UltiSnipsSnippetDirectories = ['ultisnips']
+let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
+let g:UltiSnipsExpandTrigger='<tab>'
+let g:UltiSnipsJumpForwardTrigger='<c-l>'
+let g:UltiSnipsJumpBackwardTrigger='<c-k>'
 
 
 " ----------------------------------------------------------------------------

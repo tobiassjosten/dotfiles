@@ -1,0 +1,47 @@
+snippet php "initialization"
+<?php
+
+namespace $1;
+
+class $2
+{
+    $3
+}
+endsnippet
+
+snippet if "if"
+if ($1) {
+    $2
+}
+endsnippet
+
+snippet else "else"
+else {
+    $1
+}
+endsnippet
+
+snippet for "for"
+for ($${2:i} = 0; $$2 < ${1:count}; $$2${3:++}) {
+    ${4:// code...}
+}
+endsnippet
+
+snippet foreachk "foreach"
+foreach ($${1:variable} as $${3:item}){
+    ${4:// code...}
+}
+endsnippet
+
+snippet foreachk "foreachk"
+foreach ($${1:variable} as $${2:key} => $${3:value}){
+    ${4:// code...}
+}
+endsnippet
+
+snippet f "function" b
+${1:public} function ${2:name}()
+{
+    $3
+}
+endsnippet
