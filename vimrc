@@ -67,6 +67,9 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTree
 autocmd vimenter * if !argc() | NERDTree | endif
 Bundle 'scrooloose/nerdtree'
 
+" PHP — Syntax file with 5.3 & basic 5.4 support.
+Bundle 'StanAngeloff/php.vim'
+
 " Puppet — Puppet niceties for your Vim setup.
 Bundle 'rodjek/vim-puppet'
 
