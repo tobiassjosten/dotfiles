@@ -361,6 +361,9 @@ if has("autocmd")
 
     " Jekyll YAML Front Matter.
     autocmd BufRead,BufNewFile * syntax match Comment /\%^---\_.\{-}---$/
+
+    " JavaScript files.
+    autocmd BufRead,BufNewFile Gruntfile set filetype=javascript
   augroup END
 endif
 
