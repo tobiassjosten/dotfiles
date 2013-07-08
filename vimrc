@@ -39,6 +39,9 @@ Bundle 'brookhong/DBGPavim'
 " Gitgutter — Shows a git diff in the gutter (sign column).
 Bundle 'airblade/vim-gitgutter'
 
+" HAML — Runtime files for Haml, Sass, and SCSS.
+Bundle 'tpope/vim-haml'
+
 " HTML5 — HTML5 omnicomplete and syntax.
 Bundle 'othree/html5.vim'
 
