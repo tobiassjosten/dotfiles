@@ -367,6 +367,9 @@ if has("autocmd")
 
     " JavaScript files.
     autocmd BufRead,BufNewFile Gruntfile set filetype=javascript
+
+    " Ruby files.
+    autocmd BufRead,BufNewFile Gemfile,Guardfile set filetype=ruby
   augroup END
 endif
 
