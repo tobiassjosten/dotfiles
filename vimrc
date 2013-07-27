@@ -426,12 +426,6 @@ vnoremap <leader>p "_dP
 nnoremap <silent> vv <c-w>v
 nnoremap <silent> ss <c-w>s
 
-" Window navigation.
-map <c-j> <c-w>j
-map <c-k> <c-w>k
-map <c-h> <c-w>h
-map <c-l> <c-w>l
-
 " Jump to first entry in location list.
 nnoremap <leader>ll :llist<cr>:silent ll<space><cr><cr>
 
