@@ -1,3 +1,5 @@
+alias hosts='sudo $EDITOR /etc/hosts'
+
 alias ls='ls --color=auto'
 alias ll='ls -lhF'
 alias la='ls -aF'
