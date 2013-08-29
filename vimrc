@@ -36,6 +36,9 @@ let g:dbgPavimBreakAtEntry = 1
 map <leader>, :Bp<cr>
 Bundle 'brookhong/DBGPavim'
 
+" Fugitive — A Git wrapper so awesome, it should be illegal.
+Bundle 'tpope/vim-fugitive'
+
 " Gitgutter — Shows a git diff in the gutter (sign column).
 Bundle 'airblade/vim-gitgutter'
 
