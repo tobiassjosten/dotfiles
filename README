@@ -1,14 +1,3 @@
-## Requirements
-
-[Install Powerline](https://powerline.readthedocs.org/en/latest/overview.html#installation):
-
-    $ pip install --user git+git://github.com/Lokaltog/powerline
-
-Add Powerline directory to your local Vim configuration:
-
-    " ~/.vimrcl
-    set rtp+=~/.local/lib/python2.7/site-packages/powerline/bindings/vim
-
 ## Installation
 
     $ bash < <(curl -s https://raw.github.com/tobiassjosten/dotfiles/master/install)
