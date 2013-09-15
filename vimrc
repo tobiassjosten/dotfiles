@@ -17,6 +17,9 @@ call vundle#rc()
 
 Bundle 'gmarik/vundle'
 
+" Airline — Lean & mean status/tabline.
+Bundle 'bling/vim-airline'
+
 " Closetag — Functions and mappings to close open HTML/XML tags.
 Bundle 'closetag.vim'
 
