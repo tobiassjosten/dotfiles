@@ -1,11 +1,13 @@
 snippet php "initialization"
 <?php
 
-namespace $1;
+namespace ${1:`!p res = re.sub('.*?\/([A-Z].+)', '\\1', path)`};
+
+!p # ta bort `fn` från path
 
 class $2
 {
-    $3
+    $0
 }
 endsnippet
 

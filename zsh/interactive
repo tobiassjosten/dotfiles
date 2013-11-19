@@ -12,3 +12,6 @@ ZSH_THEME="robbyrussell"
 plugins=(bundler command-not-found git)
 
 . $ZSH/oh-my-zsh.sh
+
+# Skip the "sure you want to delete all the files in" prompt.
+setopt rmstarsilent
