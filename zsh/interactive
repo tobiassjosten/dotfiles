@@ -11,9 +11,6 @@ ZSH_THEME="robbyrussell"
 # Which plugins to load.
 plugins=(bundler cabal cap command-not-found git tmux)
 
-# Tmux plugin.
-ZSH_TMUX_AUTOSTART=true
-
 . $ZSH/oh-my-zsh.sh
 
 # Skip the "sure you want to delete all the files in" prompt.
