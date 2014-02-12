@@ -376,6 +376,9 @@ if has("autocmd")
 
     " Ruby files.
     autocmd BufRead,BufNewFile Gemfile,Guardfile set filetype=ruby
+
+    " Git commits.
+    autocmd Filetype gitcommit setlocal spell textwidth=72
   augroup END
 endif
 
