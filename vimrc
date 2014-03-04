@@ -85,6 +85,9 @@ Bundle 'rodjek/vim-puppet'
 " Repeat — Enable repeating supported plugin maps with dot.
 Bundle 'tpope/vim-repeat'
 
+" Ruby — Vim/Ruby Configuration Files.
+Bundle 'vim-ruby/vim-ruby'
+
 " Supertab — Perform all your vim insert mode completions with Tab.
 Bundle 'ervandew/supertab'
 
