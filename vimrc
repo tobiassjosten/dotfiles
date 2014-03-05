@@ -39,6 +39,9 @@ let g:dbgPavimBreakAtEntry = 1
 map <leader>, :Bp<cr>
 Bundle 'brookhong/DBGPavim'
 
+" Drupal — For editing Drupal-related files.
+Bundle 'git://drupalcode.org/project/vimrc.git', {'rtp': 'bundle/vim-plugin-for-drupal/'}
+
 " Fugitive — A Git wrapper so awesome, it should be illegal.
 Bundle 'tpope/vim-fugitive'
 
@@ -363,13 +366,6 @@ if has("autocmd")
     " Markdown.
     autocmd BufRead,BufNewFile *.md,*.markdown set filetype=markdown wrap linebreak
     autocmd BufRead,BufNewFile *.md,*.markdown set wrap linebreak
-
-    " Drupal PHP files.
-    autocmd BufRead,BufNewFile *.module set filetype=php shiftwidth=2 softtabstop=2
-    autocmd BufRead,BufNewFile *.install set filetype=php shiftwidth=2 softtabstop=2
-    autocmd BufRead,BufNewFile *.test set filetype=php shiftwidth=2 softtabstop=2
-    autocmd BufRead,BufNewFile *.inc set filetype=php shiftwidth=2 softtabstop=2
-    autocmd BufRead,BufNewFile *.profile set filetype=php shiftwidth=2 softtabstop=2
 
     " Jekyll YAML Front Matter.
     autocmd BufRead,BufNewFile * syntax match Comment /\%^---\_.\{-}---$/
