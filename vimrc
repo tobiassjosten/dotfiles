@@ -33,6 +33,9 @@ nmap <c-l> :CtrlPBuffer<cr>
 nmap <c-ö> :CtrlPTag<cr>
 Bundle 'kien/ctrlp.vim'
 
+" CtrlP Matcher — C matching extension.
+Bundle 'JazzCore/ctrlp-cmatcher'
+
 " DBGPavim — Enable PHP debug in Vim with Xdebug, with a new debug engine.
 let g:dbgPavimPort = 9000
 let g:dbgPavimBreakAtEntry = 1
