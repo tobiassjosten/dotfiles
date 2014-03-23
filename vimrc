@@ -57,6 +57,12 @@ Bundle 'tpope/vim-haml'
 " HTML5 — HTML5 omnicomplete and syntax.
 Bundle 'othree/html5.vim'
 
+" JavaScript Indent — Because cindent() just wont cut it.
+Bundle 'vim-scripts/JavaScript-Indent'
+
+" JavaScript Syntax — Enhanced JavaScript Syntax.
+Bundle 'jelera/vim-javascript-syntax'
+
 " Matchindent — Set the indent style to what is in the file being edited.
 Bundle 'conormcd/matchindent.vim'
 
@@ -379,6 +385,7 @@ if has("autocmd")
 
     " JavaScript files.
     autocmd BufRead,BufNewFile Gruntfile set filetype=javascript
+    autocmd FileType javascript call JavaScriptFold()
 
     " Ruby files.
     autocmd BufRead,BufNewFile Gemfile,Guardfile set filetype=ruby
