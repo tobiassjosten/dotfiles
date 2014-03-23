@@ -60,6 +60,10 @@ Bundle 'othree/html5.vim'
 " Matchindent — Set the indent style to what is in the file being edited.
 Bundle 'conormcd/matchindent.vim'
 
+" Move — Move lines and selections up and down.
+let g:move_key_modifier = 'c'
+Bundle 'matze/vim-move'
+
 " Multiple cursors — Live update in Insert mode.
 Bundle 'terryma/vim-multiple-cursors'
 
@@ -111,7 +115,7 @@ let g:tagbar_autoclose = 1
 let g:tagbar_autofocus = 1
 let g:tagbar_iconchars = ['+', '-']
 let g:tagbar_autoshowtag = 1
-map <c-j> :TagbarToggle<cr>
+map <c-m> :TagbarToggle<cr>
 Bundle 'majutsushi/tagbar'
 
 " Twig — Twig syntax highlighting, snipMate, etc.
