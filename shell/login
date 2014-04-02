@@ -9,8 +9,8 @@ export VISUAL=$EDITOR
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 pathprepend ~/bin PATH
-pathappend ~/.composer/vendor/bin $PATH
-pathappend ./vendor/bin $PATH
+pathappend ./vendor/bin PATH
+pathappend ~/.composer/vendor/bin PATH
 pathremove . PATH
 pathremove "" PATH
 
