@@ -23,4 +23,8 @@ class utilities {
   package { 'tree':
     ensure => latest,
   }
+
+  package { 'tmux':
+    ensure => latest,
+  }
 }
