@@ -1,29 +1,12 @@
-DOTFILES="$HOME/.dotfiles"
+wget -q https://github.com/tobiassjosten/dotfiles/archive/master.zip -O /tmp/dotfiles.zip
+unzip -oq /tmp/dotfiles.zip -d /tmp
+cd /tmp/dotfiles-master
 
-hash git 2>&- || { echo >&2 "Missing Git!"; exit 1; }
-
-if [ ! -d $DOTFILES ]; then
-  git clone -q https://github.com/tobiassjosten/dotfiles.git $DOTFILES
-  [ ! -d $DOTFILES ] && { echo "Could not clone the dotfiles repository."; exit 1; }
-else
-  cd $DOTFILES && git pull -q
-fi
-
-cd $DOTFILES && git submodule -q update --init
-
-FILES=$(find $DOTFILES -mindepth 1 -maxdepth 1 | grep -Ev '(\.git|install|README)')
-for FILE in $FILES; do
-  FILENAME=".$(basename $FILE)"
-
-  if [ -f "$HOME/$FILENAME" -a ! -f "$HOME/$FILENAME.bak" ]; then
-    mv "$HOME/$FILENAME" "$HOME/$FILENAME.bak"
-  fi
-
-  if [ -f "$HOME/$FILENAME" -o -d "$HOME/$FILENAME" ]; then
-    rm -r "$HOME/$FILENAME"
-  fi
-
-  ln -s $FILE "$HOME/$FILENAME"
+sudo apt-get -qq install puppet
+MODULES='puppetlabs-apt puppetlabs-vcsrepo puppetlabs-apache willdurand-composer'
+for module in $MODULES; do
+    if ! puppet module list --modulepath=modules | grep $module > /dev/null; then
+        puppet module install --modulepath=modules $module > /dev/null
+    fi
 done
-
-. "$HOME/.bashrc"
+sudo puppet apply --modulepath=modules site.pp

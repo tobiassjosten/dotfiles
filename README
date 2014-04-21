@@ -8,6 +8,5 @@ Install Vim bundles:
 
 Install CtrlP C Matcher.
 
-    $ sudo aptitude install python-dev
     $ cd vim/bundle/ctrlp-cmatcher/
     $ ./install_linux.sh
