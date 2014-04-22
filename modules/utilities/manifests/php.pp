@@ -7,6 +7,10 @@ class utilities::php {
     ensure => latest,
   }
 
+  package { 'php5-curl':
+    ensure => latest,
+  }
+
   package { 'php5-intl':
     ensure => latest,
   }
