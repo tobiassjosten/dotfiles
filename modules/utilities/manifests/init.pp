@@ -1,6 +1,7 @@
 class utilities {
   include utilities::php
   include utilities::ruby
+  include utilities::vagrant
 
   package { 'zsh':
     ensure => latest,
