@@ -3,6 +3,7 @@ class utilities {
   include utilities::ruby
   include utilities::spotify
   include utilities::vagrant
+  include utilities::virtualbox
 
   package { 'zsh':
     ensure => latest,
