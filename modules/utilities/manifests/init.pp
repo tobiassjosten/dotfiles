@@ -29,4 +29,8 @@ class utilities {
   package { 'tmux':
     ensure => latest,
   }
+
+  package { 'retext':
+    ensure  => latest,
+  }
 }
