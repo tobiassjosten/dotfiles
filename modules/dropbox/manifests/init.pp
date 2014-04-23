@@ -3,16 +3,9 @@ class dropbox {
     'Debian': {
       $os_lowercase = downcase($::operatingsystem)
 
-      if $::lsbdistcodename == 'trusty' {
-        $os_distcodename = 'saucy'
-      } else {
-        $os_distcodename = $::lsbdistcodename
-      }
-
       apt::source { 'dropbox':
         location    => "http://linux.dropbox.com/${dropbox::os_lowercase}",
-        #release     => $::lsbdistcodename,
-        release     => $dropbox::os_distcodename,
+        release     => $::lsbdistcodename,
         repos       => 'main',
         include_src => false,
       }
@@ -23,7 +16,7 @@ class dropbox {
       }
     }
   }
-  
+
   package { 'dropbox':
     ensure => latest,
     require  => [ Apt::Source['dropbox'], Apt::Key['dropbox'] ]
