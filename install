@@ -1,6 +1,9 @@
-wget -q https://github.com/tobiassjosten/dotfiles/archive/master.zip -O /tmp/dotfiles.zip
-unzip -oq /tmp/dotfiles.zip -d /tmp
-cd /tmp/dotfiles-master
+SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
+if [ "$(pwd)" != "$SCRIPTDIR" ]; then
+    wget -q https://github.com/tobiassjosten/dotfiles/archive/master.zip -O /tmp/dotfiles.zip
+    unzip -oq /tmp/dotfiles.zip -d /tmp
+    cd /tmp/dotfiles-master
+fi
 
 sudo apt-get -qq install puppet
 MODULES='maestrodev-wget puppetlabs-apt puppetlabs-vcsrepo puppetlabs-apache willdurand-composer'
