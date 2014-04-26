@@ -1,4 +1,5 @@
 class utilities {
+  include utilities::node
   include utilities::php
   include utilities::ruby
   include utilities::spotify
