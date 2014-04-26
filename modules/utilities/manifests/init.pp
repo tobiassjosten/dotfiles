@@ -5,6 +5,10 @@ class utilities {
   include utilities::vagrant
   include utilities::virtualbox
 
+  package { 'ansible':
+    ensure => latest,
+  }
+
   package { 'zsh':
     ensure => latest,
   }
