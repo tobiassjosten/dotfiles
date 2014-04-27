@@ -1,3 +1,4 @@
+#!/bin/sh
 SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE}")" && pwd)"
 if [ "$(pwd)" != "$SCRIPTDIR" ]; then
     wget -q https://github.com/tobiassjosten/dotfiles/archive/master.zip -O /tmp/dotfiles.zip
