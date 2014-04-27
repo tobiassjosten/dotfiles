@@ -28,6 +28,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'mysql-client-core-5.6':
+    ensure => latest,
+  }
+
   package { 'tree':
     ensure => latest,
   }
