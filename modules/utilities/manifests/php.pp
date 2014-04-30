@@ -14,4 +14,8 @@ class utilities::php {
   package { 'php5-intl':
     ensure => latest,
   }
+
+  package { 'php5-memcached':
+    ensure => latest,
+  }
 }
