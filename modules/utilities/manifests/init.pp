@@ -10,6 +10,14 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'fabric':
+    ensure => latest,
+  }
+
+  package { 'gimp':
+    ensure => latest,
+  }
+
   package { 'zsh':
     ensure => latest,
   }
