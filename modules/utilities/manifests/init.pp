@@ -18,6 +18,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'libappindicator1':
+    ensure => latest,
+  }
+
   package { 'zsh':
     ensure => latest,
   }
