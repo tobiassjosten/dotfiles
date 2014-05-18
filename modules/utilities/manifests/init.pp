@@ -44,6 +44,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'retext':
+    ensure  => latest,
+  }
+
   package { 'tree':
     ensure => latest,
   }
@@ -52,7 +56,7 @@ class utilities {
     ensure => latest,
   }
 
-  package { 'retext':
-    ensure  => latest,
+  package { 'vlc':
+    ensure => latest,
   }
 }
