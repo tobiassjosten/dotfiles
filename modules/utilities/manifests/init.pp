@@ -10,6 +10,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'default-jre':
+    ensure => latest,
+  }
+
   package { 'fabric':
     ensure => latest,
   }
