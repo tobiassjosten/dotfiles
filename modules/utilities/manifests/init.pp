@@ -59,4 +59,8 @@ class utilities {
   package { 'vlc':
     ensure => latest,
   }
+
+  package { 'whois':
+    ensure => latest,
+  }
 }
