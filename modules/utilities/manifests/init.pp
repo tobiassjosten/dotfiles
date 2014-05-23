@@ -26,6 +26,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'tshark':
+    ensure => latest,
+  }
+
   package { 'zsh':
     ensure => latest,
   }
