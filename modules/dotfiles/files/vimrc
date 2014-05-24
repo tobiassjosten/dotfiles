@@ -20,6 +20,11 @@ Bundle 'gmarik/vundle'
 " Airline — Lean & mean status/tabline.
 Bundle 'bling/vim-airline'
 
+" Blockshift — Line-wise up/down shift of selected blocks.
+vmap <c-k> :call BlockShiftUp()<cr>
+vmap <c-j> :call BlockShiftDown()<cr>
+Bundle 'vim-scripts/mlessnau_block_shift'
+
 " Closetag — Functions and mappings to close open HTML/XML tags.
 Bundle 'closetag.vim'
 
@@ -68,10 +73,6 @@ Bundle 'jelera/vim-javascript-syntax'
 
 " Matchindent — Set the indent style to what is in the file being edited.
 Bundle 'conormcd/matchindent.vim'
-
-" Move — Move lines and selections up and down.
-let g:move_key_modifier = 'c'
-Bundle 'matze/vim-move'
 
 " Multiple cursors — Live update in Insert mode.
 Bundle 'terryma/vim-multiple-cursors'
