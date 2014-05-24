@@ -6,6 +6,8 @@
 /modules/composer
 /modules/concat
 /modules/git
+/modules/php
+/modules/puppi
 /modules/stdlib
 /modules/vcsrepo
 /modules/wget

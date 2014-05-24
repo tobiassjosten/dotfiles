@@ -7,7 +7,7 @@ if [ "$(pwd)" != "$SCRIPTDIR" ]; then
 fi
 
 sudo apt-get -qq install puppet
-MODULES='maestrodev-wget puppetlabs-apt puppetlabs-vcsrepo puppetlabs-apache willdurand-composer'
+MODULES='example42-php maestrodev-wget puppetlabs-apt puppetlabs-vcsrepo puppetlabs-apache willdurand-composer'
 for module in $MODULES; do
     if ! puppet module list --modulepath=modules | grep $module > /dev/null; then
         puppet module install --modulepath=modules $module > /dev/null
