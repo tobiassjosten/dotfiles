@@ -14,6 +14,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'exuberant-ctags':
+    ensure => latest,
+  }
+
   package { 'fabric':
     ensure => latest,
   }
