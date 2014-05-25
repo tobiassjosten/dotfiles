@@ -33,4 +33,19 @@ class utilities::php {
   exec { 'php5enmod stats':
     require => File['stats.ini'],
   }
+
+  php::pecl::module { 'mongo':
+    service_autorestart => false,
+    use_package         => 'no',
+  }
+
+  file { 'mongo.ini':
+    path    => '/etc/php5/mods-available/mongo.ini',
+    source  => 'puppet:///modules/utilities/php/mongo.ini',
+    require => Php::Pecl::Module['mongo'],
+  }
+
+  exec { 'php5enmod mongo':
+    require => File['mongo.ini'],
+  }
 }
