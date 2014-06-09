@@ -19,6 +19,10 @@ class utilities::php {
     ensure => latest,
   }
 
+  package { 'php5-mysql':
+    ensure => latest,
+  }
+
   php::pecl::module { 'stats':
     service_autorestart => false,
     use_package         => 'no',
