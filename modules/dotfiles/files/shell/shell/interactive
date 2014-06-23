@@ -25,6 +25,14 @@ function mcd () {
 	cd "$1"
 }
 
+function vup () {
+	if [ -f Vagrantfile ]; then
+		vagrant up
+	elif [ -d vagrant ]; then
+		cd vagrant && vagrant up && cd ..
+	fi
+}
+
 alias gp='git push'
 alias gd='git diff'
 alias gc='git commit'
