@@ -25,11 +25,23 @@ function mcd () {
 	cd "$1"
 }
 
-function vup () {
+function vcmd () {
 	if [ -f Vagrantfile ]; then
-		vagrant up
+		eval "vagrant $@"
 	elif [ -d vagrant ]; then
-		cd vagrant && vagrant up && cd ..
+		cd vagrant && eval "vagrant $@" && cd ..
+	fi
+}
+
+function vup () {
+	vcmd 'up'
+}
+
+function vsh () {
+	if [ $# -eq 0 ]; then
+		vcmd "ssh"
+	else
+		vcmd "ssh -c '$@'"
 	fi
 }
 
