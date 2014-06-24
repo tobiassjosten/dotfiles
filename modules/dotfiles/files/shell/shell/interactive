@@ -29,7 +29,7 @@ function vcmd () {
 	if [ -f Vagrantfile ]; then
 		eval "vagrant $@"
 	elif [ -d vagrant ]; then
-		cd vagrant && eval "vagrant $@" && cd ..
+		cd vagrant; eval "vagrant $@"; cd ..
 	fi
 }
 
