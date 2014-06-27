@@ -23,6 +23,10 @@ class utilities::php {
     ensure => latest,
   }
 
+  package { 'php5-sqlite':
+    ensure => latest,
+  }
+
   php::pecl::module { 'stats':
     service_autorestart => false,
     use_package         => 'no',
