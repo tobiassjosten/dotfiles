@@ -1,5 +1,6 @@
 class utilities {
   include utilities::docker
+  include utilities::golang
   include utilities::node
   include utilities::php
   include utilities::ruby

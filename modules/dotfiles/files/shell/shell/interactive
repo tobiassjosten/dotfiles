@@ -73,6 +73,8 @@ if [ -x $(which rbenv) ]; then
 fi
 pathprepend ~/.rbenv/bin PATH
 
+pathprepend ~/.go GOPATH
+
 export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 ssource ~/.interactive_local
