@@ -36,6 +36,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'libreadline-dev':
+    ensure => latest,
+  }
+
   package { 'tshark':
     ensure => latest,
   }
