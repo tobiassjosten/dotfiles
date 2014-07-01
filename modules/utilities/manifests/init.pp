@@ -40,6 +40,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'tf5':
+    ensure => latest,
+  }
+
   package { 'tshark':
     ensure => latest,
   }
