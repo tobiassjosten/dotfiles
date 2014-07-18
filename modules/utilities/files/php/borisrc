@@ -1,0 +1,8 @@
+<?php
+require __DIR__.'/.boris-loader/boris-loader.php';
+\Boris\Loader\Loader::load($boris, array(
+    new \Boris\Loader\Provider\Symfony2(),
+    new \Boris\Loader\Provider\Drupal7(),
+    new \Boris\Loader\Provider\Drupal8(),
+    new \Boris\Loader\Provider\Composer(),
+));

@@ -56,4 +56,16 @@ class utilities::php {
   exec { 'php5enmod mongo':
     require => File['mongo.ini'],
   }
+
+  vcsrepo { 'boris-loader':
+    path     => '/home/tobias/.boris-loader',
+    ensure   => present,
+    provider => git,
+    source   => 'git://github.com/tobiassjosten/boris-loader.git',
+  }
+
+  file { '.borisrc':
+    path   => '/home/tobias/.borisrc',
+    source => 'puppet:///modules/utilities/php/borisrc',
+  }
 }
