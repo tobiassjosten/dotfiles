@@ -40,6 +40,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'mercurial':
+    ensure => latest,
+  }
+
   package { 'tf5':
     ensure => latest,
   }
