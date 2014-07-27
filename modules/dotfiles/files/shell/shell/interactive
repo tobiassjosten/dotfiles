@@ -34,7 +34,7 @@ function vcmd () {
 }
 
 function vup () {
-	vcmd 'up'
+	vcmd "up $@"
 }
 
 function vsh () {
