@@ -395,7 +395,7 @@ if has("autocmd")
     autocmd FileType javascript call JavaScriptFold()
 
     " Ruby files.
-    autocmd BufRead,BufNewFile Gemfile,Guardfile set filetype=ruby
+    autocmd BufRead,BufNewFile Gemfile,Guardfile,Vagrantfile set filetype=ruby
 
     " Git commits.
     autocmd Filetype gitcommit setlocal spell textwidth=72
