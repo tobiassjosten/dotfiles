@@ -78,6 +78,10 @@ class utilities {
     ensure  => latest,
   }
 
+  package { 'tig':
+    ensure => latest,
+  }
+
   package { 'tree':
     ensure => latest,
   }
