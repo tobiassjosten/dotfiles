@@ -45,6 +45,18 @@ function vsh () {
 	fi
 }
 
+function drma () {
+	if [[ -n $(docker ps --no-trunc -q) ]]; then
+		docker ps --no-trunc -q | xargs docker kill
+	fi
+	if [[ -n $(docker ps --no-trunc -aq) ]]; then
+		docker ps --no-trunc -aq | xargs docker rm
+	fi
+	if [[ -n $(docker images --no-trunc | egrep '^<none>') ]]; then
+		docker images --no-trunc | awk '/^<none>/ {print $3}' | xargs docker rmi
+	fi
+}
+
 alias gp='git push'
 alias gd='git diff'
 alias gc='git commit'
