@@ -44,6 +44,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'ngrok-client':
+    ensure => latest,
+  }
+
   package { 'postgresql-client-common':
     ensure => latest,
   }
