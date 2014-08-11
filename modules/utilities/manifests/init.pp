@@ -44,6 +44,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'postgresql-client-common':
+    ensure => latest,
+  }
+
   package { 'tf5':
     ensure => latest,
   }
