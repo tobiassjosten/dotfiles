@@ -1,5 +1,6 @@
 class utilities {
   include utilities::docker
+  include utilities::elasticsearch
   include utilities::golang
   include utilities::node
   include utilities::php
@@ -12,7 +13,15 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'apache2':
+    ensure => latest,
+  }
+
   package { 'autossh':
+    ensure => latest,
+  }
+
+  package { 'beanstalkd':
     ensure => latest,
   }
 
@@ -44,11 +53,23 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'mysql-server-5.6':
+    ensure => latest,
+  }
+
   package { 'ngrok-client':
     ensure => latest,
   }
 
+  package { 'postgresql':
+    ensure => latest,
+  }
+
   package { 'postgresql-client-common':
+    ensure => latest,
+  }
+
+  package { 'postgresql-contrib':
     ensure => latest,
   }
 
@@ -75,6 +96,10 @@ class utilities {
   }
 
   package { 'htop':
+    ensure => latest,
+  }
+
+  package { 'libapache2-mod-php5':
     ensure => latest,
   }
 

@@ -57,6 +57,20 @@ function drma () {
 	fi
 }
 
+function up () {
+	sudo service apache2 start > /dev/null
+	sudo service elasticsearch start > /dev/null
+	sudo service mysql start > /dev/null
+	sudo service beanstalkd start > /dev/null
+}
+
+function down () {
+	sudo service apache2 stop > /dev/null
+	sudo service elasticsearch stop > /dev/null
+	sudo service mysql stop > /dev/null
+	sudo service beanstalkd stop > /dev/null
+}
+
 alias gp='git push'
 alias gd='git diff'
 alias gc='git commit'
