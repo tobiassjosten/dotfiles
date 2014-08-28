@@ -102,6 +102,8 @@ pathprepend ~/.rbenv/bin PATH
 pathprepend ~/.go GOPATH
 pathprepend ~/.go/bin PATH
 
+pathprepend node_modules/.bin PATH
+
 export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 ssource ~/.interactive_local
