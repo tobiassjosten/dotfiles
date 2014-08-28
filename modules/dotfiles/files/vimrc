@@ -41,11 +41,8 @@ Bundle 'kien/ctrlp.vim'
 " CtrlP Matcher — C matching extension.
 Bundle 'JazzCore/ctrlp-cmatcher'
 
-" DBGPavim — Enable PHP debug in Vim with Xdebug, with a new debug engine.
-let g:dbgPavimPort = 9000
-let g:dbgPavimBreakAtEntry = 1
-map <leader>, :Bp<cr>
-Bundle 'brookhong/DBGPavim'
+" VDebug — Multi-language DBGP debugger client.
+Bundle 'joonty/vdebug.git'
 
 " Drupal — For editing Drupal-related files.
 Bundle 'git://drupalcode.org/project/vimrc.git', {'rtp': 'bundle/vim-plugin-for-drupal/'}
