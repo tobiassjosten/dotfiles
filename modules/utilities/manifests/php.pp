@@ -27,6 +27,16 @@ class utilities::php {
     ensure => latest,
   }
 
+  package { 'php5-xdebug':
+    ensure => latest,
+  }
+
+  file { 'xdebug.ini':
+    path    => '/etc/php5/mods-available/xdebug.ini',
+    source  => 'puppet:///modules/utilities/php/xdebug.ini',
+    require => Package['php5-xdebug'],
+  }
+
   php::pecl::module { 'stats':
     service_autorestart => false,
     use_package         => 'no',
