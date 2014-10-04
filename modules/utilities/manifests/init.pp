@@ -37,6 +37,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'ghc':
+    ensure => latest,
+  }
+
   package { 'gimp':
     ensure => latest,
   }
