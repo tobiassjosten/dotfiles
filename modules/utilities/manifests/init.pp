@@ -77,6 +77,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'sqlite3':
+    ensure => latest,
+  }
+
   package { 'tf5':
     ensure => latest,
   }
