@@ -45,6 +45,10 @@ class utilities {
     ensure => latest,
   }
 
+  package { 'git-flow':
+    ensure => latest,
+  }
+
   package { 'libappindicator1':
     ensure => latest,
   }
