@@ -84,6 +84,9 @@ alias gi="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%
 
 alias tm='tmux attach || tmux new'
 
+bindkey "^[[A" history-search-backward
+bindkey "^[[B" history-search-forward
+
 if [ -t 0 ]; then
 	mesg n
 fi
