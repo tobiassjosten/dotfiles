@@ -53,6 +53,14 @@ Bundle 'editorconfig/editorconfig-vim'
 " Fugitive — A Git wrapper so awesome, it should be illegal.
 Bundle 'tpope/vim-fugitive'
 
+" Ftcolor — Switches colorschemes according to the file type.
+Bundle 'caglartoklu/ftcolor.vim'
+let g:ftcolor_default_color_scheme = 'default'
+let g:ftcolor_custom_command = "hi cursorline cterm=none ctermbg=234 guibg=234"
+let g:ftcolor_color_mappings = {}
+let g:ftcolor_color_mappings.php = 'default'
+" @todo Let's tweak this with individual language colors … some day.
+
 " Gitgutter — Shows a git diff in the gutter (sign column).
 Bundle 'airblade/vim-gitgutter'
 
