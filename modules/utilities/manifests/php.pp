@@ -11,6 +11,10 @@ class utilities::php {
     ensure => latest,
   }
 
+  package { 'php5-gd':
+    ensure => latest,
+  }
+
   package { 'php5-intl':
     ensure => latest,
   }
