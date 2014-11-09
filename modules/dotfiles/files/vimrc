@@ -64,6 +64,9 @@ let g:ftcolor_color_mappings.php = 'default'
 " Gitgutter — Shows a git diff in the gutter (sign column).
 Bundle 'airblade/vim-gitgutter'
 
+" Go — Go (golang) support.
+Bundle 'fatih/vim-go'
+
 " HAML — Runtime files for Haml, Sass, and SCSS.
 Bundle 'tpope/vim-haml'
 
