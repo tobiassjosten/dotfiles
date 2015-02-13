@@ -1,3 +1,6 @@
+[core]
+  excludesfile = ~/.gitignore
+
 [user]
   name = Tobias Sjösten
   email = tobias@tobiassjosten.net
