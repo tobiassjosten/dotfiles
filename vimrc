@@ -7,7 +7,7 @@
 
 set nocompatible
 
-let mapleader = ','
+let mapleader = ' '
 
 set rtp+=~/.vim/bundle/vundle/
 
@@ -49,6 +49,9 @@ Bundle 'git://drupalcode.org/project/vimrc.git', {'rtp': 'bundle/vim-plugin-for-
 
 " EditorConfig — Consistent coding styles.
 Bundle 'editorconfig/editorconfig-vim'
+
+" Emmet – The essential toolkit for web-developers.
+Bundle 'mattn/emmet-vim'
 
 " Fugitive — A Git wrapper so awesome, it should be illegal.
 Bundle 'tpope/vim-fugitive'
@@ -437,6 +440,9 @@ set gdefault
 " ----------------------------------------------------------------------------
 "  mappings and aliases
 " ----------------------------------------------------------------------------
+
+" Quick save.
+nnoremap <leader>w :w<cr>
 
 " Center search matches when jumping.
 map N Nzz
