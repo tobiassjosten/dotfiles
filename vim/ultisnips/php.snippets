@@ -1,41 +1,43 @@
-snippet php "initialization"
-<?php
+snippet php "initialization" b
+?php
 
-namespace ${1:`!p res = re.sub('.*?\/([A-Z].+)', '\\1', path)`};
+namespace ${1:`!p
+m = re.search(r'/[^A-Z]+/(.+)/[^/]+$', os.path.abspath(path))
+if m:
+    snip.rv = m.group(1).replace('/', '\\')
+`};
 
-!p # ta bort `fn` från path
-
-class $2
+class ${2:`!p snip.rv=snip.basename`}
 {
-    $0
+    $3
 }
 endsnippet
 
-snippet if "if"
+snippet if "if" b
 if ($1) {
     $2
 }
 endsnippet
 
-snippet else "else"
+snippet else "else" b
 else {
     $1
 }
 endsnippet
 
-snippet for "for"
+snippet for "for" b
 for ($${2:i} = 0; $$2 < ${1:count}; $$2${3:++}) {
     ${4:// code...}
 }
 endsnippet
 
-snippet foreachk "foreach"
+snippet foreachk "foreach" b
 foreach ($${1:variable} as $${3:item}){
     ${4:// code...}
 }
 endsnippet
 
-snippet foreachk "foreachk"
+snippet foreachk "foreachk" b
 foreach ($${1:variable} as $${2:key} => $${3:value}){
     ${4:// code...}
 }

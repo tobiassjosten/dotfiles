@@ -149,8 +149,8 @@ Bundle 'SirVer/ultisnips'
 let g:UltiSnipsSnippetDirectories = ['ultisnips']
 let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
 let g:UltiSnipsExpandTrigger='<tab>'
-let g:UltiSnipsJumpForwardTrigger='<c-l>'
-let g:UltiSnipsJumpBackwardTrigger='<c-k>'
+let g:UltiSnipsJumpForwardTrigger='<tab>'
+let g:UltiSnipsJumpBackwardTrigger='<c-tabk>'
 
 
 " ----------------------------------------------------------------------------
