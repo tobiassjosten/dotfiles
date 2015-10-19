@@ -1,13 +1,2 @@
 /vim/bundle/*
 /vim/.netrwhist
-
-/modules/apache
-/modules/apt
-/modules/composer
-/modules/concat
-/modules/git
-/modules/php
-/modules/puppi
-/modules/stdlib
-/modules/vcsrepo
-/modules/wget
