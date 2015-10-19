@@ -393,9 +393,13 @@ set wildmenu
 
 if has("autocmd")
   augroup module
+    " PHP.
+    autocmd BufRead,BufNewFile *.module,*.inc set filetype=php
+    autocmd FileType php setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
+
     " Markdown.
-    autocmd BufRead,BufNewFile *.md,*.markdown set filetype=markdown wrap linebreak
-    autocmd BufRead,BufNewFile *.md,*.markdown set wrap linebreak
+    autocmd BufRead,BufNewFile *.md,*.markdown set filetype=markdown
+    autocmd FileType markdown set wrap linebreak
 
     " Jekyll YAML Front Matter.
     autocmd BufRead,BufNewFile * syntax match Comment /\%^---\_.\{-}---$/
