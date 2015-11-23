@@ -90,6 +90,10 @@ Bundle 'conormcd/matchindent.vim'
 " Multiple cursors — Live update in Insert mode.
 Bundle 'terryma/vim-multiple-cursors'
 
+" Mustache/Handlebars – For working with mustache and handlebars templates.
+Bundle 'mustache/vim-mustache-handlebars'
+let g:mustache_abbreviations = 1
+
 " NERDTree — A tree explorer plugin for Vim.
 let g:NERDTreeQuitOnOpen = 1
 map <silent> <c-d> :call NERDTreeFindToggle()<cr>
