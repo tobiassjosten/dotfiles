@@ -125,6 +125,13 @@ Bundle 'tpope/vim-repeat'
 " Ruby — Vim/Ruby Configuration Files.
 Bundle 'vim-ruby/vim-ruby'
 
+" Scrollbar – Displays a scrollbar with 'thumb' in curses-based vim.
+Bundle 'https://github.com/lornix/vim-scrollbar'
+let g:scrollbar_thumb='#'
+let g:scrollbar_clear='·'
+highlight Scrollbar_Clear ctermfg=green ctermbg=black guifg=green guibg=black cterm=none
+highlight Scrollbar_Thumb ctermfg=blue ctermbg=blue guifg=blue guibg=blue cterm=reverse
+
 " Supertab — Perform all your vim insert mode completions with Tab.
 Bundle 'ervandew/supertab'
 
