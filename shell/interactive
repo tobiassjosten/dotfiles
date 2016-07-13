@@ -55,6 +55,11 @@ function drma () {
 	fi
 }
 
+dsh() {
+	[ -z $1 ] && NAME=_web || NAME=$1
+	docker exec -it $(docker ps -qf "name=$NAME") bash
+}
+
 function up () {
 	sudo service apache2 start > /dev/null
 	sudo service elasticsearch start > /dev/null
