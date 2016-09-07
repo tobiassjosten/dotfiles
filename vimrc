@@ -29,7 +29,8 @@ Bundle 'vim-scripts/mlessnau_block_shift'
 Bundle 'closetag.vim'
 
 " Commentary — Comment stuff out.
-xmap " gcgv
+vmap \ gcgv
+nmap \ gcc
 Bundle 'tpope/vim-commentary'
 
 " CtrlP — Fuzzy file, buffer, mru, tag, etc finder.

@@ -102,6 +102,8 @@ fi
 ssource /usr/local/share/chruby/chruby.sh
 ssource /usr/local/share/chruby/auto.sh
 
+pathprepend /usr/local/sbin PATH
+
 pathprepend ~/.go GOPATH
 pathprepend ~/.go/bin PATH
 
