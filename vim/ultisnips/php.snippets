@@ -1,15 +1,14 @@
 snippet php "initialization" b
-?php
+<?php
 
-namespace ${1:`!p
+namespace `!p
 m = re.search(r'/[^A-Z]+/(.+)/[^/]+$', os.path.abspath(path))
 if m:
     snip.rv = m.group(1).replace('/', '\\')
-`};
+`;
 
-class ${2:`!p snip.rv=snip.basename`}
+class `!p snip.rv=snip.basename`
 {
-    $3
 }
 endsnippet
 
