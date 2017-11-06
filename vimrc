@@ -9,153 +9,89 @@ set nocompatible
 
 let mapleader = ' '
 
-set rtp+=~/.vim/bundle/vundle/
-
 filetype off
 
-call vundle#rc()
+silent! packadd minpac
+if exists('*minpac#init')
+  call minpac#init()
+  call minpac#add('k-takata/minpac', {'type': 'opt'})
 
-Bundle 'gmarik/vundle'
+  " Airline — Lean & mean status/tabline.
+  call minpac#add('bling/vim-airline')
 
-" Airline — Lean & mean status/tabline.
-Bundle 'bling/vim-airline'
+  " Commentary — Comment stuff out.
+  vmap \ gcgv
+  nmap \ gcc
+  call minpac#add('tpope/vim-commentary')
 
-" Blockshift — Line-wise up/down shift of selected blocks.
-vmap <c-k> :call BlockShiftUp()<cr>
-vmap <c-j> :call BlockShiftDown()<cr>
-Bundle 'vim-scripts/mlessnau_block_shift'
+  " CtrlP — Fuzzy file, buffer, mru, tag, etc finder.
+  let g:ctrlp_clear_cache_on_exit = 0
+  nmap <c-l> :CtrlPBuffer<cr>
+  nmap <c-ö> :CtrlPTag<cr>
+  call minpac#add('kien/ctrlp.vim')
 
-" Closetag — Functions and mappings to close open HTML/XML tags.
-Bundle 'closetag.vim'
+  " CtrlP Matcher — C matching extension.
+  call minpac#add('JazzCore/ctrlp-cmatcher')
 
-" Commentary — Comment stuff out.
-vmap \ gcgv
-nmap \ gcc
-Bundle 'tpope/vim-commentary'
+  " EditorConfig — Consistent coding styles.
+  call minpac#add('editorconfig/editorconfig-vim')
 
-" CtrlP — Fuzzy file, buffer, mru, tag, etc finder.
-let g:ctrlp_clear_cache_on_exit = 0
-nmap <c-l> :CtrlPBuffer<cr>
-nmap <c-ö> :CtrlPTag<cr>
-Bundle 'kien/ctrlp.vim'
+  " Fugitive — A Git wrapper so awesome, it should be illegal.
+  call minpac#add('tpope/vim-fugitive')
 
-" CtrlP Matcher — C matching extension.
-Bundle 'JazzCore/ctrlp-cmatcher'
+  " Gitgutter — Shows a git diff in the gutter (sign column).
+  call minpac#add('airblade/vim-gitgutter')
 
-" VDebug — Multi-language DBGP debugger client.
-Bundle 'joonty/vdebug.git'
+  " Go — Go (golang) support.
+  call minpac#add('fatih/vim-go')
 
-" Drupal — For editing Drupal-related files.
-Bundle 'git://drupalcode.org/project/vimrc.git', {'rtp': 'bundle/vim-plugin-for-drupal/'}
+  " Incsearch — Improved incremental searching.
+  call minpac#add('haya14busa/incsearch.vim')
+  let g:incsearch#auto_nohlsearch = 1
+  let g:incsearch#consistent_n_direction = 1
 
-" EditorConfig — Consistent coding styles.
-Bundle 'editorconfig/editorconfig-vim'
+  " Matchindent — Set the indent style to what is in the file being edited.
+  call minpac#add('conormcd/matchindent.vim')
 
-" Fugitive — A Git wrapper so awesome, it should be illegal.
-Bundle 'tpope/vim-fugitive'
+  " NERDTree — A tree explorer plugin for Vim.
+  let g:NERDTreeQuitOnOpen = 1
+  map <silent> <c-d> :call NERDTreeFindToggle()<cr>
+  function! NERDTreeFindToggle()
+    if exists("t:NERDTreeBufName") | let s:ntree = bufwinnr(t:NERDTreeBufName) | else | let s:ntree = -1 | endif
+    if (s:ntree != -1) | :NERDTreeClose | else | :NERDTreeFind | endif
+  endfunction
+  autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+  autocmd vimenter * if !argc() && exists("NERDTree") | NERDTree | endif
+  call minpac#add('scrooloose/nerdtree')
 
-" Ftcolor — Switches colorschemes according to the file type.
-Bundle 'caglartoklu/ftcolor.vim'
-let g:ftcolor_default_color_scheme = 'default'
-let g:ftcolor_custom_command = "hi cursorline cterm=none ctermbg=234 guibg=234"
-let g:ftcolor_color_mappings = {}
-let g:ftcolor_color_mappings.php = 'default'
-" @todo Let's tweak this with individual language colors … some day.
+  " Repeat — Enable repeating supported plugin maps with dot.
+  call minpac#add('tpope/vim-repeat')
 
-" Gitgutter — Shows a git diff in the gutter (sign column).
-Bundle 'airblade/vim-gitgutter'
+  " Supertab — Perform all your vim insert mode completions with Tab.
+  call minpac#add('ervandew/supertab')
 
-" Go — Go (golang) support.
-Bundle 'fatih/vim-go'
+  " Syntastic — Syntax checking hacks for Vim.
+  call minpac#add('scrooloose/syntastic')
 
-" HAML — Runtime files for Haml, Sass, and SCSS.
-Bundle 'tpope/vim-haml'
+  " Tagbar — The Vim class outline viewer.
+  let g:tagbar_autoclose = 1
+  let g:tagbar_autofocus = 1
+  let g:tagbar_iconchars = ['+', '-']
+  let g:tagbar_autoshowtag = 1
+  map <c-m> :TagbarToggle<cr>
+  call minpac#add('majutsushi/tagbar')
 
-" HTML5 — HTML5 omnicomplete and syntax.
-Bundle 'othree/html5.vim'
+  " Twig — Twig syntax highlighting, snipMate, etc.
+  call minpac#add('evidens/vim-twig')
 
-" Incsearch — Improved incremental searching.
-Bundle 'haya14busa/incsearch.vim'
-let g:incsearch#auto_nohlsearch = 1
-let g:incsearch#consistent_n_direction = 1
-
-" JavaScript Indent — Because cindent() just wont cut it.
-Bundle 'vim-scripts/JavaScript-Indent'
-
-" JavaScript Syntax — Enhanced JavaScript Syntax.
-Bundle 'jelera/vim-javascript-syntax'
-
-" Matchindent — Set the indent style to what is in the file being edited.
-Bundle 'conormcd/matchindent.vim'
-
-" Multiple cursors — Live update in Insert mode.
-Bundle 'terryma/vim-multiple-cursors'
-
-" Mustache/Handlebars – For working with mustache and handlebars templates.
-Bundle 'mustache/vim-mustache-handlebars'
-let g:mustache_abbreviations = 1
-
-" NERDTree — A tree explorer plugin for Vim.
-let g:NERDTreeQuitOnOpen = 1
-map <silent> <c-d> :call NERDTreeFindToggle()<cr>
-function! NERDTreeFindToggle()
-  if exists("t:NERDTreeBufName")
-    let s:ntree = bufwinnr(t:NERDTreeBufName)
-  else
-    let s:ntree = -1
-  endif
-  if (s:ntree != -1)
-    :NERDTreeClose
-  else
-    :NERDTreeFind
-  endif
-endfunction
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
-autocmd vimenter * if !argc() | NERDTree | endif
-Bundle 'scrooloose/nerdtree'
-
-" PHP — Syntax file with 5.3 & basic 5.4 support.
-Bundle 'StanAngeloff/php.vim'
-
-" Puppet — Puppet niceties for your Vim setup.
-Bundle 'rodjek/vim-puppet'
-
-" Repeat — Enable repeating supported plugin maps with dot.
-Bundle 'tpope/vim-repeat'
-
-" Ruby — Vim/Ruby Configuration Files.
-Bundle 'vim-ruby/vim-ruby'
-
-" Supertab — Perform all your vim insert mode completions with Tab.
-Bundle 'ervandew/supertab'
-
-" Surround — Quoting/parenthesizing made simple.
-Bundle 'tpope/vim-surround'
-
-" Syntastic — Syntax checking hacks for Vim.
-Bundle 'scrooloose/syntastic'
-
-" Tabular — Text filtering and alignment.
-Bundle 'godlygeek/tabular'
-
-" Tagbar — The Vim class outline viewer.
-let g:tagbar_autoclose = 1
-let g:tagbar_autofocus = 1
-let g:tagbar_iconchars = ['+', '-']
-let g:tagbar_autoshowtag = 1
-map <c-m> :TagbarToggle<cr>
-Bundle 'majutsushi/tagbar'
-
-" Twig — Twig syntax highlighting, snipMate, etc.
-Bundle 'evidens/vim-twig'
-
-" UtilSnips — The Ultimate Snippet Solution for Vim.
-Bundle 'SirVer/ultisnips'
-let g:UltiSnipsSnippetDirectories = ['ultisnips']
-let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
-let g:UltiSnipsExpandTrigger='<tab>'
-let g:UltiSnipsJumpForwardTrigger='<tab>'
-let g:UltiSnipsJumpBackwardTrigger='<c-tabk>'
+  " UtilSnips — The Ultimate Snippet Solution for Vim.
+  call minpac#add('SirVer/ultisnips')
+  let g:UltiSnipsSnippetDirectories = ['ultisnips']
+  let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
+  let g:UltiSnipsExpandTrigger='<tab>'
+  let g:UltiSnipsJumpForwardTrigger='<tab>'
+  let g:UltiSnipsJumpBackwardTrigger='<c-tabk>'
+endif
 
 
 " ----------------------------------------------------------------------------
@@ -221,14 +157,14 @@ if has('syntax') && !exists('g:syntax_on')
 endif
 
 " Keep transperancy background for gutter in gnome-terminal.
-highlight SignColumn ctermfg=4 ctermbg=none guifg=darkblue guibg=none
+highlight SignColumn ctermfg=4 ctermbg=NONE guifg=darkblue guibg=NONE
 
 " Hilight searches by default.
 set hlsearch
 
 " Mark current line.
 set cursorline
-hi cursorline cterm=none ctermbg=234 guibg=234
+highlight cursorline cterm=NONE ctermbg=234
 
 
 " ----------------------------------------------------------------------------
