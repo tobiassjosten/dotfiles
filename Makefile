@@ -1,7 +1,7 @@
 DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 all: homebrew shell symlinks
-	vim "+call minpac#update()" +qall
+	vim "+call minpac#update('', {'do': 'qall!'})"
 
 homebrew:
 	brew update
