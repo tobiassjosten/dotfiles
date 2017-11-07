@@ -13,20 +13,20 @@ shell: homebrew
 	sh -c "$$(wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
 
 symlinks:
-	ln -fs $(DIR)/vim ~/.vim
-	ln -fs $(DIR)/bash ~/.bash
-	ln -fs $(DIR)/bash_profile ~/.bash_profile
-	ln -fs $(DIR)/gitignore ~/.gitignore
-	ln -fs $(DIR)/profile ~/.profile
-	ln -fs $(DIR)/shell ~/.shell
-	ln -fs $(DIR)/xmodmaprc ~/.xmodmaprc
-	ln -fs $(DIR)/zshenv ~/.zshenv
+	ln -fhs $(DIR)/bash ~/.bash
 	ln -fs $(DIR)/bash_logout ~/.bash_logout
+	ln -fs $(DIR)/bash_profile ~/.bash_profile
 	ln -fs $(DIR)/bashrc ~/.bashrc
 	ln -fs $(DIR)/gitconfig ~/.gitconfig
+	ln -fs $(DIR)/gitignore ~/.gitignore
 	ln -fs $(DIR)/htoprc ~/.htoprc
-	ln -fs $(DIR)/sh ~/.sh
+	ln -fs $(DIR)/profile ~/.profile
+	ln -fhs $(DIR)/sh ~/.sh
+	ln -fhs $(DIR)/shell ~/.shell
 	ln -fs $(DIR)/tmux.conf ~/.tmux.conf
+	ln -fhs $(DIR)/vim ~/.vim
 	ln -fs $(DIR)/vimrc ~/.vimrc
-	ln -fs $(DIR)/zsh ~/.zsh
+	ln -fs $(DIR)/xmodmaprc ~/.xmodmaprc
+	ln -fhs $(DIR)/zsh ~/.zsh
+	ln -fs $(DIR)/zshenv ~/.zshenv
 	ln -fs $(DIR)/zshrc ~/.zshrc
