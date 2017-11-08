@@ -23,26 +23,6 @@ function mcd () {
 	cd "$1"
 }
 
-function vcmd () {
-	if [ -f Vagrantfile ]; then
-		eval "vagrant $@"
-	elif [ -d vagrant ]; then
-		cd vagrant; eval "vagrant $@"; cd ..
-	fi
-}
-
-function vup () {
-	vcmd "up $@"
-}
-
-function vsh () {
-	if [ $# -eq 0 ]; then
-		vcmd "ssh"
-	else
-		vcmd "ssh -c '$@'"
-	fi
-}
-
 function drma () {
 	if [[ -n $(docker ps --no-trunc -q) ]]; then
 		docker ps --no-trunc -q | xargs docker kill
@@ -56,22 +36,11 @@ function drma () {
 }
 
 dsh() {
-	[ -z $1 ] && NAME=_web || NAME=$1
-	docker exec -it $(docker ps -qf "name=$NAME") bash
+	docker exec -it $(docker ps -qf "name=_web") bash
 }
 
-function up () {
-	sudo service apache2 start > /dev/null
-	sudo service elasticsearch start > /dev/null
-	sudo service mysql start > /dev/null
-	sudo service beanstalkd start > /dev/null
-}
-
-function down () {
-	sudo service apache2 stop > /dev/null
-	sudo service elasticsearch stop > /dev/null
-	sudo service mysql stop > /dev/null
-	sudo service beanstalkd stop > /dev/null
+dmysql() {
+	docker exec -it $(docker ps -qf "name=_mysql") mysql $1
 }
 
 alias gp='git push'
