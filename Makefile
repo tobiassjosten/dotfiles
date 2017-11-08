@@ -2,6 +2,7 @@ DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 all: homebrew shell symlinks
 	vim "+call minpac#update('', {'do': 'qall!'})"
+	gem install bundler
 
 homebrew:
 	brew update
