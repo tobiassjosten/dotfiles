@@ -40,7 +40,11 @@ dsh() {
 }
 
 dmysql() {
-	docker exec -it $(docker ps -qf "name=_mysql") mysql $1
+	if [ -t 0 ]; then
+		docker exec -it $(docker ps -qf "name=_mysql") mysql $1
+	else
+		docker exec -i $(docker ps -qf "name=_mysql") mysql $1
+	fi
 }
 
 alias gp='git push'
