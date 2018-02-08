@@ -3,6 +3,7 @@ DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 all: homebrew shell symlinks
 	vim "+call minpac#update('', {'do': 'qall!'})"
 	gem install bundler
+	npm install -g ember-cli
 
 homebrew:
 	brew update
