@@ -55,6 +55,7 @@ if exists('*minpac#init')
 
   " NERDTree — A tree explorer plugin for Vim.
   let g:NERDTreeQuitOnOpen = 1
+  let g:NERDTreeWinSize = 50
   map <silent> <c-d> :call NERDTreeFindToggle()<cr>
   function! NERDTreeFindToggle()
     if exists("t:NERDTreeBufName") | let s:ntree = bufwinnr(t:NERDTreeBufName) | else | let s:ntree = -1 | endif
@@ -63,6 +64,9 @@ if exists('*minpac#init')
   autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
   autocmd vimenter * if !argc() && exists("NERDTree") | NERDTree | endif
   call minpac#add('scrooloose/nerdtree')
+
+  " NERDTree Git – A plugin of NERDTree showing git status flags.
+  call minpac#add('Xuyuanp/nerdtree-git-plugin')
 
   " Repeat — Enable repeating supported plugin maps with dot.
   call minpac#add('tpope/vim-repeat')
