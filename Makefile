@@ -1,11 +1,14 @@
 DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
-all: homebrew shell symlinks
+all: brews shell symlinks
 	vim "+call minpac#update('', {'do': 'qall!'})"
 	gem install bundler
 	npm install -g ember-cli
 
 homebrew:
+	ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+brews: homebrew
 	brew update
 	# @todo Detect whether homebrew bundle is installed or install it if not.
 	brew tap homebrew/bundle
