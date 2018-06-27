@@ -84,6 +84,8 @@ pathprepend node_modules/.bin PATH
 
 export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
+[ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh
+
 # Fixes:
 # perl: warning: Setting locale failed.
 # perl: warning: Please check that your locale settings:
