@@ -77,6 +77,8 @@ ssource /usr/local/share/chruby/auto.sh
 
 pathprepend /usr/local/sbin PATH
 
+pathprepend ~/.composer/vendor/bin PATH
+
 pathprepend ~/.go GOPATH
 pathprepend ~/.go/bin PATH
 
