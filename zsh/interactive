@@ -13,5 +13,7 @@ plugins=(bundler cabal cap command-not-found git tmux)
 
 . $ZSH/oh-my-zsh.sh
 
+. /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
 # Skip the "sure you want to delete all the files in" prompt.
 setopt rmstarsilent

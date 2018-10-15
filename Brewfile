@@ -30,6 +30,7 @@ brew "webpack"
 brew "wget"
 brew "yarn"
 brew "zsh"
+brew "zsh-autosuggestions"
 brew "zsh-completions"
 
 tap "homebrew/homebrew-php"
