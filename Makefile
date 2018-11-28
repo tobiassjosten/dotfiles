@@ -2,17 +2,13 @@ DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 all: brews shell symlinks
 	vim "+call minpac#update('', {'do': 'qall!'})"
-	gem install bundler
-	npm install -g ember-cli
 
 homebrew:
 	ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 brews: homebrew
 	brew update
-	# @todo Detect whether homebrew bundle is installed or install it if not.
-	brew tap homebrew/bundle
-	cd $(DIR) && brew bundle
+	brew bundle
 
 shell: homebrew
 	sh -c "$$(wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
