@@ -1,5 +1,6 @@
 brew "ansible"
 brew "autojump"
+brew "bat"
 brew "bower"
 brew "cabal-install"
 brew "chruby"

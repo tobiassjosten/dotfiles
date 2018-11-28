@@ -9,6 +9,8 @@ alias la='ls -aF'
 alias lla='ls -lahF'
 alias l='ls -CF'
 
+alias cat='bat'
+
 alias grep='grep --color=always --exclude-dir=.svn'
 alias fgrep='fgrep --color=always --exclude-dir=.svn'
 alias egrep='egrep --color=always --exclude-dir=.svn'
