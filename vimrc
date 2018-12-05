@@ -45,6 +45,9 @@ if exists('*minpac#init')
   " Go — Go (golang) support.
   call minpac#add('fatih/vim-go')
 
+  " Groovy — Syntax for the Groovy programming language.
+  call minpac#add('vim-scripts/groovy.vim')
+
   " Incsearch — Improved incremental searching.
   call minpac#add('haya14busa/incsearch.vim')
   let g:incsearch#auto_nohlsearch = 1
@@ -355,6 +358,9 @@ if has("autocmd")
 
     " Ruby files.
     autocmd BufRead,BufNewFile Gemfile,Guardfile,Vagrantfile set filetype=ruby
+
+    " Groovy files.
+    autocmd BufRead,BufNewFile *.groovy,Jenkinsfile set filetype=groovy
 
     " Git commits.
     autocmd Filetype gitcommit setlocal spell textwidth=72
