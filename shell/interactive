@@ -60,7 +60,7 @@ alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
 alias gl="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias gi="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 
-alias tm='tmux attach || tmux new'
+alias tm='tmux attach 2> /dev/null || tmux new'
 
 bindkey "^[[A" history-search-backward
 bindkey "^[[B" history-search-forward
