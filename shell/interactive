@@ -77,6 +77,9 @@ fi
 ssource /usr/local/share/chruby/chruby.sh
 ssource /usr/local/share/chruby/auto.sh
 
+ssource ~/google-cloud-sdk/path.zsh.inc
+ssource ~/google-cloud-sdk/completion.zsh.inc
+
 pathprepend /usr/local/sbin PATH
 
 pathprepend ~/.composer/vendor/bin PATH
