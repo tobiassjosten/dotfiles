@@ -90,6 +90,8 @@ pathprepend ~/.go/bin PATH
 
 pathprepend node_modules/.bin PATH
 
+pathprepend /usr/local/heroku/bin PATH
+
 export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 [ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh
