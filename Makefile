@@ -4,14 +4,14 @@ all: brews shell symlinks
 	vim "+call minpac#update('', {'do': 'qall!'})"
 
 homebrew:
-	ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	which brew || ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 brews: homebrew
 	brew update
 	brew bundle
 
 shell: homebrew
-	sh -c "$$(wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+	which zsh || sh -c "$$(wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
 
 symlinks:
 	ln -fhs $(DIR)/bash ~/.bash
