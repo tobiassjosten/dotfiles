@@ -92,6 +92,13 @@ pathprepend node_modules/.bin PATH
 
 pathprepend /usr/local/heroku/bin PATH
 
+if [ -d /Library/Ballerina ]; then
+	BALLERINA_FOLDERS=`ls -F /Library/Ballerina | grep --color=never '/'`
+	for FOLDER in $BALLERINA_FOLDERS; do
+		pathprepend "/Library/Ballerina/${FOLDER}bin" PATH
+	done
+fi
+
 export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 [ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh

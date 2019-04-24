@@ -19,6 +19,9 @@ if exists('*minpac#init')
   " Airline — Lean & mean status/tabline.
   call minpac#add('bling/vim-airline')
 
+  " Ballerina – Ballerina plugin for Vim.
+  call minpac#add('ballerina-attic/plugin-vim')
+
   " Commentary — Comment stuff out.
   vmap \ gcgv
   nmap \ gcc
