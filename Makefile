@@ -18,6 +18,7 @@ symlinks:
 	ln -fs $(DIR)/bash_logout ~/.bash_logout
 	ln -fs $(DIR)/bash_profile ~/.bash_profile
 	ln -fs $(DIR)/bashrc ~/.bashrc
+	ln -fs $(DIR)/ctags ~/.ctags
 	ln -fs $(DIR)/gitconfig ~/.gitconfig
 	ln -fs $(DIR)/gitignore ~/.gitignore
 	ln -fs $(DIR)/htoprc ~/.htoprc

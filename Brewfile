@@ -41,3 +41,6 @@ brew "zsh-completions"
 
 cask "minikube"
 cask "virtualbox"
+
+tap "universal-ctags/universal-ctags"
+brew "universal-ctags", args: ["HEAD"]

@@ -51,6 +51,9 @@ if exists('*minpac#init')
   " Groovy — Syntax for the Groovy programming language.
   call minpac#add('vim-scripts/groovy.vim')
 
+  " Gutentags
+  call minpac#add('ludovicchabant/vim-gutentags')
+
   " Incsearch — Improved incremental searching.
   call minpac#add('haya14busa/incsearch.vim')
   let g:incsearch#auto_nohlsearch = 1
