@@ -93,8 +93,7 @@ pathprepend node_modules/.bin PATH
 pathprepend /usr/local/heroku/bin PATH
 
 if [ -d /Library/Ballerina ]; then
-	BALLERINA_FOLDERS=`ls -F /Library/Ballerina | grep --color=never '/'`
-	for FOLDER in $BALLERINA_FOLDERS; do
+	for FOLDER in `ls -F /Library/Ballerina | grep --color=never '/'`; do
 		pathprepend "/Library/Ballerina/${FOLDER}bin" PATH
 	done
 fi
