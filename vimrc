@@ -94,6 +94,11 @@ if exists('*minpac#init')
   map <c-m> :TagbarToggle<cr>
   call minpac#add('majutsushi/tagbar')
 
+  " Terraform – Basic vim/terraform integration.
+  let g:terraform_align=1
+  let g:terraform_fmt_on_save=1
+  call minpac#add('hashivim/vim-terraform')
+
   " Twig — Twig syntax highlighting, snipMate, etc.
   call minpac#add('evidens/vim-twig')
 
