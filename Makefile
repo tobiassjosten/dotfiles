@@ -2,6 +2,7 @@ DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 all: brews shell symlinks
 	vim "+call minpac#update('', {'do': 'qall!'})"
+	vim -c GoInstallBinaries
 
 homebrew:
 	which brew || ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
