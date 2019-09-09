@@ -52,6 +52,10 @@ if exists('*minpac#init')
   " Groovy — Syntax for the Groovy programming language.
   call minpac#add('vim-scripts/groovy.vim')
 
+  " Gruvbox – Retro groove color scheme.
+  call minpac#add('morhetz/gruvbox')
+  let g:gruvbox_contrast_dark = 'hard'
+
   " Gutentags
   call minpac#add('ludovicchabant/vim-gutentags')
 
@@ -356,6 +360,11 @@ if has("autocmd")
     " PHP.
     autocmd BufRead,BufNewFile *.module,*.inc set filetype=php
     autocmd FileType php setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
+    autocmd FileType php color desert
+    autocmd FileType php highlight cursorline cterm=NONE ctermbg=234
+
+    " Go.
+    autocmd FileType go colorscheme gruvbox
 
     " Markdown.
     autocmd BufRead,BufNewFile *.md,*.markdown set filetype=markdown
