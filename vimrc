@@ -356,35 +356,55 @@ set wildmenu
 " ----------------------------------------------------------------------------
 
 if has("autocmd")
-  augroup module
-    " PHP.
-    autocmd BufRead,BufNewFile *.module,*.inc set filetype=php
+  "augroup General
+  "  autocmd!
+  "  autocmd BufNewFile,BufRead,BufEnter * colorscheme murphy
+  "augroup END
+
+  augroup Git
+    autocmd!
+    autocmd Filetype gitcommit setlocal spell textwidth=72
+  augroup END
+
+  augroup Go
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter *.go set filetype=go
+    autocmd FileType go colorscheme gruvbox
+  augroup END
+
+  augroup Groovy
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter *.groovy,Jenkinsfile set filetype=groovy
+  augroup END
+
+  augroup JavaScript
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter Gruntfile set filetype=javascript
+    autocmd FileType javascript color murphy
+  augroup END
+
+  augroup Markdown
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter *.md,*.markdown set filetype=markdown
+    autocmd FileType markdown set wrap linebreak
+  augroup END
+
+  augroup PHP
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter *.module,*.inc set filetype=php
     autocmd FileType php setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
     autocmd FileType php color desert
     autocmd FileType php highlight cursorline cterm=NONE ctermbg=234
+  augroup END
 
-    " Go.
-    autocmd FileType go colorscheme gruvbox
+  augroup Ruby
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter Gemfile,Guardfile,Vagrantfile set filetype=ruby
+  augroup END
 
-    " Markdown.
-    autocmd BufRead,BufNewFile *.md,*.markdown set filetype=markdown
-    autocmd FileType markdown set wrap linebreak
-
-    " Jekyll YAML Front Matter.
-    autocmd BufRead,BufNewFile * syntax match Comment /\%^---\_.\{-}---$/
-
-    " JavaScript files.
-    autocmd BufRead,BufNewFile Gruntfile set filetype=javascript
-    autocmd FileType javascript call JavaScriptFold()
-
-    " Ruby files.
-    autocmd BufRead,BufNewFile Gemfile,Guardfile,Vagrantfile set filetype=ruby
-
-    " Groovy files.
-    autocmd BufRead,BufNewFile *.groovy,Jenkinsfile set filetype=groovy
-
-    " Git commits.
-    autocmd Filetype gitcommit setlocal spell textwidth=72
+  augroup YAMLFrontMatter
+    autocmd!
+    autocmd BufNewFile,BufRead,BufEnter * syntax match Comment /\%^---\_.\{-}---$/
   augroup END
 endif
 
