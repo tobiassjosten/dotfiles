@@ -3,22 +3,20 @@ alias hosts='sudo $EDITOR /etc/hosts'
 # Configure coloring for BSD/Darwin and alias it for GNU core-utils.
 export CLICOLOR=1
 ls --color=auto &> /dev/null && alias ls='ls --color=auto' ||
-
 alias ll='ls -lhF'
 alias la='ls -aF'
 alias lla='ls -lahF'
 alias l='ls -CF'
 
 alias cat='bat'
+alias cdr='cd "$(git rev-parse --show-toplevel)"'
+alias less='less -R'
+alias k='kubectl'
 
 alias grep='grep --color=always --exclude-dir=.svn'
 alias fgrep='fgrep --color=always --exclude-dir=.svn'
 alias egrep='egrep --color=always --exclude-dir=.svn'
 alias pgrep='grep --color=auto'
-
-alias cdr='cd "$(git rev-parse --show-toplevel)"'
-
-alias less='less -R'
 
 function mcd () {
 	mkdir -p "$1"
