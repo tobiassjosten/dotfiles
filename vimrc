@@ -29,6 +29,7 @@ if exists('*minpac#init')
 
   " CtrlP — Fuzzy file, buffer, mru, tag, etc finder.
   let g:ctrlp_clear_cache_on_exit = 0
+  let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|^.git$\|_site'
   nmap <c-l> :CtrlPBuffer<cr>
   nmap <c-ö> :CtrlPTag<cr>
   call minpac#add('kien/ctrlp.vim')
