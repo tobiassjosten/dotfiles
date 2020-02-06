@@ -16,3 +16,6 @@
 [push]
   default = upstream
   followTags = true
+
+[includeIf "gitdir:~/stim/"]
+  path = .gitconfig_stim

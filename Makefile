@@ -21,6 +21,7 @@ symlinks:
 	ln -fs $(DIR)/bashrc ~/.bashrc
 	ln -fs $(DIR)/ctags ~/.ctags
 	ln -fs $(DIR)/gitconfig ~/.gitconfig
+	ln -fs $(DIR)/gitconfig_stim ~/.gitconfig_stim
 	ln -fs $(DIR)/gitignore ~/.gitignore
 	ln -fs $(DIR)/htoprc ~/.htoprc
 	ln -fs $(DIR)/profile ~/.profile
