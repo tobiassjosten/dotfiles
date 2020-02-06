@@ -66,6 +66,9 @@ if exists('*minpac#init')
   let g:incsearch#auto_nohlsearch = 1
   let g:incsearch#consistent_n_direction = 1
 
+  " Liquid
+  call minpac#add('tpope/vim-liquid')
+
   " Matchindent — Set the indent style to what is in the file being edited.
   call minpac#add('conormcd/matchindent.vim')
 
