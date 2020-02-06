@@ -48,6 +48,7 @@ if exists('*minpac#init')
   " Go — Go (golang) support.
   call minpac#add('fatih/vim-go')
   let g:go_fmt_command = 'goimports'
+  command! -bar GoSetup GoInstallBinaries
 
   " Groovy — Syntax for the Groovy programming language.
   call minpac#add('vim-scripts/groovy.vim')

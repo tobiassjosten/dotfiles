@@ -6,7 +6,6 @@ brew "cabal-install"
 brew "chruby"
 brew "composer"
 brew "coreutils"
-brew "ctags"
 brew "fzf"
 brew "ghc"
 brew "git-flow"
@@ -17,7 +16,6 @@ brew "hugo"
 brew "irssi"
 brew "mycli"
 brew "mysql"
-brew "ngrok"
 brew "nmap"
 brew "node"
 brew "python"
@@ -41,9 +39,8 @@ brew "zsh-autosuggestions"
 brew "zsh-completions"
 
 cask "minikube"
+cask "ngrok"
 cask "virtualbox"
 
 tap "universal-ctags/universal-ctags"
 brew "universal-ctags", args: ["HEAD"]
-
-brew install golangci/tap/golangci-lint
