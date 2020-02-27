@@ -19,3 +19,5 @@
 
 [includeIf "gitdir:~/stim/"]
   path = .gitconfig_stim
+[pager]
+	branch = false
