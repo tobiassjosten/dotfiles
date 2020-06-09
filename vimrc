@@ -34,6 +34,9 @@ if exists('*minpac#init')
   nmap <c-ö> :CtrlPTag<cr>
   call minpac#add('kien/ctrlp.vim')
 
+  " CSS – Preview colours in source code while editing.
+  call minpac#add('ap/vim-css-color')
+
   " CtrlP Matcher — C matching extension.
   call minpac#add('JazzCore/ctrlp-cmatcher')
 
