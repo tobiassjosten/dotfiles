@@ -24,6 +24,7 @@ symlinks:
 	ln -fs $(DIR)/gitconfig_stim ~/.gitconfig_stim
 	ln -fs $(DIR)/gitignore ~/.gitignore
 	ln -fs $(DIR)/htoprc ~/.htoprc
+	ln -fs $(DIR)/myclirc ~/.myclirc
 	ln -fs $(DIR)/profile ~/.profile
 	ln -fhs $(DIR)/sh ~/.sh
 	ln -fhs $(DIR)/shell ~/.shell
