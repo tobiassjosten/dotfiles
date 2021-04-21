@@ -77,6 +77,7 @@ if exists('*minpac#init')
 
   " NERDTree — A tree explorer plugin for Vim.
   let g:NERDTreeQuitOnOpen = 1
+  let g:NERDTreeShowHidden = 1
   let g:NERDTreeWinSize = 50
   map <silent> <c-d> :call NERDTreeFindToggle()<cr>
   function! NERDTreeFindToggle()
