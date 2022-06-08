@@ -11,7 +11,7 @@ fish_add_path -a -m ~/.cargo/bin
 if [ -f '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc'; end
 
 alias gb="git branch"
-alias gb="git diff"
+alias gd="git diff"
 alias gi="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias gs="git status -s"
 
@@ -28,13 +28,13 @@ set -gx __fish_git_prompt_stashstate '*'
 set -gx __fish_git_prompt_color_stashstate brblue
 
 function fish_prompt
-    set_color brwhite
-    printf '%s' (pwd)
+    set_color yellow
+    printf '%s' (prompt_pwd)
 
     fish_git_prompt
 
     set_color brwhite
-    printf '> '
+    printf ' > '
 
     set_color normal
 end
