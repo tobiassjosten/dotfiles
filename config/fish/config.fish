@@ -15,6 +15,15 @@ alias gd="git diff"
 alias gi="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias gs="git status -s"
 
+function got
+    set pkg ./...
+    if count $argv > 0
+        set pkg $argv
+    end
+    go test $pkg -count 1 | gotestsum --format standard-quiet
+end
+alias gotw="gotestsum --watch"
+
 set -gx LSCOLORS 'GxFxCxDxBxegedabagaced'
 
 set -gx __fish_git_prompt_color normal
