@@ -17,7 +17,7 @@ alias gs="git status -s"
 
 function got
     set pkg ./...
-    if count $argv > 0
+    if count $argv > /dev/null
         set pkg $argv
     end
     go test $pkg -count 1 | gotestsum --format standard-quiet
