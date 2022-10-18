@@ -6,6 +6,7 @@ end
 
 fish_add_path -a -m ~/go/bin
 fish_add_path -a -m ~/.cargo/bin
+fish_add_path /opt/homebrew/opt/mysql-client/bin
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc'; end
