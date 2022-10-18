@@ -1,6 +1,3 @@
-" Layout based on:
-" http://dougireton.com/blog/2013/02/23/layout-your-vimrc-like-a-boss/
-
 " ----------------------------------------------------------------------------
 "  bundling
 " ----------------------------------------------------------------------------
@@ -11,119 +8,136 @@ let mapleader = ' '
 
 filetype off
 
-silent! packadd minpac
-if exists('*minpac#init')
-  call minpac#init()
-  call minpac#add('k-takata/minpac', {'type': 'opt'})
+call plug#begin()
 
-  " Airline — Lean & mean status/tabline.
-  call minpac#add('bling/vim-airline')
+" @todo Completion (YouCompleteMe, Deoplete (integrerar med ALE)).
 
-  " Ballerina – Ballerina plugin for Vim.
-  call minpac#add('ballerina-attic/plugin-vim')
+" Airline — Lean & mean status/tabline for vim that's light as air.
+Plug 'vim-airline/vim-airline'
+let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
+autocmd BufEnter *.go nmap <leader>d :ALEGoToDefinition<cr>
+autocmd BufEnter *.go nmap <leader>r :ALEFindReferences<cr>
 
-  " Commentary — Comment stuff out.
-  vmap \ gcgv
-  nmap \ gcc
-  call minpac#add('tpope/vim-commentary')
+" ALE – Asynchronous Lint Engine.
+Plug 'dense-analysis/ale'
+let g:ale_completion_enabled = 1
+let g:ale_completion_autoimport = 1
+nmap <silent> <c-k> <Plug>(ale_previous_wrap)
+nmap <silent> <c-j> <Plug>(ale_next_wrap)
 
-  " CtrlP — Fuzzy file, buffer, mru, tag, etc finder.
-  let g:ctrlp_clear_cache_on_exit = 0
-  let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|^.git$\|_site'
-  nmap <c-l> :CtrlPBuffer<cr>
-  nmap <c-ö> :CtrlPTag<cr>
-  call minpac#add('kien/ctrlp.vim')
+" Commentary — Comment stuff out.
+Plug 'tpope/vim-commentary'
 
-  " CSS – Preview colours in source code while editing.
-  call minpac#add('ap/vim-css-color')
+" CtrlP — Fuzzy file, buffer, mru, tag, etc finder.
+Plug 'kien/ctrlp.vim'
+let g:ctrlp_clear_cache_on_exit = 0
+let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|^.git$\|_site'
+nmap <c-l> :CtrlPBuffer<cr>
+nmap <c-o> :CtrlPTag<cr>
 
-  " CtrlP Matcher — C matching extension.
-  call minpac#add('JazzCore/ctrlp-cmatcher')
+" EditorConfig — Consistent coding styles.
+Plug 'editorconfig/editorconfig-vim'
 
-  " EditorConfig — Consistent coding styles.
-  call minpac#add('editorconfig/editorconfig-vim')
+" Fugitive — A Git wrapper so awesome, it should be illegal.
+Plug 'tpope/vim-fugitive'
+"
+" Gitgutter — Shows a git diff in the gutter (sign column).
+Plug 'airblade/vim-gitgutter'
 
-  " Fugitive — A Git wrapper so awesome, it should be illegal.
-  call minpac#add('tpope/vim-fugitive')
+" Go development.
+Plug 'fatih/vim-go'
+let g:go_fmt_command = 'goimports'
+let g:go_highlight_build_constraints = 1
+let g:go_highlight_extra_types = 1
+let g:go_highlight_fields = 1
+let g:go_highlight_function_calls = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_generate_tags = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_types = 1
+autocmd BufEnter *.go nmap <leader>t <Plug>(go-test)
+autocmd BufEnter *.go nmap <leader>tt <Plug>(go-test-func)
+autocmd BufEnter *.go nmap <leader>c <Plug>(go-coverage-toggle)
 
-  " Gitgutter — Shows a git diff in the gutter (sign column).
-  call minpac#add('airblade/vim-gitgutter')
+" Gutentags
+Plug 'ludovicchabant/vim-gutentags'
 
-  " Go — Go (golang) support.
-  call minpac#add('fatih/vim-go')
-  let g:go_fmt_command = 'goimports'
-  command! -bar GoSetup GoInstallBinaries
+" Incsearch — Improved incremental searching.
+Plug 'haya14busa/incsearch.vim'
+let g:incsearch#auto_nohlsearch = 1
+let g:incsearch#consistent_n_direction = 1
 
-  " Groovy — Syntax for the Groovy programming language.
-  call minpac#add('vim-scripts/groovy.vim')
+Plug 'nanotech/jellybeans.vim'
+let g:jellybeans_overrides = {
+\    'SpecialKey': { 'guifg': '303030', 'guibg': '151515' },
+\}
 
-  " Gruvbox – Retro groove color scheme.
-  call minpac#add('morhetz/gruvbox')
-  let g:gruvbox_contrast_dark = 'hard'
+" NERDTree — A tree explorer plugin for Vim.
+Plug 'scrooloose/nerdtree'
+let g:NERDTreeQuitOnOpen = 1
+let g:NERDTreeShowHidden = 1
+let g:NERDTreeWinSize = 50
+map <silent> <c-d> :call NERDTreeFindToggle()<cr>
+function! NERDTreeFindToggle()
+  if exists("t:NERDTreeBufName") | let s:ntree = bufwinnr(t:NERDTreeBufName) | else | let s:ntree = -1 | endif
+  if (s:ntree != -1) | :NERDTreeClose | else | :NERDTreeFind | endif
+endfunction
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+autocmd vimenter * if !argc() && exists("NERDTree") | NERDTree | endif
 
-  " Gutentags
-  call minpac#add('ludovicchabant/vim-gutentags')
+" NERDTree Git – A plugin of NERDTree showing git status flags.
+Plug 'Xuyuanp/nerdtree-git-plugin'
 
-  " Incsearch — Improved incremental searching.
-  call minpac#add('haya14busa/incsearch.vim')
-  let g:incsearch#auto_nohlsearch = 1
-  let g:incsearch#consistent_n_direction = 1
+" Rainbow Parentheses.
+Plug 'junegunn/rainbow_parentheses.vim'
+let g:rainbow#blacklist = [10]
+autocmd VimEnter * RainbowParentheses
 
-  " Liquid
-  call minpac#add('tpope/vim-liquid')
+" Repeat — Enable repeating supported plugin maps with dot.
+Plug 'tpope/vim-repeat'
 
-  " Matchindent — Set the indent style to what is in the file being edited.
-  call minpac#add('conormcd/matchindent.vim')
+" Sleuth – Heuristically set buffer options.
+Plug 'tpope/vim-sleuth'
 
-  " NERDTree — A tree explorer plugin for Vim.
-  let g:NERDTreeQuitOnOpen = 1
-  let g:NERDTreeShowHidden = 1
-  let g:NERDTreeWinSize = 50
-  map <silent> <c-d> :call NERDTreeFindToggle()<cr>
-  function! NERDTreeFindToggle()
-    if exists("t:NERDTreeBufName") | let s:ntree = bufwinnr(t:NERDTreeBufName) | else | let s:ntree = -1 | endif
-    if (s:ntree != -1) | :NERDTreeClose | else | :NERDTreeFind | endif
-  endfunction
-  autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
-  autocmd vimenter * if !argc() && exists("NERDTree") | NERDTree | endif
-  call minpac#add('scrooloose/nerdtree')
+" Supertab — Perform all your vim insert mode completions with Tab.
+Plug 'ervandew/supertab'
+let g:SuperTabDefaultCompletionType = "<c-n>"
 
-  " NERDTree Git – A plugin of NERDTree showing git status flags.
-  call minpac#add('Xuyuanp/nerdtree-git-plugin')
+" Tagbar — The Vim class outline viewer.
+Plug 'majutsushi/tagbar'
+let g:tagbar_autoclose = 1
+let g:tagbar_autofocus = 1
+let g:tagbar_iconchars = ['+', '-']
+let g:tagbar_autoshowtag = 1
 
-  " Repeat — Enable repeating supported plugin maps with dot.
-  call minpac#add('tpope/vim-repeat')
+" Tengo – A fast script language for Go.
+Plug 'geseq/tengo-vim'
 
-  " Supertab — Perform all your vim insert mode completions with Tab.
-  call minpac#add('ervandew/supertab')
+" Terraform – Basic vim/terraform integration.
+Plug 'hashivim/vim-terraform'
+let g:terraform_align=1
+let g:terraform_fmt_on_save=1
 
-  " Syntastic — Syntax checking hacks for Vim.
-  call minpac#add('scrooloose/syntastic')
+" UtilSnips — The Ultimate Snippet Solution for Vim.
+Plug 'SirVer/ultisnips'
+let g:UltiSnipsSnippetDirectories = ['ultisnips']
+let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
+let g:UltiSnipsExpandTrigger='<tab>'
+let g:UltiSnipsJumpForwardTrigger='<tab>'
+let g:UltiSnipsJumpBackwardTrigger='<c-tabk>'
 
-  " Tagbar — The Vim class outline viewer.
-  let g:tagbar_autoclose = 1
-  let g:tagbar_autofocus = 1
-  let g:tagbar_iconchars = ['+', '-']
-  let g:tagbar_autoshowtag = 1
-  map <c-m> :TagbarToggle<cr>
-  call minpac#add('majutsushi/tagbar')
+call plug#end()
 
-  " Terraform – Basic vim/terraform integration.
-  let g:terraform_align=1
-  let g:terraform_fmt_on_save=1
-  call minpac#add('hashivim/vim-terraform')
+colorscheme jellybeans
 
-  " Twig — Twig syntax highlighting, snipMate, etc.
-  call minpac#add('evidens/vim-twig')
 
-  " UtilSnips — The Ultimate Snippet Solution for Vim.
-  call minpac#add('SirVer/ultisnips')
-  let g:UltiSnipsSnippetDirectories = ['ultisnips']
-  let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
-  let g:UltiSnipsExpandTrigger='<tab>'
-  let g:UltiSnipsJumpForwardTrigger='<tab>'
-  let g:UltiSnipsJumpBackwardTrigger='<c-tabk>'
-endif
+" ----------------------------------------------------------------------------
+"  backups and swap files
+" ----------------------------------------------------------------------------
+
+" Avoid temporary swap files (ending with ~) in the current directory.
+set backupdir=~/tmp,/tmp
+set dir=~/tmp,/tmp
 
 
 " ----------------------------------------------------------------------------
@@ -365,11 +379,6 @@ set wildmenu
 " ----------------------------------------------------------------------------
 
 if has("autocmd")
-  "augroup General
-  "  autocmd!
-  "  autocmd BufNewFile,BufRead,BufEnter * colorscheme murphy
-  "augroup END
-
   augroup Git
     autocmd!
     autocmd Filetype gitcommit setlocal spell textwidth=72
@@ -378,7 +387,6 @@ if has("autocmd")
   augroup Go
     autocmd!
     autocmd BufNewFile,BufRead,BufEnter *.go set filetype=go
-    autocmd FileType go colorscheme gruvbox
   augroup END
 
   augroup Groovy
@@ -389,7 +397,6 @@ if has("autocmd")
   augroup JavaScript
     autocmd!
     autocmd BufNewFile,BufRead,BufEnter Gruntfile set filetype=javascript
-    autocmd FileType javascript color murphy
   augroup END
 
   augroup Markdown
@@ -402,7 +409,6 @@ if has("autocmd")
     autocmd!
     autocmd BufNewFile,BufRead,BufEnter *.module,*.inc set filetype=php
     autocmd FileType php setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
-    autocmd FileType php color desert
     autocmd FileType php highlight cursorline cterm=NONE ctermbg=234
   augroup END
 
@@ -456,6 +462,10 @@ map <c-b> <c-b>0
 map H H0
 map M M0
 map L L0
+
+" Commentary shortcuts.
+vmap \ gcgv
+nmap \ gcc
 
 " Scroll viewport faster.
 nnoremap <c-e> 3<C-e>
