@@ -1,0 +1,19 @@
+snippet tcs "list-based test" b
+func Test$1(t *testing.T) {
+	tcs := map[string]struct{
+		prop int
+		err error
+	}{
+		"my case": {
+			prop: 1,
+			err: errors.New("asdf"),
+		},
+	}
+
+	for name, tc := range tcs {
+		t.Run(name, func(t *testing.T) {
+			$2
+		})
+	}
+}
+endsnippet
