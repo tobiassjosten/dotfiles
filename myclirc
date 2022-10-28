@@ -1,15 +1,4 @@
 [main]
-
-# Keybindings: Possible values: emacs, vi.
-# Emacs mode: Ctrl-A is home, Ctrl-E is end. All emacs keybindings are available in the REPL.
-# When Vi mode is enabled you can use modal editing features offered by Vi in the REPL.
-key_bindings = vi
-
-# Skip intro info on startup and outro info on exit
 less_chatty = True
-
-# keyword casing preference. Possible values "lower", "upper", "auto"
 keyword_casing = upper
-
-# Enable the pager on startup.
 enable_pager = False
