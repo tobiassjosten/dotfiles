@@ -33,7 +33,6 @@ Plug 'kien/ctrlp.vim'
 let g:ctrlp_clear_cache_on_exit = 0
 let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|^.git$\|_site'
 nmap <c-l> :CtrlPBuffer<cr>
-nmap <c-o> :CtrlPTag<cr>
 
 " EditorConfig — Consistent coding styles.
 Plug 'editorconfig/editorconfig-vim'
@@ -73,10 +72,11 @@ let g:jellybeans_overrides = {
 \}
 
 " NERDTree — A tree explorer plugin for Vim.
-Plug 'scrooloose/nerdtree'
+Plug 'preservim/nerdtree'
 let g:NERDTreeQuitOnOpen = 1
 let g:NERDTreeShowHidden = 1
 let g:NERDTreeWinSize = 50
+let g:NERDTreeMinimalMenu=1
 map <silent> <c-d> :call NERDTreeFindToggle()<cr>
 function! NERDTreeFindToggle()
   if exists("t:NERDTreeBufName") | let s:ntree = bufwinnr(t:NERDTreeBufName) | else | let s:ntree = -1 | endif
@@ -409,7 +409,6 @@ if has("autocmd")
     autocmd!
     autocmd BufNewFile,BufRead,BufEnter *.module,*.inc set filetype=php
     autocmd FileType php setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
-    autocmd FileType php highlight cursorline cterm=NONE ctermbg=234
   augroup END
 
   augroup Ruby
