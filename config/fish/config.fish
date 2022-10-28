@@ -21,9 +21,14 @@ function got
     if count $argv > /dev/null
         set pkg $argv
     end
-    go test $pkg -count 1 | gotestsum --format standard-quiet
+    gotestsum --format standard-quiet -- $pkg -count 1
 end
-alias gotw="gotestsum --watch"
+
+function gotw
+    gotestsum --watch --format standard-quiet \
+        --post-run-command "sh -c 'printf \"\\n%100s\\n\\n\" | tr \" \" \"=\"'" \
+        -- -count 1
+end
 
 set -gx LSCOLORS 'GxFxCxDxBxegedabagaced'
 
