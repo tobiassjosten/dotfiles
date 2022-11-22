@@ -16,6 +16,8 @@ alias gd="git diff"
 alias gi="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias gs="git status -s"
 
+alias tm="tmux attach 2> /dev/null || tmux new"
+
 function got
     set pkg ./...
     if count $argv > /dev/null
