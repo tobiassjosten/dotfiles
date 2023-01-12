@@ -1,0 +1,12 @@
+aliases: {}
+substitute-path: []
+max-string-len: 10000
+show-location-expr: false
+source-list-line-color: null
+source-list-arrow-color: ""
+source-list-keyword-color: ""
+source-list-string-color: ""
+source-list-number-color: ""
+source-list-comment-color: ""
+debug-info-directories:
+- /usr/lib/debug/.build-id
