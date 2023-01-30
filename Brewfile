@@ -1,6 +1,7 @@
 brew "coreutils"
 brew "difftastic"
 brew "go"
+brew "gpg"
 brew "htop"
 brew "hugo"
 brew "irssi"
