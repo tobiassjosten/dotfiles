@@ -2,9 +2,13 @@
   excludesfile = ~/.gitignore
   editor = vim -f
 
+[init]
+  defaultBranch = main
+
 [user]
   name = Tobias Sjösten
   email = tobias@tobiassjosten.net
+	signingkey = /Users/tobias.sjosten/.ssh/id_rsa.pub
 
 [color]
   ui = always
@@ -17,7 +21,24 @@
   default = upstream
   followTags = true
 
+[url "ssh://git@bitbucket.org/"]
+  insteadOf = https://bitbucket.org/
+
+[url "ssh://git@github.com/"]
+  insteadOf = https://github.com/
+
 [includeIf "gitdir:~/stim/"]
   path = .gitconfig_stim
+
 [pager]
-	branch = false
+  branch = false
+
+[diff]
+    external = difft
+[commit]
+	gpgsign = true
+[gpg]
+	format = ssh
+[credential]
+	helper = !aws codecommit credential-helper $@
+	UseHttpPath = true
