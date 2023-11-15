@@ -6,6 +6,9 @@ set nocompatible
 
 let mapleader = ' '
 
+" Source Vim configuration file and install plugins
+nnoremap <silent><leader>1 :source ~/.vimrc \| :PlugInstall<CR>
+
 filetype off
 
 call plug#begin()
@@ -15,15 +18,36 @@ call plug#begin()
 " Airline — Lean & mean status/tabline for vim that's light as air.
 Plug 'vim-airline/vim-airline'
 let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
-autocmd BufEnter *.go nmap <leader>d :ALEGoToDefinition<cr>
-autocmd BufEnter *.go nmap <leader>r :ALEFindReferences<cr>
 
 " ALE – Asynchronous Lint Engine.
 Plug 'dense-analysis/ale'
 let g:ale_completion_enabled = 1
 let g:ale_completion_autoimport = 1
+autocmd BufEnter *.go nmap gf :ALEFindReferences <cr>
+
+" @todo Make this work for React apps.
+let g:ale_lint_on_enter = 1
+let g:ale_lint_on_insert_leave = 1
+let g:ale_lint_on_text_changed = 'normal'
+let g:ale_lint_on_save = 1
+let g:ale_linters = {}
+let g:ale_linters['typescriptreact'] = ['eslint']
+
+let g:ale_fix_on_save = 1
+let g:ale_fixers = {}
+let g:ale_fixers['typescriptreact'] = ['prettier', 'eslint']
+
+let g:ale_javascript_eslint_use_global = 1
+let g:ale_javascript_eslint_executable = 'eslint_d'
+let g:ale_typescript_eslint_use_global = 1
+let g:ale_typescript_eslint_executable = 'eslint_d'
+
 nmap <silent> <c-k> <Plug>(ale_previous_wrap)
 nmap <silent> <c-j> <Plug>(ale_next_wrap)
+
+" Conquer of Completion.
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+let g:coc_global_extensions = ['coc-tsserver']
 
 " Commentary — Comment stuff out.
 Plug 'tpope/vim-commentary'
@@ -58,7 +82,10 @@ autocmd BufEnter *.go nmap <leader>t <Plug>(go-test)
 autocmd BufEnter *.go nmap <leader>tt <Plug>(go-test-func)
 autocmd BufEnter *.go nmap <leader>c <Plug>(go-coverage-toggle)
 
-" Gutentags
+" GraphQL file detection, syntax highlighting, and indentation.
+Plug 'jparise/vim-graphql'
+
+" Gutentags.
 Plug 'ludovicchabant/vim-gutentags'
 
 " Incsearch — Improved incremental searching.
@@ -66,10 +93,16 @@ Plug 'haya14busa/incsearch.vim'
 let g:incsearch#auto_nohlsearch = 1
 let g:incsearch#consistent_n_direction = 1
 
+" JavaScript bundle.
+Plug 'pangloss/vim-javascript'
+
 Plug 'nanotech/jellybeans.vim'
 let g:jellybeans_overrides = {
 \    'SpecialKey': { 'guifg': '303030', 'guibg': '151515' },
 \}
+
+" React syntax highlighting and indenting.
+Plug 'maxmellon/vim-jsx-pretty'
 
 " NERDTree — A tree explorer plugin for Vim.
 Plug 'preservim/nerdtree'
@@ -112,6 +145,9 @@ let g:tagbar_autoshowtag = 1
 
 " Tengo – A fast script language for Go.
 Plug 'geseq/tengo-vim'
+
+" Syntax file and other settings for TypeScript.
+Plug 'leafgarland/typescript-vim'
 
 " Terraform – Basic vim/terraform integration.
 Plug 'hashivim/vim-terraform'
