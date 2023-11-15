@@ -18,11 +18,6 @@ alias fgrep='fgrep --color=always --exclude-dir=.svn'
 alias egrep='egrep --color=always --exclude-dir=.svn'
 alias pgrep='grep --color=auto'
 
-function mcd () {
-	mkdir -p "$1"
-	cd "$1"
-}
-
 function drma () {
 	if [[ -n $(docker ps --no-trunc -q) ]]; then
 		docker ps --no-trunc -q | xargs docker kill
@@ -46,19 +41,6 @@ dmysql() {
 		docker exec -i $(docker ps -qf "name=_mysql") mysql $1
 	fi
 }
-
-alias gp='git push'
-alias gd='git diff'
-alias gc='git commit'
-alias gca='git commit -a'
-alias gco='git checkout'
-alias gb='git branch'
-alias gs='git status -s'
-alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
-alias gl="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
-alias gi="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
-
-alias tm='tmux attach 2> /dev/null || tmux new'
 
 bindkey "^[[A" history-search-backward
 bindkey "^[[B" history-search-forward
