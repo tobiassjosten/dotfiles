@@ -1,5 +1,6 @@
 brew "coreutils"
 brew "difftastic"
+brew "ffmpeg"
 brew "go"
 brew "gpg"
 brew "htop"
