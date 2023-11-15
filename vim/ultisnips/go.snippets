@@ -17,3 +17,7 @@ func Test$1(t *testing.T) {
 	}
 }
 endsnippet
+
+snippet pkg "resolve current package" b
+package `!v expand('%:p:h:t')`
+endsnippet
