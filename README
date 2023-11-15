@@ -1,0 +1,21 @@
+## Terminal shortcuts
+
+Jump one word backward: Esc + b
+
+Jump one word forward: Esc + f
+
+Jump to start: Hex 0x01
+
+Jump to end: Hex 0x05
+
+Delete one word backward: Hex 0x17
+
+Delete one word forward: Esc + d
+
+Delete to start: Hex 0x15
+
+### iTerm2
+
+iTerm2 > Preferences > Profiles (Default) > Keys > Key Mappings
+
+
