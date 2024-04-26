@@ -8,7 +8,7 @@
 [user]
   name = Tobias Sjösten
   email = tobias@tobiassjosten.net
-	signingkey = /Users/tobias.sjosten/.ssh/id_rsa.pub
+  signingkey = /Users/tobias.sjosten/.ssh/id_rsa.pub
 
 [color]
   ui = always
@@ -35,10 +35,16 @@
 
 [diff]
     external = difft
+
 [commit]
 	gpgsign = true
+
 [gpg]
 	format = ssh
+
 [credential]
 	helper = !aws codecommit credential-helper $@
 	UseHttpPath = true
+
+[rerere]
+	enabled = true
