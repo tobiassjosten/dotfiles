@@ -1,21 +1,27 @@
 DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
+.PHONY: all
 all: brews dirs symlinks vim
 
+.PHONY: dirs
 dirs:
 	mkdir -p ~/.config/fish
 
+.PHONY: vim
 vim:
 	vim -c 'PlugInstall' '+qall'
 	vim -c 'GoInstallBinaries' '+qall'
 
+.PHONY: homebrew
 homebrew:
 	which brew || ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
+.PHONY: brews
 brews: homebrew
 	brew update
 	brew bundle
 
+.PHONY: symlinks
 symlinks:
 	ln -fs $(DIR)/ctags ~/.ctags
 	ln -fs $(DIR)/dlv ~/.dlv
