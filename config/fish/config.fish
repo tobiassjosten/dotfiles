@@ -27,6 +27,14 @@ function got
     gotestsum --format standard-quiet -- $pkg -count 1
 end
 
+function goti
+    set pkg ./...
+    if count $argv > /dev/null
+        set pkg $argv
+    end
+    gotestsum --format standard-quiet -- $pkg -count 1 --tags=integration
+end
+
 function gotw
     gotestsum --watch --format standard-quiet \
         --post-run-command "sh -c 'printf \"\\n%100s\\n\\n\" | tr \" \" \"=\"'" \
