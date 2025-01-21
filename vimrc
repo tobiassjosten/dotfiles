@@ -56,6 +56,9 @@ let g:coc_global_extensions = ['coc-tsserver']
 " Commentary — Comment stuff out.
 Plug 'tpope/vim-commentary'
 
+" Copilot.
+Plug 'github/copilot.vim'
+
 " CtrlP — Fuzzy file, buffer, mru, tag, etc finder.
 Plug 'kien/ctrlp.vim'
 let g:ctrlp_clear_cache_on_exit = 0
