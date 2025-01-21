@@ -144,11 +144,12 @@ Plug 'ervandew/supertab'
 let g:SuperTabDefaultCompletionType = "<c-n>"
 
 " Tagbar — The Vim class outline viewer.
-Plug 'majutsushi/tagbar'
+Plug 'preservim/tagbar'
 let g:tagbar_autoclose = 1
 let g:tagbar_autofocus = 1
 let g:tagbar_iconchars = ['+', '-']
 let g:tagbar_autoshowtag = 1
+nmap <cr> :TagbarToggle<cr>
 
 " Tengo – A fast script language for Go.
 Plug 'geseq/tengo-vim'
