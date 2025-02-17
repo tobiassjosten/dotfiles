@@ -1,11 +1,7 @@
 DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 .PHONY: all
-all: brews dirs symlinks vim
-
-.PHONY: dirs
-dirs:
-	mkdir -p ~/.config/fish
+all: files brews fish vim
 
 .PHONY: vim
 vim:
@@ -14,15 +10,21 @@ vim:
 
 .PHONY: homebrew
 homebrew:
-	which brew || ruby -e "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	@which brew > /dev/null || (/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && eval "$$(/opt/homebrew/bin/brew shellenv)" && brew analytics off)
 
 .PHONY: brews
 brews: homebrew
 	brew update
 	brew bundle
 
-.PHONY: symlinks
-symlinks:
+.PHONY: fish
+fish: brews
+	@grep -q -F "/fish" "/etc/shells" || (echo "$$(which fish)" | sudo tee -a /etc/shells > /dev/null)
+	@chsh -s $$(which fish)
+
+.PHONY: files
+files:
+	mkdir -p ~/.config/fish
 	ln -fs $(DIR)/ctags ~/.ctags
 	ln -fs $(DIR)/dlv ~/.dlv
 	ln -fs $(DIR)/gitconfig ~/.gitconfig
@@ -36,3 +38,4 @@ symlinks:
 	ln -fs $(DIR)/vimrc ~/.vimrc
 	ln -fs $(DIR)/xmodmaprc ~/.xmodmaprc
 	ln -fs $(DIR)/config/fish/config.fish ~/.config/fish/
+	ln -fs $(DIR)/zprofile ~/.zprofile
