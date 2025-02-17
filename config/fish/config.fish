@@ -4,6 +4,7 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end
 
+fish_add_path -a -m /opt/homebrew/bin/
 fish_add_path -a -m ~/go/bin
 fish_add_path -a -m ~/.cargo/bin
 fish_add_path -a -m /opt/homebrew/opt/mysql-client/bin
@@ -65,9 +66,4 @@ function fish_prompt
     set_color normal
 end
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-if test -f /Users/tobias.sjosten/miniforge3/bin/conda
-    eval /Users/tobias.sjosten/miniforge3/bin/conda "shell.fish" "hook" $argv | source
-end
-# <<< conda initialize <<<
+source "/Users/tobias.sjosten/google-cloud-sdk/path.fish.inc"
