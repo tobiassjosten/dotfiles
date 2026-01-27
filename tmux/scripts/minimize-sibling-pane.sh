@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MIN_ROWS=3
+MIN_ROWS=5
 
 win_id="$(tmux display-message -p '#{window_id}')"
 cur_id="$(tmux display-message -p '#{pane_id}')"
@@ -14,7 +14,11 @@ panes="$(tmux list-panes -t "$win_id" -F '#{pane_id} #{pane_left} #{pane_width} 
 count="$(printf "%s\n" "$panes" | grep -c '^[^ ]')"
 [ "$count" -lt 2 ] && exit 0
 
-tmux resize-pane -t "$cur_id" -y 9999 >/dev/null 2>&1
+other_count=$((count - 1))
+total_height="$(printf "%s\n" "$panes" | awk '{sum += $3} END {print sum}')"
+target_height=$((total_height - other_count * MIN_ROWS))
+
+tmux resize-pane -t "$cur_id" -y "$target_height" >/dev/null 2>&1
 
 printf "%s\n" "$panes" |
   awk -v C="$cur_id" '$1!=C {print $1}' |
