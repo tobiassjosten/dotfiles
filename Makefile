@@ -24,18 +24,21 @@ fish: brews
 
 .PHONY: files
 files:
-	mkdir -p ~/.config/fish
+	mkdir -p ~/.config
+	ln -fhs $(DIR)/config/fish ~/.config/fish
+	ln -fhs $(DIR)/config/nvim ~/.config/nvim
+	ln -fhs $(DIR)/vim ~/.vim
+	ln -fs $(DIR)/config/fish/config.fish ~/.config/fish/
 	ln -fs $(DIR)/ctags ~/.ctags
 	ln -fs $(DIR)/dlv ~/.dlv
 	ln -fs $(DIR)/gitconfig ~/.gitconfig
 	ln -fs $(DIR)/gitconfig_stim ~/.gitconfig_stim
 	ln -fs $(DIR)/gitignore ~/.gitignore
+	ln -fs $(DIR)/hammerspoon/Spoons/* ~/.hammerspoon/Spoons/
 	ln -fs $(DIR)/htoprc ~/.htoprc
 	ln -fs $(DIR)/myclirc ~/.myclirc
 	ln -fs $(DIR)/tmux ~/.tmux
 	ln -fs $(DIR)/tmux.conf ~/.tmux.conf
-	ln -fhs $(DIR)/vim ~/.vim
 	ln -fs $(DIR)/vimrc ~/.vimrc
 	ln -fs $(DIR)/xmodmaprc ~/.xmodmaprc
-	ln -fs $(DIR)/config/fish/config.fish ~/.config/fish/
 	ln -fs $(DIR)/zprofile ~/.zprofile
