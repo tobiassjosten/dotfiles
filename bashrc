@@ -1,2 +1,0 @@
-. ~/.bash/env
-. ~/.bash/interactive
