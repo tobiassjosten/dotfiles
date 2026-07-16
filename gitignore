@@ -1,2 +1,5 @@
 .DS_Store
 /tags
+/TODO.md
+
+**/.claude/settings.local.json

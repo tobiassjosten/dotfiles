@@ -162,14 +162,6 @@ Plug 'hashivim/vim-terraform'
 let g:terraform_align=1
 let g:terraform_fmt_on_save=1
 
-" UtilSnips — The Ultimate Snippet Solution for Vim.
-Plug 'SirVer/ultisnips'
-let g:UltiSnipsSnippetDirectories = ['ultisnips']
-let g:UltiSnipsSnippetsDir = '~/.vim/ultisnips'
-let g:UltiSnipsExpandTrigger='<tab>'
-let g:UltiSnipsJumpForwardTrigger='<tab>'
-let g:UltiSnipsJumpBackwardTrigger='<c-tabk>'
-
 call plug#end()
 
 colorscheme jellybeans
