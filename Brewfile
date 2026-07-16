@@ -1,3 +1,4 @@
+brew "bat"
 brew "ccusage"
 brew "cmake"
 brew "coreutils"
