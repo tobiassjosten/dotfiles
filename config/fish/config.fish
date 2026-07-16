@@ -9,9 +9,15 @@ fish_add_path -a -m ~/go/bin
 fish_add_path -a -m ~/.cargo/bin
 fish_add_path -a -m /opt/homebrew/opt/mysql-client/bin
 fish_add_path -a -m ~/google-cloud-sdk/bin
+fish_add_path -a -m ~/.local/bin
+fish_add_path -a -m ~/.cap/bin
+
+set -Ux PYENV_ROOT $HOME/.pyenv
+fish_add_path $PYENV_ROOT/bin
+pyenv init - fish | source
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc'; end
+if [ -f '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc' ]; . /Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc; end
 
 alias gb="git branch"
 alias gd="git diff"
@@ -42,6 +48,14 @@ function gotw
         -- -count 1
 end
 
+function gotb
+    set pkg ./...
+    if count $argv > /dev/null
+        set pkg $argv
+    end
+    go test -bench=. $pkg
+end
+
 set -gx LSCOLORS 'GxFxCxDxBxegedabagaced'
 
 set -gx __fish_git_prompt_color normal
@@ -66,4 +80,15 @@ function fish_prompt
     set_color normal
 end
 
+functions -q fish_user_key_bindings; or functions -c fish_default_key_bindings fish_user_key_bindings
+set -U fish_escape_delay_ms 300
+function fish_user_key_bindings
+    fish_default_key_bindings
+    bind \e. history-token-search-backward
+end
+
 source "/Users/tobias.sjosten/google-cloud-sdk/path.fish.inc"
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH

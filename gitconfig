@@ -27,7 +27,7 @@
 [url "ssh://git@github.com/"]
   insteadOf = https://github.com/
 
-[includeIf "gitdir:~/stim/"]
+[includeIf "gitdir:~/projects/stim/"]
   path = .gitconfig_stim
 
 [pager]
