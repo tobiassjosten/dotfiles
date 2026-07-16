@@ -16,8 +16,13 @@ set -Ux PYENV_ROOT $HOME/.pyenv
 fish_add_path $PYENV_ROOT/bin
 pyenv init - fish | source
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc' ]; . /Users/tobias.sjosten/Downloads/google-cloud-sdk/path.fish.inc; end
+set -gx EDITOR vim
+set -gx VISUAL $EDITOR
+set -gx PAGER less
+
+alias cat="bat"
+alias cdr="cd (git rev-parse --show-toplevel)"
+alias k="kubectl"
 
 alias gb="git branch"
 alias gd="git diff"
