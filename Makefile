@@ -40,5 +40,4 @@ files:
 	ln -fhs $(DIR)/tmux ~/.tmux
 	ln -fs $(DIR)/tmux.conf ~/.tmux.conf
 	ln -fs $(DIR)/vimrc ~/.vimrc
-	ln -fs $(DIR)/xmodmaprc ~/.xmodmaprc
 	ln -fs $(DIR)/zprofile ~/.zprofile
