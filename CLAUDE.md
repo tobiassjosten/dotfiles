@@ -8,9 +8,9 @@ Personal dotfiles, installed by symlinking files from this repo into `$HOME`. Th
 
 - `make` — full setup: symlinks, Homebrew + Brewfile, fish as login shell, vim plugins
 - `make files` — (re)create the symlinks only; run after adding a new config file so it gets linked into `$HOME`
-- `make brews` — install/update Homebrew packages from `Brewfile`
+- `make brews` — install/update Homebrew packages from `Brewfile`. Note: `Brewfile` ships `tfenv`, not `terraform` — on a fresh machine run `tfenv install latest` once to get a `terraform` binary.
 
-**When adding a new config file, add a corresponding `ln` line to the `files` target in the Makefile** — otherwise it never reaches `$HOME`. Use `-fhs` for directories, `-fs` for files.
+**When adding a new config file, add a corresponding `ln` line to the `files` target in the Makefile** — otherwise it never reaches `$HOME`. Use `-fs` for files and the `LINK_DIR` macro for directories: `ln -fhs` only replaces an existing symlink — if the target is already a real directory, it silently creates the link inside it instead, which the macro guards against. The inverse also holds: when converting a formerly-symlinked directory into a real directory, `rm` the legacy symlink in the recipe first — both `mkdir -p` and `ln -fs` resolve through an existing symlink and would write into the repo itself.
 
 ## Architecture
 
@@ -25,6 +25,7 @@ Fish is the login shell; all shell config (PATH, aliases, functions, prompt) liv
 
 ### Other pieces
 
+- `claude/` — Claude Code user config, symlinked into `~/.claude/` (top-level files individually, `skills/` as a whole directory). Config here may depend on CLI tools (e.g. `jq` for the statusline, `rtk` for the Bash hook) — add those to `Brewfile` so a fresh `make` produces a working setup. Never symlink or track the rest of `~/.claude/` — it's machine state (session transcripts, history, caches) and must stay local. Some skills are vendored third-party snapshots; the rest are personal.
 - `tmux.conf` + `tmux/` — plugins are vendored under `tmux/plugins/` (tpm, extrakto, tmux-cowboy); helper scripts in `tmux/scripts/`
 - `hammerspoon/Spoons/` — Lua Spoons (only the Spoons are symlinked, not the whole Hammerspoon dir)
 - `gitconfig` conditionally includes `gitconfig_stim` (work identity) for repos under `~/projects/stim/`
