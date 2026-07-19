@@ -20,34 +20,32 @@ input=$(cat)
 # Helpers
 # ---------------------------------------------------------------------------
 
-# Format token counts as e.g. "12k" or "1.2M"
-format_tokens() {
-    local n=$1
-    if [ "$n" -ge 1000000 ]; then
-        printf "%.1fM" "$(echo "scale=1; $n / 1000000" | bc)"
-    elif [ "$n" -ge 1000 ]; then
-        printf "%dk" "$(echo "scale=0; $n / 1000" | bc)"
-    else
-        printf "%d" "$n"
-    fi
-}
-
-# Format a future Unix epoch as "Xh Ym" or "Ym Xs" relative to now
-format_resets_in() {
-    local epoch=$1
+# Percentage of a rate-limit window already elapsed, given its reset epoch
+# and total length in seconds. Clamped to 0-100.
+window_time_pct() {
+    local resets_at=$1
+    local window_s=$2
     local now
     now=$(date +%s)
-    local diff=$(( epoch - now ))
-    [ "$diff" -le 0 ] && { printf "now"; return; }
-    local h=$(( diff / 3600 ))
-    local m=$(( (diff % 3600) / 60 ))
-    local s=$(( diff % 60 ))
-    if [ "$h" -gt 0 ]; then
-        printf "%dh %dm" "$h" "$m"
-    elif [ "$m" -gt 0 ]; then
-        printf "%dm %ds" "$m" "$s"
+    local elapsed=$(( window_s - (resets_at - now) ))
+    [ "$elapsed" -lt 0 ] && elapsed=0
+    [ "$elapsed" -gt "$window_s" ] && elapsed=$window_s
+    printf "%d" $(( elapsed * 100 / window_s ))
+}
+
+# Color for time-vs-usage pace: how far usage % runs ahead of elapsed time %.
+# Green when on/behind pace, yellow/red when burning faster than the clock.
+pace_color() {
+    local used=$1
+    local time_pct=$2
+    local used_int=${used%.*}
+    local diff=$(( used_int - time_pct ))
+    if [ "$diff" -ge 30 ]; then
+        printf '%s' "$FG_RED"
+    elif [ "$diff" -ge 15 ]; then
+        printf '%s' "$FG_YELLOW"
     else
-        printf "%ds" "$s"
+        printf '%s' "$FG_GREEN"
     fi
 }
 
@@ -120,18 +118,14 @@ fi
 # Split on tabs only (model names contain spaces), and emit "null" for absent
 # fields — an empty field would collapse its tab delimiters and shift the rest.
 IFS=$'\t' read -r model \
-        total_input total_output used_pct \
-        cost_usd duration_ms \
+        used_pct cost_usd \
         rl5h_pct rl5h_resets \
         rl7d_pct rl7d_resets \
     < <(echo "$input" | jq -r '
         [
             (.model.display_name // .model.id // "unknown"),
-            (.context_window.total_input_tokens // 0 | tostring),
-            (.context_window.total_output_tokens // 0 | tostring),
             (.context_window.used_percentage // "null" | tostring),
             (.cost.total_cost_usd // "null" | tostring),
-            (.cost.total_duration_ms // "null" | tostring),
             (.rate_limits.five_hour.used_percentage // "null" | tostring),
             (.rate_limits.five_hour.resets_at // "null" | tostring),
             (.rate_limits.seven_day.used_percentage // "null" | tostring),
@@ -147,17 +141,23 @@ rl_part=""
 
 if [ "$rl5h_pct" != "null" ]; then
     color=$(pct_color "$rl5h_pct")
-    reset_str=""
-    [ "$rl5h_resets" != "null" ] && reset_str=" $(format_resets_in "$rl5h_resets")"
-    rl_part="${rl_part}${color}5h:${rl5h_pct}%${reset_str}${RESET}"
+    time_str=""
+    if [ "$rl5h_resets" != "null" ]; then
+        time_pct=$(window_time_pct "$rl5h_resets" $(( 5 * 3600 )))
+        time_str=" $(pace_color "$rl5h_pct" "$time_pct")t:${time_pct}%${RESET}"
+    fi
+    rl_part="${rl_part}${color}5h:${rl5h_pct}%${RESET}${time_str}"
 fi
 
 if [ "$rl7d_pct" != "null" ]; then
     [ -n "$rl_part" ] && rl_part="${rl_part}  "
     color=$(pct_color "$rl7d_pct")
-    reset_str=""
-    [ "$rl7d_resets" != "null" ] && reset_str=" $(format_resets_in "$rl7d_resets")"
-    rl_part="${rl_part}${color}7d:${rl7d_pct}%${reset_str}${RESET}"
+    time_str=""
+    if [ "$rl7d_resets" != "null" ]; then
+        time_pct=$(window_time_pct "$rl7d_resets" $(( 7 * 24 * 3600 )))
+        time_str=" $(pace_color "$rl7d_pct" "$time_pct")t:${time_pct}%${RESET}"
+    fi
+    rl_part="${rl_part}${color}7d:${rl7d_pct}%${RESET}${time_str}"
 fi
 
 [ -n "$rl_part" ] && line2="${line2}  ${rl_part}"
@@ -165,32 +165,13 @@ fi
 # --- context window usage ---
 if [ "$used_pct" != "null" ]; then
     color=$(pct_color "$used_pct")
-    in_fmt=$(format_tokens "$total_input")
-    out_fmt=$(format_tokens "$total_output")
-    line2="${line2}  ${color}ctx:${used_pct}%${RESET} ${DIM}${in_fmt}in ${out_fmt}out${RESET}"
-else
-    in_fmt=$(format_tokens "$total_input")
-    out_fmt=$(format_tokens "$total_output")
-    line2="${line2}  ${DIM}${in_fmt}in ${out_fmt}out${RESET}"
+    line2="${line2}  ${color}ctx:${used_pct}%${RESET}"
 fi
 
 # --- cost ---
 if [ "$cost_usd" != "null" ] && [ "$cost_usd" != "0" ]; then
     cost_fmt=$(printf "\$%.2f" "$cost_usd")
     line2="${line2}  ${FG_MAGENTA}${cost_fmt}${RESET}"
-fi
-
-# --- session duration ---
-if [ "$duration_ms" != "null" ] && [ "$duration_ms" != "0" ]; then
-    total_s=$(( duration_ms / 1000 ))
-    dur_m=$(( total_s / 60 ))
-    dur_s=$(( total_s % 60 ))
-    if [ "$dur_m" -gt 0 ]; then
-        dur_fmt="${dur_m}m ${dur_s}s"
-    else
-        dur_fmt="${dur_s}s"
-    fi
-    line2="${line2}  ${DIM}${dur_fmt}${RESET}"
 fi
 
 # ---------------------------------------------------------------------------
