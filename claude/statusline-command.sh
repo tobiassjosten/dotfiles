@@ -122,13 +122,14 @@ IFS=$'\t' read -r model \
         rl5h_pct rl5h_resets \
         rl7d_pct rl7d_resets \
     < <(echo "$input" | jq -r '
+        def pct(v): if v == null then "null" else (v | round | tostring) end;
         [
             (.model.display_name // .model.id // "unknown"),
-            (.context_window.used_percentage // "null" | tostring),
+            pct(.context_window.used_percentage),
             (.cost.total_cost_usd // "null" | tostring),
-            (.rate_limits.five_hour.used_percentage // "null" | tostring),
+            pct(.rate_limits.five_hour.used_percentage),
             (.rate_limits.five_hour.resets_at // "null" | tostring),
-            (.rate_limits.seven_day.used_percentage // "null" | tostring),
+            pct(.rate_limits.seven_day.used_percentage),
             (.rate_limits.seven_day.resets_at // "null" | tostring)
         ] | @tsv
     ')
