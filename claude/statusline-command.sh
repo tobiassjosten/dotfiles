@@ -165,8 +165,7 @@ fi
 
 # --- context window usage ---
 if [ "$used_pct" != "null" ]; then
-    color=$(pct_color "$used_pct")
-    line2="${line2}  ${color}ctx:${used_pct}%${RESET}"
+    line2="${line2}  ${DIM}ctx:${used_pct}%${RESET}"
 fi
 
 # --- cost ---
