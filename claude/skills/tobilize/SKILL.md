@@ -2,6 +2,7 @@
 name: tobilize
 description: Bootstrap or sync the tobilize approach in the current project — a thin CLAUDE.md that imports @docs/approach.md plus a docs/ tree (architecture/, design/, domain/, plan/) with INDEX.md in each. Discovers project tooling and layout to seed real build commands and an initial architecture overview, not generic placeholders. Also offers method-specific guidance files (DDD, TDD, Hexagonal, SOLID).
 disable-model-invocation: true
+context: fork
 allowed-tools: Bash(ls:*), Bash(diff:*), Bash(grep:*), Bash(find:*), Read, Edit, Write, AskUserQuestion
 ---
 

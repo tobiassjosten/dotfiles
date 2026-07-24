@@ -2,6 +2,7 @@
 name: focused-review
 description: Review outstanding changes and surface the single most worthwhile improvement to make before committing. Returns one finding — not a list — and only if it's in scope for the change at hand.
 disable-model-invocation: true
+context: fork
 ---
 
 # Focused Review

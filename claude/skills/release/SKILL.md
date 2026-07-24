@@ -2,6 +2,7 @@
 name: release
 description: Create a GitHub release. Commits and pushes outstanding changes first, then drafts release notes for confirmation. Deployment is only triggered if the project has a release-triggered workflow.
 disable-model-invocation: true
+context: fork
 ---
 
 # Release
