@@ -1,3 +1,4 @@
+brew "backlog-md"
 brew "bat"
 brew "ccusage"
 brew "cmake"
