@@ -35,14 +35,16 @@ window_time_pct() {
 
 # Color for time-vs-usage pace: how far usage % runs ahead of elapsed time %.
 # Green when on/behind pace, yellow/red when burning faster than the clock.
+# Near the cap the absolute level predicts throttling regardless of pace,
+# so high usage overrides: >=90% at least yellow, >=95% red.
 pace_color() {
     local used=$1
     local time_pct=$2
     local used_int=${used%.*}
     local diff=$(( used_int - time_pct ))
-    if [ "$diff" -ge 30 ]; then
+    if [ "$used_int" -ge 95 ] || [ "$diff" -ge 20 ]; then
         printf '%s' "$FG_RED"
-    elif [ "$diff" -ge 15 ]; then
+    elif [ "$used_int" -ge 90 ] || [ "$diff" -ge 10 ]; then
         printf '%s' "$FG_YELLOW"
     else
         printf '%s' "$FG_GREEN"
@@ -140,23 +142,29 @@ line2="${DIM}${model}${RESET}"
 # --- rate limits ---
 rl_part=""
 
+# Usage and time share one pace-based color so they always read as a pair;
+# without a reset timestamp there is no pace, so fall back to absolute usage.
 if [ "$rl5h_pct" != "null" ]; then
-    color=$(pct_color "$rl5h_pct")
     time_str=""
     if [ "$rl5h_resets" != "null" ]; then
         time_pct=$(window_time_pct "$rl5h_resets" $(( 5 * 3600 )))
-        time_str=" $(pace_color "$rl5h_pct" "$time_pct")t:${time_pct}%${RESET}"
+        color=$(pace_color "$rl5h_pct" "$time_pct")
+        time_str=" ${color}t:${time_pct}%${RESET}"
+    else
+        color=$(pct_color "$rl5h_pct")
     fi
     rl_part="${rl_part}${color}5h:${rl5h_pct}%${RESET}${time_str}"
 fi
 
 if [ "$rl7d_pct" != "null" ]; then
     [ -n "$rl_part" ] && rl_part="${rl_part}  "
-    color=$(pct_color "$rl7d_pct")
     time_str=""
     if [ "$rl7d_resets" != "null" ]; then
         time_pct=$(window_time_pct "$rl7d_resets" $(( 7 * 24 * 3600 )))
-        time_str=" $(pace_color "$rl7d_pct" "$time_pct")t:${time_pct}%${RESET}"
+        color=$(pace_color "$rl7d_pct" "$time_pct")
+        time_str=" ${color}t:${time_pct}%${RESET}"
+    else
+        color=$(pct_color "$rl7d_pct")
     fi
     rl_part="${rl_part}${color}7d:${rl7d_pct}%${RESET}${time_str}"
 fi
