@@ -2,6 +2,7 @@
 name: commit
 description: Commit all outstanding changes as standalone, logically coherent atomic commits using Conventional Commits.
 disable-model-invocation: true
+context: fork
 allowed-tools: Bash(git add:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*), Bash(git push:*), Bash(git status:*)
 ---
 
