@@ -1,7 +1,5 @@
 #!/bin/sh
 
-MIN_ROWS=5
-
 win_id="$(tmux display-message -p '#{window_id}')"
 cur_id="$(tmux display-message -p '#{pane_id}')"
 
@@ -15,6 +13,11 @@ count="$(printf "%s\n" "$panes" | grep -c '^[^ ]')"
 [ "$count" -lt 2 ] && exit 0
 
 other_count=$((count - 1))
+case "$other_count" in
+  1) MIN_ROWS=5 ;;
+  2) MIN_ROWS=3 ;;
+  *) MIN_ROWS=2 ;;
+esac
 total_height="$(printf "%s\n" "$panes" | awk '{sum += $3} END {print sum}')"
 target_height=$((total_height - other_count * MIN_ROWS))
 
