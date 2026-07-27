@@ -2,7 +2,7 @@
 
 Outstanding work the project wants done but hasn't done yet: cleanup, refactoring, ops chores, parts of a chunked migration, leftovers from previous changes. One file per change.
 
-Unlike `architecture/`, `design/`, and `domain/` — which accumulate durable knowledge — entries here are **removed when the work is complete**. `plan/` shrinks as work finishes and grows as new work is identified.
+Unlike `architecture/`, `design/`, `domain/`, and `process/` — which accumulate durable knowledge — entries here are **removed when the work is complete**. `plan/` shrinks as work finishes and grows as new work is identified.
 
 ## Naming convention
 

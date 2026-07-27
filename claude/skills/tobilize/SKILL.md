@@ -1,12 +1,12 @@
 ---
 name: tobilize
-description: Bootstrap or sync the tobilize approach in the current project — a thin CLAUDE.md that imports @docs/approach.md plus a docs/ tree (architecture/, design/, domain/, plan/) with INDEX.md in each. Discovers project tooling and layout to seed real build commands and an initial architecture overview, not generic placeholders. Also offers method-specific guidance files (DDD, TDD, Hexagonal, SOLID).
+description: Bootstrap or sync the tobilize approach in the current project — a thin CLAUDE.md that imports @docs/approach.md plus a docs/ tree (architecture/, design/, domain/, process/, and plan/ or an external work tracker) with INDEX.md in each. Discovers project tooling and layout to seed real build commands and an initial architecture overview, not generic placeholders. Also offers method-specific guidance files (DDD, TDD, Hexagonal, SOLID).
 disable-model-invocation: true
 context: fork
 allowed-tools: Bash(ls:*), Bash(diff:*), Bash(grep:*), Bash(find:*), Read, Edit, Write, AskUserQuestion
 ---
 
-Align the current project with the tobilize approach: a thin `CLAUDE.md` that imports `@docs/approach.md`, plus a `docs/` tree (`architecture/`, `design/`, `domain/`, `plan/`) with `INDEX.md` in each.
+Align the current project with the tobilize approach: a thin `CLAUDE.md` that imports `@docs/approach.md`, plus a `docs/` tree (`architecture/`, `design/`, `domain/`, `process/`, and — depending on the project's outstanding-work mode — `plan/`) with `INDEX.md` in each.
 
 ## Precedence over existing conventions
 
@@ -28,6 +28,21 @@ When a tool call needs an absolute path, prepend the resolved root.
 This skill takes no backups before it writes. **Undo is git's job.** Before accepting any proposed change, the user should ensure the project is in a committed (or otherwise recoverable) state, so that `git diff` / `git checkout -- <file>` / `git restore` can revert anything they don't want. The skill also leaves all writes uncommitted — staging and committing is the user's call.
 
 If the project isn't a git repo, warn the user before any non-fresh-scaffold write.
+
+## Outstanding-work modes
+
+Projects track not-yet-done work in one of two modes, and several steps below branch on it:
+
+- **Plan mode** — outstanding work lives in `docs/plan/`, one file per change. This is what the templates are written for.
+- **Tracker mode** — outstanding work lives in a work tracker (Backlog.md, Jira, Linear, beads, …). `docs/plan/` does not exist, and the docs tree points at the tracker instead.
+
+**Detecting the mode.** An existing `docs/plan/INDEX.md` means plan mode. A tracker signal — a `backlog/config.yml`, a `.beads/` directory, a tracker MCP server, or `CLAUDE.md`/`docs/approach.md` naming a tracker as where work is tracked — means tracker mode. When neither signal exists (a fresh scaffold), or both do, ask the user via `AskUserQuestion` rather than guessing.
+
+**Tracker-mode adaptations.** In tracker mode, adapt what you write — and treat these adaptations as deliberate when syncing, never as drift to revert:
+
+- `docs/approach.md` — drop the `plan/` bullet from the structure section ("Five subdirectories" becomes "Four subdirectories"); after the list, note that outstanding work is tracked in the project's tracker (name it, and point at where the tracker's workflow is documented, typically `CLAUDE.md`) and should be searched before starting new work; "All but `plan/` accumulate over time" becomes "All four accumulate over time"; retitle "Suggesting `plan/` entries" to "Suggesting follow-up tasks" and reframe it around proposing tracker tasks (a draft title, a one-line *what / why / done when*, ordering constraints as dependencies) — the end-of-task suggestion habit itself stays; "The five base subdirectories" becomes "The four base subdirectories".
+- `docs/INDEX.md` — drop the `plan/` entry, note where outstanding work is tracked instead, and "five above" becomes "four above".
+- Never scaffold `docs/plan/`, propose reinstating it, or sync plan-related template prose into a tracker-mode project.
 
 ## 1. Discover the project
 
@@ -68,6 +83,10 @@ List top-level directories and sniff each one's purpose. Recognize common patter
 
 For unrecognized directories, write what's there ("contains the four service entry points" / "auto-generated OpenAPI clients") rather than guessing.
 
+### Work tracking
+
+Look for how the project tracks outstanding work: a `docs/plan/` directory, a canonical `TODO.md`, or a tracker signal (`backlog/config.yml`, `.beads/`, a tracker MCP server, a tracker named in `CLAUDE.md`). This feeds the outstanding-work mode (see "Outstanding-work modes" above).
+
 ### README and existing docs
 
 If `README.md` is present, read it for the project description and any commands not picked up from manifests. Note what it already covers (overview, install, usage, contributing) — Step 3 uses this to decide whether to scaffold a README, append to an existing one, or leave it alone. If `README.md` is **absent**, note that too: it's a flag for Step 3 to scaffold one from `templates/README.md` so the `@README.md` import in `CLAUDE.md` resolves.
@@ -101,11 +120,17 @@ Copy from `templates/` to the project root:
 - `docs/architecture/INDEX.md`
 - `docs/design/INDEX.md`
 - `docs/domain/INDEX.md`
+- `docs/process/INDEX.md`
+
+Then resolve the outstanding-work mode (see "Outstanding-work modes"; on a fresh scaffold there are usually no signals, so ask). In plan mode, additionally copy:
+
 - `docs/plan/INDEX.md`
 - `docs/plan/1-finish-legacy-migration-EXAMPLE.md`
 - `docs/plan/2-extract-billing-service-EXAMPLE.md`
 - `docs/plan/3-add-event-bus-EXAMPLE.md`
 - `docs/plan/consolidate-logging-EXAMPLE.md`
+
+In tracker mode, skip the `docs/plan/` templates and apply the tracker-mode adaptations to the files just scaffolded.
 
 The `docs/plan/` files other than `INDEX.md` are example placeholders demonstrating the naming convention — the `-EXAMPLE` suffix is the signal to delete or replace them. Tell the user this in the report. Likewise the scaffolded `README.md` is a thin stub with placeholder comments — call it out as something to flesh out, not something the skill will manage on future runs.
 
@@ -146,12 +171,13 @@ Read the project's `CLAUDE.md` and `README.md` (if present). Classify each secti
 | Contributing guide, issue / PR conventions, code of conduct | `README.md` (or a separate `CONTRIBUTING.md` if it's substantial) |
 | Overall shape of the system, layering, cross-cutting concerns | `docs/architecture/` |
 | Coding conventions, style guides, naming rules | `docs/architecture/` |
-| Deployment, release, ops, runbooks | `docs/architecture/` (or a new `docs/ops/` if it grows) |
+| Deployment, release, ops, runbooks | `docs/process/` |
+| How-we-work procedure: task writing, tooling operation, cross-repo workflows | `docs/process/` |
 | Specific features, modules, or packages | `docs/design/` |
 | Per-feature troubleshooting / FAQ | `docs/design/` (alongside the feature) |
 | Cross-cutting troubleshooting / FAQ | `docs/architecture/` |
 | Domain knowledge, terminology, external systems, business rules | `docs/domain/` |
-| TODOs, deferred cleanup, pending refactors, chunked migrations | `docs/plan/` (one file per change; see `docs/plan/INDEX.md` for naming) |
+| TODOs, deferred cleanup, pending refactors, chunked migrations | `docs/plan/` in plan mode (one file per change; see `docs/plan/INDEX.md` for naming); filed as tracker tasks in tracker mode |
 
 The four `README.md` rows reflect the rule: README is the project's human-facing front door, covering overview and general functionality. Content that explains *what the project is* and *how to use it from the outside* belongs there. Content about *how it's built internally* belongs in `docs/`. When `CLAUDE.md` has user-facing material that isn't in `README.md`, propose moving it; when there's no `README.md` yet, propose creating one (copy the template scaffold, fill in what the migrated sections cover, and route the user-facing sections into it).
 
@@ -176,7 +202,7 @@ If the existing `CLAUDE.md` is already thin, the proposal collapses to a single-
 
 Include these augmentations in the per-section proposal so the user can accept or redirect each one alongside the section moves.
 
-On confirm: create the new files in one atomic pass, update the affected `INDEX.md` files, rewrite `CLAUDE.md` with `@docs/approach.md` inserted near the top (after any title and `@README.md` import), and create the rest of the scaffold (`docs/INDEX.md`, `docs/approach.md`, the four subdirectory `INDEX.md` files, and — only if the project doesn't already have one — a scaffolded `README.md`). Do **not** copy the example `docs/plan/` files in this case — the user adds their own.
+On confirm: create the new files in one atomic pass, update the affected `INDEX.md` files, rewrite `CLAUDE.md` with `@docs/approach.md` inserted near the top (after any title and `@README.md` import), and create the rest of the scaffold (`docs/INDEX.md`, `docs/approach.md`, the subdirectory `INDEX.md` files — `architecture/`, `design/`, `domain/`, `process/`, plus `plan/` in plan mode — and, only if the project doesn't already have one, a scaffolded `README.md`). Do **not** copy the example `docs/plan/` files in this case — the user adds their own.
 
 **`docs/approach.md` exists — sync.** No version stamps; compare semantically against the template and propose changes that move the project toward the ideal while preserving deliberate project edits.
 
@@ -203,12 +229,12 @@ Empty diff → in sync, report and continue. Otherwise classify each hunk:
 
 If every difference is a preserved project addition (the user has adapted the file substantially and the template adds nothing new), report "no template-driven changes" and continue.
 
-**INDEX file sync.** After `approach.md`, run the same semantic-sync over each `INDEX.md` file that exists in the project: `docs/INDEX.md`, `docs/architecture/INDEX.md`, `docs/design/INDEX.md`, `docs/domain/INDEX.md`, `docs/plan/INDEX.md`. These files mix template prose (describing what goes in the directory) with user content (lists of documents the user has added). When classifying hunks:
+**INDEX file sync.** After `approach.md`, run the same semantic-sync over each `INDEX.md` file that exists in the project: `docs/INDEX.md`, `docs/architecture/INDEX.md`, `docs/design/INDEX.md`, `docs/domain/INDEX.md`, `docs/process/INDEX.md`, and — in plan mode — `docs/plan/INDEX.md`. These files mix template prose (describing what goes in the directory) with user content (lists of documents the user has added). When classifying hunks:
 
 - **Prose paragraphs** — header descriptions, naming conventions, principles — are template content. Propose updates to match the template wording. This is how revised category descriptions (e.g., the architecture/design distinction) propagate into existing projects.
 - **Bullet list entries linking to documents** (e.g. `` - [`auth.md`](auth.md) — ... ``) are user content. Preserve them verbatim.
 - **The `*No documents yet — …*` placeholder** is template content. If the project file has real list entries, drop the placeholder from the merged result; if both still have the placeholder, sync the wording.
-- **`docs/INDEX.md` subdirectory list.** The four standard entries (`architecture/`, `design/`, `domain/`, `plan/`) carry template-owned descriptions — propose updates. If the user has added a fifth subdirectory per the "Adding subdirectories" guidance in `approach.md`, preserve that entry.
+- **`docs/INDEX.md` subdirectory list.** The standard entries (`architecture/`, `design/`, `domain/`, `process/`, and `plan/` in plan mode) carry template-owned descriptions — propose updates. If the user has added an extra subdirectory per the "Adding subdirectories" guidance in `approach.md`, preserve that entry. In tracker mode, the absence of `plan/` — and the tracker note in its place in both `docs/INDEX.md` and `approach.md` — is deliberate adaptation, not drift; never propose reinstating plan material (see "Outstanding-work modes").
 - **`docs/plan/INDEX.md` "Current plan" section.** Everything above it is template prose and syncs normally; the entries listed under "Current plan" (including any `-EXAMPLE` placeholders) are user-owned and preserved.
 
 Present these alongside the `approach.md` proposal so the user accepts or redirects them in the same pass. On confirm, write each merged INDEX file. If every INDEX is in sync, report "INDEX files in sync" and continue.
@@ -222,7 +248,8 @@ After the INDEX sync, run the same semantic-sync over each method file that exis
 - `docs/architecture/INDEX.md`
 - `docs/design/INDEX.md`
 - `docs/domain/INDEX.md`
-- `docs/plan/INDEX.md`
+- `docs/process/INDEX.md`
+- `docs/plan/INDEX.md` — **plan mode only**; in tracker mode its absence is correct
 
 If anything is missing, list it and **offer to fix it inline** — ask the user via `AskUserQuestion` whether to scaffold the missing pieces. On **Yes**, copy the missing template files (or insert the missing `@docs/approach.md` import into `CLAUDE.md`) and report what was added. On **No**, leave the project alone.
 
