@@ -10,7 +10,7 @@ Installing and updating is done by invoking the skill: `/tobilize`
 
 Before deciding what to write, `/tobilize` **discovers the project** — reads manifests (`go.mod`, `package.json`, `Cargo.toml`, `pyproject.toml`, `Makefile`, `wrangler.toml`, etc.), the README, and the top-level directory layout. Findings are used to fill scaffolded files with real project content (build/test/run commands that match the actual tooling, a layout overview that names actual directories), so a fresh Go project doesn't end up with `pnpm` examples in `CLAUDE.md`.
 
-- **Fresh project** (no `CLAUDE.md`, no `docs/approach.md`) → scaffolds `CLAUDE.md`, `docs/INDEX.md`, the managed `docs/approach.md`, a stub `INDEX.md` in each of the four base subdirectories (`architecture/`, `design/`, `domain/`, `plan/`), and — only if one isn't already present — a thin `README.md` so the `@README.md` import in `CLAUDE.md` resolves. Seeds `docs/plan/` with example entries (suffixed `-EXAMPLE`) that demonstrate the filename convention. Fills `CLAUDE.md`'s build/test/run section from discovery, seeds the scaffolded `README.md`'s Install/Usage sections with discovered commands, and writes an initial `docs/architecture/overview.md` describing the discovered top-level layout.
+- **Fresh project** (no `CLAUDE.md`, no `docs/approach.md`) → scaffolds `CLAUDE.md`, `docs/INDEX.md`, the managed `docs/approach.md`, a stub `INDEX.md` in each base subdirectory (`architecture/`, `design/`, `domain/`, `process/`, plus `plan/` when the project tracks outstanding work in docs rather than a work tracker — the skill asks), and — only if one isn't already present — a thin `README.md` so the `@README.md` import in `CLAUDE.md` resolves. In plan mode, seeds `docs/plan/` with example entries (suffixed `-EXAMPLE`) that demonstrate the filename convention; in tracker mode, the docs tree points at the tracker instead. Fills `CLAUDE.md`'s build/test/run section from discovery, seeds the scaffolded `README.md`'s Install/Usage sections with discovered commands, and writes an initial `docs/architecture/overview.md` describing the discovered top-level layout.
 
 - **Existing project with a `CLAUDE.md`** (no `docs/approach.md` yet) → analyzes the existing `CLAUDE.md` and proposes a reorganization: durable content moves into the appropriate `docs/` subdirectory so `CLAUDE.md` becomes thin, user-facing material (overview, install, usage, contributing) is routed to `README.md` (scaffolded if absent, otherwise proposed as an append or flagged for manual fold-in), and the rest of the docs tree gets scaffolded. The proposal is augmented with discovery findings — missing build commands, a seed `docs/architecture/overview.md` from the discovered layout (skipped if `CLAUDE.md` already has a layout section being migrated), and flags for any pre-existing `ARCHITECTURE.md` / `CONTRIBUTING.md` content the user may want to fold in manually. The full plan is shown to the user before any file is touched.
 
@@ -60,8 +60,9 @@ tobilize/
     ├── docs/architecture/INDEX.md
     ├── docs/design/INDEX.md
     ├── docs/domain/INDEX.md
-    ├── docs/plan/INDEX.md
-    ├── docs/plan/*-EXAMPLE.md         # example plan entries (scaffolded on fresh projects)
+    ├── docs/process/INDEX.md
+    ├── docs/plan/INDEX.md             # plan mode only — skipped when a work tracker is used
+    ├── docs/plan/*-EXAMPLE.md         # example plan entries (scaffolded on fresh projects, plan mode)
     └── methods/                       # optional methodology guides, offered by /tobilize
         ├── ddd.md
         ├── tdd.md

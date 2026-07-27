@@ -8,14 +8,15 @@
 
 ## docs/ structure
 
-Four subdirectories, each with its own `INDEX.md`:
+Five subdirectories, each with its own `INDEX.md`:
 
-- **`architecture/`** — cross-cutting patterns and conventions that apply system-wide: dependency wiring, background-job processing, CQRS read/write split, logging, layering. Answers *"how do we do X here, in general?"*. Load when reasoning about how the system as a whole behaves.
-- **`design/`** — feature-specific knowledge: how authentication is implemented, gotchas in the admin dashboard, trade-offs behind the billing module. Answers *"how does this specific feature work?"*. Load when working on or near a specific feature.
-- **`domain/`** — business logic, terminology, external systems, business rules. Load when the task touches the domain.
+- **`architecture/`** — how the system is built: cross-cutting technical patterns and conventions that apply system-wide — dependency wiring, background-job processing, CQRS read/write split, logging, layering. Answers *"how is X implemented here, in general?"*. Load when reasoning about how the system as a whole behaves.
+- **`design/`** — how one specific feature works: how authentication is implemented, gotchas in the admin dashboard, trade-offs behind the billing module. Answers *"how does this specific feature work?"*. Load when working on or near a specific feature.
+- **`domain/`** — the business the system serves: terminology, external systems, business rules — knowledge that holds true regardless of how the code is written. Load when the task touches the domain.
+- **`process/`** — how we work on the project: writing tasks, operating developer tooling, sequencing deploys, working across repos. Answers *"what's the procedure for X?"*. Load when the task is about a way of working rather than the system itself.
 - **`plan/`** — outstanding work the project wants done but hasn't done yet (cleanup, chunked migrations, leftovers). Load before starting new work. See `docs/plan/INDEX.md` for the filename convention and the rename-to-insert rule. Entries are **deleted** when done.
 
-The first three accumulate over time; `plan/` shrinks and grows. `INDEX.md` is the navigation entry point — keep it in sync any time files in its directory change (added, renamed, removed, or *completed and deleted*).
+All but `plan/` accumulate over time; `plan/` shrinks and grows. `INDEX.md` is the navigation entry point — keep it in sync any time files in its directory change (added, renamed, removed, or *completed and deleted*).
 
 ## Working in docs/
 
@@ -35,7 +36,7 @@ The bar: would this still be worth doing in a few weeks if you didn't bring it u
 
 ## Adding subdirectories
 
-The four base subdirectories cover most projects. Add another only when ≥ 2 documents belong together and don't fit any of them. Give it an `INDEX.md` and link it from `docs/INDEX.md`.
+The five base subdirectories cover most projects. Add another only when ≥ 2 documents belong together and don't fit any of them. Give it an `INDEX.md` and link it from `docs/INDEX.md`.
 
 ## What not to put here
 
