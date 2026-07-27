@@ -3,7 +3,7 @@ name: commit
 description: Commit all outstanding changes as standalone, logically coherent atomic commits using Conventional Commits.
 disable-model-invocation: true
 context: fork
-allowed-tools: Bash(git add:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*), Bash(git push:*), Bash(git status:*)
+allowed-tools: Bash(git add:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*), Bash(git push:*), Bash(git status:*), Bash(backlog task edit:*)
 ---
 
 Commit all outstanding changes. Group related changes into standalone, logically coherent atomic commits. Each commit must be independently meaningful — do not lump unrelated changes together.
