@@ -22,6 +22,8 @@ All but `plan/` accumulate over time; `plan/` shrinks and grows. `INDEX.md` is t
 
 **One topic per file.** A file about authentication shouldn't also cover payments — different tasks need them separately. When files relate, **link**; never duplicate.
 
+**Keep specifics where they're defined.** A concrete value — a timeout, a threshold, a rate limit, a port, a cron expression — lives in exactly one place: the code that defines it (ideally a named constant), or the single canonical doc or config that owns it. Everywhere else, name the concept abstractly ("the task deadline", "the dispatch alarm threshold", "the per-source rate limit") and link to the source instead of copying the number. Copied values drift: when the source changes, every prose restatement silently goes stale and starts misleading the next reader. The test: if a doc states a value that could fall out of sync with code or infra, it shouldn't hold the value — it should point at whatever does.
+
 **Keep each file short** — aim for under ~50 lines of content, treat ~75 as a hard ceiling. A long file forces every task touching any sub-topic to drag in all the others, defeating selective loading. When a file approaches the ceiling, split it; that usually means the topic was actually more than one.
 
 **Capture as you work.** Prefer a new, small, single-topic file over expanding an existing one with tangential material. If you'd add a `## New section` for it, it belongs in its own file. Update the subdirectory's `INDEX.md` in the same change, and cross-link related files.
