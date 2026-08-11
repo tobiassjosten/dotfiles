@@ -12,7 +12,7 @@ Review the changes under review (outstanding changes, or the branch diff when th
 
 ## Shared principles
 
-The threshold, categories, planned-work calibration, output formats, and rules below govern this review:
+The threshold, categories, planned-work calibration, review method, output formats, and rules below govern this review:
 
 !`cat ~/.claude/skills/review-core.md`
 
