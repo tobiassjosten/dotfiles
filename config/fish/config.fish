@@ -94,6 +94,33 @@ end
 
 source "/Users/tobias.sjosten/google-cloud-sdk/path.fish.inc"
 
+# Per-repo gcloud config isolation.
+# GCP's Application Default Credentials live in one global file, so authing for
+# one project clobbers the identity others rely on. Pointing CLOUDSDK_CONFIG at a
+# per-repo directory isolates each project's account/project/ADC.
+#
+# Opt a repo in by creating its config dir once, then authing into it:
+#   mkdir -p ~/.config/gcloud/<reponame>
+#   set -x CLOUDSDK_CONFIG ~/.config/gcloud/<reponame>
+#   gcloud auth login ...; gcloud auth application-default login; gcloud config set project ...
+# Repos with no such directory fall back to the global default.
+function __gcloud_config_env --on-variable PWD --description "Scope CLOUDSDK_CONFIG to the current git repo"
+    set -l root (git rev-parse --show-toplevel 2>/dev/null)
+    set -l cfg
+    if test -n "$root"
+        set cfg $HOME/.config/gcloud/(basename $root)
+    end
+
+    if test -n "$cfg"; and test -d "$cfg"
+        set -gx CLOUDSDK_CONFIG $cfg
+    else if set -q CLOUDSDK_CONFIG; and string match -q "$HOME/.config/gcloud/*" -- $CLOUDSDK_CONFIG
+        # only clear configs we set, leave a manually-exported one alone
+        set -e CLOUDSDK_CONFIG
+    end
+end
+
+__gcloud_config_env
+
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
