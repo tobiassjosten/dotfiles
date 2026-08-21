@@ -18,6 +18,8 @@ Personal dotfiles, installed by symlinking files from this repo into `$HOME`. Th
 
 Fish is the login shell; all shell config (PATH, aliases, functions, prompt) lives in `config/fish/config.fish`. The only other shell file is `zprofile`, a minimal fallback for macOS's default zsh (puts Homebrew on `PATH`, loads nvm) — keep it minimal, everything else belongs in the fish config.
 
+**Per-repo gcloud isolation.** `config/fish/config.fish` defines `__gcloud_config_env`, a `--on-variable PWD` hook that scopes `CLOUDSDK_CONFIG` per git repo. On entering a repo it sets `CLOUDSDK_CONFIG` to `~/.config/gcloud/<reponame>` **if that directory exists**, otherwise leaves the global default in place; it only clears a value it set itself. This isolates each project's gcloud account/project/ADC so authing for one doesn't clobber another. To opt a repo in: `mkdir -p ~/.config/gcloud/<reponame>`, then run the gcloud auth sequence with `CLOUDSDK_CONFIG` set to that dir. Keyed on repo basename, so same-named repos collide. When working in a repo that relies on a specific GCP identity, be aware that `gcloud`/Terraform commands pick up this scoped config automatically — don't run `gcloud auth application-default login` against the global config expecting it to apply here.
+
 ### Editors
 
 - Neovim: `config/nvim/` (→ `~/.config/nvim`), lazy.nvim-based; plugins are one spec file each under `lua/plugins/`, auto-imported by `lua/config/lazy.lua`. Versions pinned in `lazy-lock.json`.
