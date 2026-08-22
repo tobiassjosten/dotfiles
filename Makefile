@@ -39,6 +39,7 @@ files:
 	ln -fs $(DIR)/claude/settings.json ~/.claude/settings.json
 	ln -fs $(DIR)/claude/statusline-command.sh ~/.claude/statusline-command.sh
 	$(call LINK_DIR,$(DIR)/claude/skills,~/.claude/skills)
+	$(call LINK_DIR,$(DIR)/claude/agents,~/.claude/agents)
 	$(call LINK_DIR,$(DIR)/config/nvim,~/.config/nvim)
 	$(call LINK_DIR,$(DIR)/vim,~/.vim)
 	# fish writes machine state (fish_variables, completions) into ~/.config/fish,
