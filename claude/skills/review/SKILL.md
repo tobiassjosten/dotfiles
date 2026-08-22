@@ -3,7 +3,7 @@ name: review
 description: Review all outstanding changes — or, when the working tree is clean on a non-main branch, the branch's diff from the main branch. Reports Issues (anything that could cause user problems, security risk, or data inconsistency) and optional Notes for further improvement.
 disable-model-invocation: true
 context: fork
-allowed-tools: Bash(cat:*), Bash(echo:*), Bash(git status:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git symbolic-ref:*), Bash(git show-ref:*), Bash(git branch:*), Bash(git merge-base:*), Bash(rtk proxy git diff:*)
+allowed-tools: Bash(cat:*), Bash(echo:*), Bash(sh ~/.claude/skills/review-diff.sh:*), Bash(git status:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git symbolic-ref:*), Bash(git show-ref:*), Bash(git branch:*), Bash(git merge-base:*), Bash(rtk proxy git diff:*)
 ---
 
 # Code Review
@@ -28,9 +28,9 @@ The diff below picks its base automatically; the `MODE:` line at its top says wh
 - **branch** — the working tree is clean and the current branch is not the main branch: the branch's changes since it diverged from the main branch (`<main>...HEAD`, i.e. against the merge-base). The main branch is whatever `origin/HEAD` points at, falling back to a local `main`, `master`, or `trunk`; when both the local and `origin/` refs exist, the more up-to-date of the two is the base — a stale local main would otherwise blame others' already-merged commits on the branch.
 - **initial** — a repo with no commits yet: the diff against the empty tree.
 
-`rtk proxy` and `--no-ext-diff` keep this a plain unified diff — the rtk filter and external diff tools (difftastic) drop context lines and truncate long ones, which a review can't afford:
+`rtk proxy` and `--no-ext-diff` keep this a plain unified diff — the rtk filter and external diff tools (difftastic) drop context lines and truncate long ones, which a review can't afford. The base-selection logic lives in `~/.claude/skills/review-diff.sh`, shared with the `code-reviewer` agent:
 
-!`if ! git rev-parse -q --verify HEAD >/dev/null 2>&1; then echo "MODE: initial (diff against the empty tree)"; rtk proxy git diff --no-ext-diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904; elif [ -n "$(git status --porcelain)" ]; then echo "MODE: outstanding (diff against HEAD)"; rtk proxy git diff --no-ext-diff HEAD; else main=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null); main=${main#origin/}; if [ -z "$main" ]; then for b in main master trunk; do if git show-ref -q --verify refs/heads/$b; then main=$b; break; fi; done; fi; base=""; if [ -n "$main" ]; then loc=""; rem=""; git show-ref -q --verify refs/heads/$main && loc=$main; git show-ref -q --verify refs/remotes/origin/$main && rem=origin/$main; if [ -n "$loc" ] && [ -n "$rem" ]; then if git merge-base --is-ancestor "$loc" "$rem" 2>/dev/null; then base=$rem; else base=$loc; fi; else base=${loc:-$rem}; fi; fi; cur=$(git branch --show-current); if [ -n "$base" ] && [ "$cur" != "$main" ]; then echo "MODE: branch ($base...HEAD)"; rtk proxy git diff --no-ext-diff "$base...HEAD"; else echo "MODE: clean working tree on the main branch (or no main branch found) — no diff to review"; fi; fi`
+!`sh ~/.claude/skills/review-diff.sh`
 
 ## Workflow
 
