@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Forge
 
-Take one work item from selection all the way to a review-hardened change: run the `/next` workflow to pick, plan, and implement a task, then loop a strict review — delegated each round to the `code-reviewer` agent — fixing everything a strict senior developer would insist on, until a review comes back clean or seven rounds are spent. Finish by summarizing the change and every review turn. **Never commit** — the change is left In Review for the user to `/commit`.
+Take one work item from selection all the way to a review-hardened change: run the `/next` workflow to pick, plan, and implement a task, then loop a strict review — delegated each round to the `code-reviewer` agent — fixing everything a strict senior developer would insist on, until two reviews in a row come back clean or seven review runs are spent. Finish by summarizing the change and every review turn. **Never commit** — the change is left In Review for the user to `/commit`.
 
 ## Argument
 
@@ -35,27 +35,32 @@ If `/next` finds no actionable task, report that and stop.
 
 Run the project's mandated verification (per `CLAUDE.md`): `make lint`, `make test`, `go build -o /dev/null ./...`, `make lint-size`, and — for Go changes — `make mutate`. Rerun `make install` if anything under `application/lumus/` changed. A review of broken code wastes rounds; get to green before reviewing.
 
-### 3. Review loop — up to seven rounds
+### 3. Review loop — up to seven review runs
 
-For each round (1 through 7):
+Convergence requires **two consecutive clean reviews**, not one. A single clean review only provisionally confirms the change; a second review of the unchanged diff guards against a review that missed something or made an inconsistent call. Keep a consecutive-clean counter, starting at 0.
+
+For each review run (1 through 7):
 
 1. **Review.** Spawn the `code-reviewer` agent (via the Agent tool) to review the **outstanding** diff. It gathers the diff, reads every untracked file in full, applies `~/.claude/skills/review-core.md`, and returns the numbered findings (Issues, Notes, Documentation) as its final message. State in the prompt that it is reviewing the outstanding changes just implemented/fixed this round. Running it as a subagent keeps the round's diff-reading out of this orchestrator's context — you retain only the findings to act on.
 
 2. **Act on findings — the senior-developer bar.** The `code-reviewer` agent only reports; the fixing is yours. Here you fix autonomously and only escalate genuine judgment calls.
    - **Fix every Issue.**
-   - **Fix Notes that have an unambiguous, low-risk fix** — dead code, duplication, doc/README/INDEX drift, missing tests on changed behavior, naming inconsistencies, and the like.
+   - **Fix every Note by default — nothing below the Issue bar gets a pass.** `review-core.md` writes Notes for a generic reviewer who must weigh each fix against the cost of disturbing otherwise-untouched code, so many are phrased as deferrals ("worth consolidating next time this area is touched," "a one-word tweak next time this file is touched"). In forge that deferral has already come due: the file *is* being touched this round, so the cost the Note was waiting on is already paid. Treat every "next time this is touched," "worth doing later," or "minor" as "do it now." A Note is left unfixed **only** when one of the two rules below removes it — never because it seemed too small to bother with.
    - **Scout rule:** also fix related and adjacent problems the review surfaces in the code you touched — including pre-existing ones — when the fix is clear and proportionate. Do not expand into unrelated subsystems or large refactors; that is scope expansion and gets escalated, not done.
-   - **Escalate, never guess:** anything that is a genuine trade-off, ambiguous intent, scope expansion, or otherwise *not* resolvable from existing code or documentation goes to the user. Batch all of a round's escalations into a single `AskUserQuestion`, apply the answers, then continue. A decision that *is* determinable from code or docs is resolved autonomously — note the inference in the summary.
+   - **Escalate, never guess:** anything that is a genuine trade-off, ambiguous intent, scope expansion, or otherwise *not* resolvable from existing code or documentation goes to the user — this is the one exit for a Note you do not fix. Batch all of a round's escalations into a single `AskUserQuestion`, apply the answers, then continue. A decision that *is* determinable from code or docs is resolved autonomously — note the inference in the summary. Record each escalation's outcome: a Note the user declines to fix is **settled** — do not re-escalate it in later rounds, and it no longer blocks a clean review.
    - Keep documentation aligned as you go (`docs/`, `INDEX.md`, README) — a strict review treats doc drift as a defect.
 
-3. **Re-verify.** Rerun the mandated verification from step 2. Fixes must not break lint, tests, build, mutation, or size checks.
+   A **clean** review has nothing left to act on: no Issues, and no Notes other than ones already settled this session (a Note the user declined to fix when it was escalated). Because the default is to fix every Note, a single fresh Note — one not yet fixed or settled — means the review is **not** clean: fix it or escalate it, then reset the counter to 0. Only a review that surfaces nothing but settled Notes (or nothing at all) is clean — increment the consecutive-clean counter and go straight to step 4.
+
+3. **Re-verify.** Only when this run applied fixes (a clean run changed nothing): rerun the mandated verification from step 2. Fixes must not break lint, tests, build, mutation, or size checks.
 
 4. **Decide whether to continue.**
-   - **Clean round** — no Issues and no actionable Notes (nothing to fix, nothing to escalate): the change is perfected. Exit the loop.
-   - **Otherwise** — fixes or escalated decisions were applied this round: the diff changed, so loop again to re-review it.
-   - **Round 7 exhausted with findings remaining:** stop. Do not loop further and do not claim completion — carry the remaining findings into the summary.
+   - **Two consecutive clean reviews** (counter reached 2): the change is perfected. Exit the loop.
+   - **One clean review** (counter is 1): loop again to run the confirming review — no fixes were applied, so the diff is unchanged.
+   - **This run applied fixes or escalations:** the diff changed, so loop again to re-review it.
+   - **Seven runs exhausted without two clean reviews in a row:** stop. Do not loop further and do not claim completion — carry the remaining findings into the summary.
 
-Track for each round: the findings count (Issues / Notes), what was auto-fixed, and every escalation with the user's decision.
+Track for each run: the findings count (Issues / Notes), what was auto-fixed, and every escalation with the user's decision. Retain the full Issue/Note items of the two converging clean reviews (or, on the cap, the final run) for the summary.
 
 ### 4. Finish — project Review gate, no commit
 
@@ -69,6 +74,7 @@ Present, in the conversation:
 
 - **Change** — the task worked, and a concise description of the code changes (files and areas touched).
 - **Review turns** — one line per round: findings count, what was fixed automatically (Issues and Notes), what was escalated and how the user decided. State whether the loop converged on a clean round or hit the seven-round cap with N findings still open (list them).
+- **Last review** — list the items from **both** consecutive clean reviews that ended the loop, grouped by run and labelled (e.g. "Run 5", "Run 6"), one condensed line each (category tag, file:line, and the gist — enough to recognize the finding, not the full explanation/fix block). A clean review carries only settled Notes (ones the user declined to fix) or nothing at all — say "nothing" for any run that returned nothing. Do not collapse them into a verdict or a count; the point is for the user to see exactly what each converging review surfaced and confirm they agree the loop was right to stop. If the seven-run cap was hit without two clean reviews in a row, list instead the final run's items and mark which remain unaddressed.
 - **Verification** — the final state of lint, test, build, mutation, and size checks.
 - **Next step** — the task is In Review; the user runs `/commit` when satisfied.
 
@@ -77,4 +83,4 @@ Present, in the conversation:
 - Honor every project Hard Rule and gate (`CLAUDE.md`): plan approval before any file change, at most one task In Progress, and never commit or push without the user's explicit instruction.
 - Fix autonomously within the change's scope; escalate anything requiring judgment. When in doubt whether a decision is inferable, ask.
 - Boy-scout fixes stay proportionate and adjacent — never a silent refactor of unrelated code.
-- The loop's hard ceiling is seven review rounds. Convergence (a clean round) ends it sooner; the cap never yields to "just one more round."
+- The loop's hard ceiling is seven review runs. Convergence (two clean reviews in a row) ends it sooner; the cap never yields to "just one more run."
