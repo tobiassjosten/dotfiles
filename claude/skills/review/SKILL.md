@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review all outstanding changes — or, when the working tree is clean on a non-main branch, the branch's diff from the main branch. Reports Issues (anything that could cause user problems, security risk, or data inconsistency) and optional Notes for further improvement.
+description: Review all outstanding changes — or, when the working tree is clean on a non-main branch, the branch's diff from the main branch. Reports every genuine improvement to the changed code, each with a fix, split into Issues (consequential) and Nitpicks (cosmetic) — no advisory notes or change summary.
 disable-model-invocation: true
 context: fork
 allowed-tools: Bash(cat:*), Bash(echo:*), Bash(sh ~/.claude/skills/review-diff.sh:*), Bash(git status:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git symbolic-ref:*), Bash(git show-ref:*), Bash(git branch:*), Bash(git merge-base:*), Bash(rtk proxy git diff:*)
@@ -8,7 +8,7 @@ allowed-tools: Bash(cat:*), Bash(echo:*), Bash(sh ~/.claude/skills/review-diff.s
 
 # Code Review
 
-Review the changes under review (outstanding changes, or the branch diff when the tree is clean — see below) against a fixed threshold. The aim is a bounded, useful review — not an open-ended hunt for things to flag.
+Review the changes under review (outstanding changes, or the branch diff when the tree is clean — see below) against the shared bar: every genuine improvement to the changed code is a finding, down to the smallest nit — but only genuine improvements, never invented churn. Findings are split into Issues (consequential) and Nitpicks (cosmetic).
 
 ## Shared principles
 
@@ -38,31 +38,28 @@ The diff below picks its base automatically; the `MODE:` line at its top says wh
 
 2. **Understand the intent and planned work.** Before critiquing, understand what the changes are trying to accomplish. Read surrounding code and related files as needed to build context. Check the repo for planned-work notes (e.g., `TODO.md`, a `plans/` or `todo/` directory) and read what's relevant — see *Calibrating against planned work* in the shared principles.
 
-3. **Review against each category.** Walk through the categories in the order listed in the shared principles. For each candidate finding, check it against the threshold before deciding whether it is an Issue or a Note.
+3. **Review against each category.** Walk through the categories in the order listed in the shared principles. For each candidate finding, check it against the threshold: report it — as an Issue or a Nitpick per its consequence, each with a fix — or omit it if it is not a genuine improvement. Do not skip the nitpick pass.
 
 4. **Check documentation alignment.** Per *Documentation alignment* in the shared principles.
 
-5. **Present findings.** Use the sections and formats from *Presenting findings* in the shared principles.
+5. **Present findings.** Use the sections and formats from *Presenting findings* in the shared principles — the two sections, Issues then Nitpicks, under one continuous numbering.
 
-6. **Ask which Issues to fix, then implement them.** If the review surfaced one or more Issues, end the review by asking the user which to proceed to fix. Do not modify any code yet — wait for the user's reply.
+6. **Ask which findings to fix, then implement them.** If the review surfaced anything — an Issue or a Nitpick — end the review by asking the user which to proceed to fix. Both sections are selectable by number; Nitpicks are fixable findings, not advisory. Do not modify any code yet — wait for the user's reply.
 
-   Prompt them with a short line like: `Which to fix? (e.g. 1b, 2, 3a, 5 (with the database), 6, 8, D11)`. The full numbered findings list is already on screen above, so do not restate the Issues.
+   Prompt them with a short line like: `Which to fix? (e.g. 1b, 2, 3a, 5 (with the database), 6, 8 — or "all")`. The full numbered findings list is already on screen above, so do not restate it.
 
-   Expect free-text input naming Issues by number, optionally with a fix-option letter and/or a parenthetical hint. Examples of valid input:
-   - `2` — fix Issue 2 (apply the only fix, or option `a.` if there are several).
-   - `3a` — fix Issue 3 using option `a.`.
-   - `5 (with the database)` — fix Issue 5; the parenthetical is the user's steer on how — honor it, picking the option or approach that matches.
+   Expect free-text input naming findings by number, optionally with a fix-option letter and/or a parenthetical hint. Examples of valid input:
+   - `2` — fix finding 2 (apply the only fix, or option `a.` if there are several).
+   - `3a` — fix finding 3 using option `a.`.
+   - `5 (with the database)` — fix finding 5; the parenthetical is the user's steer on how — honor it, picking the option or approach that matches.
    - `1b, 2, 3a, 5 (with the database), 6, 8` — apply each in turn.
-   - Ranges like `3–6` are also valid and mean every Issue in that range.
+   - Ranges like `3–6` are also valid and mean every finding in that range.
+   - `all` (or `all nitpicks`, `all issues`) — apply every finding, or every finding in that section.
 
-   For each named Issue:
+   For each named finding:
    - Single fix (`→`): apply it.
    - Multiple fix options (`a.`, `b.`, `c.`) with no letter or hint from the user: apply option `a.` and mention which one you used in your implementation summary, so the user can redirect — e.g., "for #3 I applied option a; reply if you'd prefer b".
    - Parenthetical hint: pick the option or approach that matches the hint. If no listed option fits, follow the hint directly and note what you did.
-
-   Notes are below the threshold and are never offered for selection — ignore any Note numbers the user names, and say so.
-
-   Documentation suggestions can be applied alongside Issue fixes. The user names them with a `D` prefix (e.g., `D11`) or naturally in a parenthetical. Apply them as straightforward doc edits.
 
    If the user replies with nothing, "none", or similar, end without implementing anything.
 
@@ -70,4 +67,4 @@ The diff below picks its base automatically; the `MODE:` line at its top says wh
 
 All rules from the shared principles apply. Additionally:
 
-- Only implement Issues the user explicitly picks in step 6 — never before, never others.
+- Only implement findings the user explicitly picks in step 6 — never before, never others.
