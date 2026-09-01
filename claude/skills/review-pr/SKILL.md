@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Review a GitHub pull request against the shared review principles. Accepts "123" (current repo), "repo#123" (current repo's owner), "owner/repo#123", or a URL. Reports Issues and Notes locally, then optionally posts them to the PR as a review.
+description: Review a GitHub pull request against the shared review principles. Accepts "123" (current repo), "repo#123" (current repo's owner), "owner/repo#123", or a URL. Reports every genuine improvement (each with a fix), split into Issues and Nitpicks, locally — then optionally posts them to the PR as a review.
 disable-model-invocation: true
 context: fork
 argument-hint: [123 | repo#123 | owner/repo#123 | url]
@@ -9,7 +9,7 @@ allowed-tools: Bash(cat:*), Bash(~/.claude/skills/review-pr/gh-pr.sh:*), Bash(gh
 
 # Pull Request Review
 
-Review the given pull request against a fixed threshold. The aim is a bounded, useful review — not an open-ended hunt for things to flag.
+Review the given pull request against the shared bar: every genuine improvement to the changed code is a finding, down to the smallest nit — but only genuine improvements, never invented churn. Findings are split into Issues (consequential) and Nitpicks (cosmetic).
 
 The PR reference was resolved by `gh-pr.sh` (bundled with this skill), which accepts a bare number (current repo), `repo#123` (current repo's owner), `owner/repo#123`, a URL, or nothing (the current branch's PR). Anything in the arguments beyond the reference itself is ignored by the resolver — treat it as the user's guidance on what to focus the review on. Only the first argument token (`$1`, not `$ARGUMENTS`) is substituted into the embedded commands: the substitution is textual, so free-text guidance containing quotes or other shell metacharacters would otherwise break the command line before any script could defend against it.
 
@@ -41,22 +41,23 @@ Discussion so far:
 
 3. **Check planned work.** Look for planned-work notes (`TODO.md`, `plans/`, `todo/`) in the PR's **base** repo using the same file-access methods, and calibrate per *Calibrating against planned work* in the shared principles.
 
-4. **Review against each category.** Walk through the categories in the order listed in the shared principles. For each candidate finding, check it against the threshold before deciding whether it is an Issue or a Note.
+4. **Review against each category.** Walk through the categories in the order listed in the shared principles. For each candidate finding, check it against the threshold: report it — as an Issue or a Nitpick per its consequence, each with a fix — or omit it if it is not a genuine improvement. Do not skip the nitpick pass.
 
 5. **Check documentation alignment.** Per *Documentation alignment* in the shared principles, reading the docs at the PR's head ref.
 
-6. **Present findings locally.** Use the sections and formats from *Presenting findings* in the shared principles. Present everything in the conversation first — nothing goes to GitHub yet.
+6. **Present findings locally.** Use the format from *Presenting findings* in the shared principles. Present everything in the conversation first — nothing goes to GitHub yet.
 
-7. **Ask what to post, then post it.** End by asking, e.g.: `Post to the PR? (all / e.g. 1, 3, D5 / none)`. Do not post anything before the user replies.
+7. **Ask what to post, then post it.** End by asking, e.g.: `Post to the PR? (all / issues only / e.g. 1, 3 / none)`. Do not post anything before the user replies.
 
-   - `all` or a bare confirmation → post every finding.
-   - Numbers (ranges like `3–6` are valid) → post only those findings. Notes and Documentation entries are selectable here too — the Issue/Note distinction governs severity framing, not postability.
+   - `all` or a bare confirmation → post every finding, Issues and Nitpicks.
+   - `issues only` → post the Issues, skip the Nitpicks (a common choice for someone else's PR, where a wall of cosmetic comments can drown the substantive ones).
+   - Numbers (ranges like `3–6` are valid) → post only those findings.
    - `none`, nothing, or similar → end without posting.
 
    Post the selection as a **single review** with event `COMMENT`, via `gh api repos/<owner>/<repo>/pulls/<number>/reviews`:
-   - Issues that map to a line in the diff become inline comments (`path`, `line`, `side: RIGHT`), keeping their category tag and `→`/`a.`/`b.` fix format.
-   - Notes, Documentation suggestions, and any finding that cannot be anchored to the diff go in the review `body`.
-   - Open the review body with a one-line summary of the overall verdict.
+   - Findings that map to a line in the diff become inline comments (`path`, `line`, `side: RIGHT`), keeping their category tag and `→`/`a.`/`b.` fix format. Prefix a posted Nitpick with `nit:` so the author sees at a glance it is cosmetic, not blocking.
+   - Any finding that cannot be anchored to a line in the diff goes in the review `body`.
+   - Open the review body with a one-line statement of the overall verdict (e.g. counts of Issues and Nitpicks, or "no issues found").
 
 ## Rules
 
@@ -65,4 +66,4 @@ All rules from the shared principles apply. Additionally:
 - Never modify any code — this skill reviews someone's PR; it does not fix it.
 - Never post anything to GitHub before the user's explicit selection in step 7, and never post more than they selected.
 - Only ever post `COMMENT` reviews. Never approve or request changes — that judgment belongs to the human.
-- Phrase posted comments as coming from a reviewer: constructive, specific, no filler. The threshold framing ("Issue" vs "Note") carries over so the author knows what is blocking versus advisory.
+- Phrase posted comments as coming from a reviewer: constructive, specific, no filler. Every posted finding is a concrete problem with a fix; mark the cosmetic ones with a `nit:` prefix so the author can tell blocking from polish at a glance.
