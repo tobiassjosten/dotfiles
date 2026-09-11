@@ -3,7 +3,7 @@ name: commit
 description: Commit all outstanding changes as standalone, logically coherent atomic commits using Conventional Commits.
 disable-model-invocation: true
 context: fork
-allowed-tools: Bash(git add:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*), Bash(git push:*), Bash(git status:*), Bash(backlog task edit:*)
+allowed-tools: Bash(git add:*), Bash(git commit:*), Bash(git diff:*), Bash(git fetch:*), Bash(git log:*), Bash(git push:*), Bash(git rebase:*), Bash(git status:*)
 ---
 
 Commit all outstanding changes. Group related changes into standalone, logically coherent atomic commits. Each commit must be independently meaningful — do not lump unrelated changes together.
@@ -25,6 +25,10 @@ Commit all outstanding changes. Group related changes into standalone, logically
       - Always use a plain string — no `$()`, heredocs, or multi-line messages
 
 5. After all commits, run `git push` to push everything to GitHub.
+   - If the push succeeds, continue. This is the common case — don't fetch or rebase preemptively.
+   - If the push is rejected because the remote has advanced (non-fast-forward), run `git fetch` then `git rebase` onto the updated upstream, and push again.
+     - If the rebase completes cleanly, push and continue.
+     - If the rebase hits conflicts, run `git rebase --abort`, leave the commits in place unpushed, and tell the user the remote diverged and needs manual resolution. Do not force-push.
 
 6. Run `git log --oneline -<N>` (where N = number of new commits) to show the user what was committed.
 
