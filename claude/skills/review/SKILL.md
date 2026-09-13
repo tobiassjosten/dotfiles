@@ -1,50 +1,24 @@
 ---
 name: review
-description: Review all outstanding changes — or, when the working tree is clean on a non-main branch, the branch's diff from the main branch. Reports every genuine improvement to the changed code, each with a fix, split into Issues (consequential) and Nitpicks (cosmetic) — no advisory notes or change summary.
+description: Review all outstanding changes — or, when the working tree is clean on a non-main branch, the branch's diff from the main branch — by delegating to the code-reviewer agent, then interactively fix the findings the user picks. Findings are split into Issues (consequential) and Nitpicks (cosmetic).
 disable-model-invocation: true
-context: fork
-allowed-tools: Bash(cat:*), Bash(echo:*), Bash(sh ~/.claude/skills/review-diff.sh:*), Bash(git status:*), Bash(git diff:*), Bash(git rev-parse:*), Bash(git symbolic-ref:*), Bash(git show-ref:*), Bash(git branch:*), Bash(git merge-base:*), Bash(rtk proxy git diff:*)
 ---
 
 # Code Review
 
-Review the changes under review (outstanding changes, or the branch diff when the tree is clean — see below) against the shared bar: every genuine improvement to the changed code is a finding, down to the smallest nit — but only genuine improvements, never invented churn. Findings are split into Issues (consequential) and Nitpicks (cosmetic).
+Generate a review of the changes under review and act on it interactively: present the findings, let the user pick which to fix, and apply exactly those. Finding-generation is delegated to the `code-reviewer` agent — the single keeper of the review bar. This skill owns only the interaction and the fixing.
 
-## Shared principles
+## Composed pieces
 
-The threshold, categories, planned-work calibration, review method, output formats, and rules below govern this review:
-
-!`cat ~/.claude/skills/review-core.md`
-
-## Changes under review
-
-Working tree status:
-
-!`git status --untracked-files=all`
-
-The diff below picks its base automatically; the `MODE:` line at its top says which case applies:
-
-- **outstanding** — there are uncommitted changes: staged and unstaged together against `HEAD` (staging state is irrelevant).
-- **branch** — the working tree is clean and the current branch is not the main branch: the branch's changes since it diverged from the main branch (`<main>...HEAD`, i.e. against the merge-base). The main branch is whatever `origin/HEAD` points at, falling back to a local `main`, `master`, or `trunk`; when both the local and `origin/` refs exist, the more up-to-date of the two is the base — a stale local main would otherwise blame others' already-merged commits on the branch.
-- **initial** — a repo with no commits yet: the diff against the empty tree.
-
-`rtk proxy` and `--no-ext-diff` keep this a plain unified diff — the rtk filter and external diff tools (difftastic) drop context lines and truncate long ones, which a review can't afford. The base-selection logic lives in `~/.claude/skills/review-diff.sh`, shared with the `code-reviewer` agent:
-
-!`sh ~/.claude/skills/review-diff.sh`
+- **Reviewing** is delegated to the `code-reviewer` agent (`~/.claude/agents/code-reviewer.md`), which applies the shared threshold in `~/.claude/skills/review-core.md` and selects the diff base via `~/.claude/skills/review-diff.sh` (outstanding changes, or the branch diff when the tree is clean). **Spawn it via the Agent tool.** It gathers the diff, reads every untracked file, recovers a truncated diff, applies the bar, and returns the numbered findings — Issues then Nitpicks, each with a fix — as its final message, and never modifies code. Presenting those findings, asking which to fix, and fixing them stays here.
 
 ## Workflow
 
-1. **Complete the picture.** The status and diff are included above. Read every untracked file listed in the status in full — they are part of the change but absent from the diff (in branch mode the tree is clean, so there are none). If the diff appears truncated — a truncation marker, or it ends mid-hunk — re-run `rtk proxy git diff --no-ext-diff <base>` with Bash, using the base named on the `MODE:` line, to recover the full diff before reviewing.
+1. **Review.** Spawn the `code-reviewer` agent to review the changes under review. Do not narrow the scope — let its base-selection pick outstanding vs. branch mode. It returns the findings as its final message.
 
-2. **Understand the intent and planned work.** Before critiquing, understand what the changes are trying to accomplish. Read surrounding code and related files as needed to build context. Check the repo for planned-work notes (e.g., `TODO.md`, a `plans/` or `todo/` directory) and read what's relevant — see *Calibrating against planned work* in the shared principles.
+2. **Present the findings.** The agent's output is not shown to the user, so relay its returned findings **verbatim** — the two sections, Issues then Nitpicks, under one continuous numbering, each with its fix. The numbers are the user's selection handles, so reproduce them exactly; do not renumber, summarize, or drop any. If the agent found nothing to improve, say so and stop.
 
-3. **Review against each category.** Walk through the categories in the order listed in the shared principles. For each candidate finding, check it against the threshold: report it — as an Issue or a Nitpick per its consequence, each with a fix — or omit it if it is not a genuine improvement. Do not skip the nitpick pass.
-
-4. **Check documentation alignment.** Per *Documentation alignment* in the shared principles.
-
-5. **Present findings.** Use the sections and formats from *Presenting findings* in the shared principles — the two sections, Issues then Nitpicks, under one continuous numbering.
-
-6. **Ask which findings to fix, then implement them.** If the review surfaced anything — an Issue or a Nitpick — end the review by asking the user which to proceed to fix. Both sections are selectable by number; Nitpicks are fixable findings, not advisory. Do not modify any code yet — wait for the user's reply.
+3. **Ask which findings to fix.** End by asking the user which to fix. Both sections are selectable by number; Nitpicks are fixable findings, not advisory. Do not modify any code yet — wait for the user's reply.
 
    Prompt them with a short line like: `Which to fix? (e.g. 1b, 2, 3a, 5 (with the database), 6, 8 — or "all")`. The full numbered findings list is already on screen above, so do not restate it.
 
@@ -56,15 +30,14 @@ The diff below picks its base automatically; the `MODE:` line at its top says wh
    - Ranges like `3–6` are also valid and mean every finding in that range.
    - `all` (or `all nitpicks`, `all issues`) — apply every finding, or every finding in that section.
 
-   For each named finding:
+   If the user replies with nothing, "none", or similar, end without implementing anything.
+
+4. **Implement the picked findings.** For each named finding:
    - Single fix (`→`): apply it.
    - Multiple fix options (`a.`, `b.`, `c.`) with no letter or hint from the user: apply option `a.` and mention which one you used in your implementation summary, so the user can redirect — e.g., "for #3 I applied option a; reply if you'd prefer b".
    - Parenthetical hint: pick the option or approach that matches the hint. If no listed option fits, follow the hint directly and note what you did.
 
-   If the user replies with nothing, "none", or similar, end without implementing anything.
-
 ## Rules
 
-All rules from the shared principles apply. Additionally:
-
-- Only implement findings the user explicitly picks in step 6 — never before, never others.
+- All rules from `~/.claude/skills/review-core.md` apply to the findings.
+- Only implement findings the user explicitly picks in step 3 — never before, never others.
