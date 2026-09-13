@@ -31,11 +31,23 @@ Severity does not decide *whether* to report — only how to order findings (mos
 
 When a finding could go either way, decide by consequence: if leaving it unfixed could bite someone later (a maintainer misled, a bug enabled), it is an Issue; if it only makes the code marginally nicer to read, it is a Nitpick.
 
+## Defect versus preference
+
+Tier (Issue / Nitpick) sorts findings by *consequence*. A second, orthogonal axis sorts them by *whether the current code is wrong* — and gating skills (e.g. `/ship`) use it to decide what may block a commit. Mark every finding with exactly one:
+
+- **`(defect)`** — the code is *wrong*: there is a correct behavior it fails to meet, however small. A malformed output string, an off-by-one, a broken contract, an edge case that produces the wrong result, a comment that *misstates* what the code does. A defect has a right answer the code currently gets wrong.
+- **`(preference)`** — the code is *not wrong*, only *improvable*: a genuine but lateral betterment where the current form still works and reads acceptably. Extracting a helper for duplicated logic, a clearer name, consistent ordering, a comment that merely restates the code. A competent peer could ship the original without embarrassment; the fix makes it nicer, not correct.
+
+The two axes are independent. **Issues** are almost always `(defect)` — a consequential finding generally fixes something wrong. **Nitpicks** split: a double space in an error string is a `(defect)` Nitpick (cosmetic but wrong); renaming a variable for clarity is a `(preference)` Nitpick. Decide the marker by asking "is the current code *wrong*, or just *improvable*?" — not by how big the fix is.
+
+Both defects and preferences are still reported and still offered for fixing; the marker changes nothing about the review itself or the two-tier split. It exists so a gating skill can block on what is *wrong* while treating pure improvements as advisory. This is not the excluded-churn screen: churn — a lateral rewrite where the original is equally good — is still omitted entirely, whereas a `(preference)` finding is a real improvement, just not a correction.
+
 ## Introduced versus pre-existing
 
 Exhaustiveness applies to the **change**, not the whole codebase.
 
 - **Introduced or modified by the change** — the full nitpick bar applies. Every genuine improvement, down to the smallest, is an Issue.
+- **Relocated by the change** — code moved largely verbatim into a new home (an extracted helper, a moved function). Moving code is taking ownership of it: apply the full bar for **`(defect)`** findings — report anything actually wrong with it (a malformed output, a misleading comment, a broken edge case), and do **not** tag it `(pre-existing)` — but hold **`(preference)`** findings about it to the pre-existing bar (report only a genuinely significant one). Relocation is a decision to re-own the code's correctness, not a mandate to restyle legacy you merely carried across.
 - **Pre-existing, in code the change touches** — report it only when it is a genuinely significant problem (correctness, security, data, reliability, or a real maintainability trap), tagged `(pre-existing)` on the first line. Do **not** nitpick untouched pre-existing lines for naming or style: auditing legacy code the change did not create is scope creep, and it buries the change's own issues in noise. The author needs to know a significant pre-existing problem is there, but fixing it is not automatically their obligation in this change.
 - **Pre-existing and merely stylistic** — omit.
 
@@ -104,7 +116,7 @@ Each Issue is written so a reader who knows the system's shape — but not this 
 
 Substantive issues use these parts:
 
-- **First line:** category tag, file and line reference, then the problem in one sentence. Add `(pre-existing)` after the category tag where it applies.
+- **First line:** category tag, then the `(defect)` / `(preference)` marker, then the file and line reference, then the problem in one sentence. Add `(pre-existing)` after the marker where it applies. Every finding — Issue and Nitpick alike — carries the marker; a gating skill relies on it.
 - **What's wrong:** two to four sentences. Cover what this code's job is, the concrete cost (the trigger "when X happens, Y goes wrong" for correctness; what's harder to read/maintain/get-right for clarity), and who is affected and how badly.
 - **Fix — and what it achieves:** the concrete change, plus what applying it accomplishes (what the code will do correctly, or read more clearly, afterward — not just the mechanical edit). One `→` line for a single good fix; `a.`, `b.`, `c.` when there are genuinely different approaches, each saying what it achieves or trades off.
 - **Ramifications** *(optional)*: include only when applying the fix has non-obvious knock-on effects — behavior changes for other callers, a migration or deploy-ordering requirement, a performance trade-off, or follow-up work elsewhere. Prefix the line `Ramifications:`. Omit it entirely when the fix is self-contained; do not pad findings with a trivial one.
@@ -114,22 +126,22 @@ Example — the Issues get the full structure; the Nitpicks collapse to one line
 ```
 Issues
 
-1. `[security]` `src/auth/session.ts:42` — token comparison uses `==` instead of a constant-time check.
+1. `[security]` (defect) `src/auth/session.ts:42` — token comparison uses `==` instead of a constant-time check.
    This comparison decides whether an incoming API request's session token is valid. A plain `==` returns as soon as the first character differs, so the time it takes leaks how many leading characters were correct. An attacker measuring response times can reconstruct a valid token character by character and hijack a session — no credentials required.
    a. Replace with `crypto.timingSafeEqual(...)` — makes the comparison take the same time regardless of how much of the token matches, so response timing reveals nothing.
    b. Route the check through the existing `verifyToken` helper (the session-cookie checker the web routes already use), which compares in constant time — same effect, and it removes the duplicated comparison logic.
 
-2. `[correctness]` `src/api/users.ts:88` — missing `await` on `db.commit()`.
+2. `[correctness]` (defect) `src/api/users.ts:88` — missing `await` on `db.commit()`.
    This endpoint saves a user's profile update and then reports success. Without the `await`, the success response is sent while the database write is still in flight; if the process crashes or restarts in that window, the write is lost after the client was already told it succeeded. It surfaces as sporadic "my changes didn't stick" reports that are near-impossible to reproduce.
    → Add `await` before `db.commit()` so the success response is sent only after the write has durably landed.
 
 Nitpicks
 
-3. `[clarity]` `src/billing/invoice.ts:20` — `d` holds the customer's outstanding balance; the one-letter name hides that at every use.
-   → Rename `d` to `outstandingBalance`.
+3. `[clarity]` (defect) `src/billing/invoice.ts:60` — the comment says the retry backs off exponentially, but the loop adds a fixed 200 ms each pass.
+   → Correct the comment to describe the linear backoff the code actually performs (or change the code if exponential was intended).
 
-4. `[clarity]` `src/billing/invoice.ts:34-48` — the early-exit conditions are nested three deep, so the success path is hard to follow.
-   → Return early on each guard (`if (!customer) return ...`) to flatten the body to a single level.
+4. `[clarity]` (preference) `src/billing/invoice.ts:20` — `d` holds the customer's outstanding balance; the one-letter name hides that at every use.
+   → Rename `d` to `outstandingBalance`.
 ```
 
 ## Rules

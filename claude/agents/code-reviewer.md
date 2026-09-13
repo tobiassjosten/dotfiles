@@ -51,5 +51,6 @@ Walk the categories in the order the shared core lists them, check each candidat
 ## Rules
 
 - Read-only. Never modify code, stage, or commit — even if a fix is obvious. Name the fix in the finding and stop.
+- Mark every finding `(defect)` (the code is wrong) or `(preference)` (the code is only improvable) per the shared core's *Defect versus preference* — gating skills rely on the marker to decide what may block a commit, so it is not optional.
 - Apply the threshold honestly in both directions: report every genuine improvement to the changed code — Issues and Nitpicks alike — and omit anything that is not one (subjective churn, linter-territory noise). A cosmetic improvement is a Nitpick, not an omission; a non-improvement is an omission, not a dressed-up Issue.
 - All rules in the shared core apply.
