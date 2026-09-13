@@ -13,6 +13,7 @@ Take the change already sitting in the working tree and harden it: loop a strict
 This skill adds orchestration and a stricter fix policy on top of existing pieces — they remain the single source of truth:
 
 - **Reviewing** is delegated to the `code-reviewer` agent (`~/.claude/agents/code-reviewer.md`), which applies the shared threshold in `~/.claude/skills/review-core.md`. **Spawn it each round via the Agent tool** instead of inlining `/review` — its isolated context absorbs the diff-reading and finding-generation, so ten rounds don't accumulate in this orchestrator's context; you keep only the returned findings. Acting on those findings (fixing, escalating) stays here, where the tools and user gates live.
+- **The green-baseline check** — which verification checks to run — comes from `~/.claude/skills/verify-core.md` (shared with `/ship`). This skill's disposition on a red check is to fix the change until it passes.
 
 ## Procedure
 
@@ -20,12 +21,7 @@ This skill adds orchestration and a stricter fix policy on top of existing piece
 
 Verify the change is sound before reviewing — a review of broken code wastes rounds; get to green first.
 
-**Determine the verification method once, at the start:**
-
-- **If the project defines one, use it exactly.** Look for a mandated set of checks in `CLAUDE.md`, contributing/developer docs, a `Makefile` (`make lint`/`make test`/…), CI config (`.github/workflows/`, `.gitlab-ci.yml`, pre-commit hooks), or task-runner scripts (`package.json`, `justfile`, `Taskfile`). A project's stated checks win — run all of them, including project-specific ones (mutation testing, size/complexity budgets, install steps), and honor any conditions they state (e.g. only for changes under a given path).
-- **If the project defines none, infer what fits its nature** from the toolchain and apply the standard checks for it — typically lint/format, type-check, the test suite, and a build. For example: Go → `go build ./...`, `go vet`, `go test ./...`, `gofmt`/linter; Node/TS → the lint, typecheck, test, and build scripts in `package.json`; Rust → `cargo build`, `cargo clippy`, `cargo test`; Python → the configured linter/formatter (ruff/black), type checker (mypy/pyright), and `pytest`. Scale to what exists — skip a category the project has no tooling for rather than inventing one, and don't fabricate targets that aren't there.
-
-Record which checks you settled on; the loop's re-verify step and the summary refer back to this same set.
+Determine and run the verification set per `~/.claude/skills/verify-core.md`. If any check is red, fix the change until all pass before entering the review loop. The loop's re-verify step and the summary refer back to this same set.
 
 ### 2. Review loop — up to ten review runs
 
