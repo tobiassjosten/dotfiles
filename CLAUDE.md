@@ -10,7 +10,7 @@ Personal dotfiles, installed by symlinking files from this repo into `$HOME`. Th
 - `make files` — (re)create the symlinks only; run after adding a new config file so it gets linked into `$HOME`
 - `make brews` — install/update Homebrew packages from `Brewfile`. Note: `Brewfile` ships `tfenv`, not `terraform` — on a fresh machine run `tfenv install latest` once to get a `terraform` binary.
 
-**When adding a new config file, add a corresponding `ln` line to the `files` target in the Makefile** — otherwise it never reaches `$HOME`. Use `-fs` for files and the `LINK_DIR` macro for directories: `ln -fhs` only replaces an existing symlink — if the target is already a real directory, it silently creates the link inside it instead, which the macro guards against. The inverse also holds: when converting a formerly-symlinked directory into a real directory, `rm` the legacy symlink in the recipe first — both `mkdir -p` and `ln -fs` resolve through an existing symlink and would write into the repo itself.
+**When adding a new config file, add a corresponding `ln` line to the `files` target in the Makefile** — otherwise it never reaches `$HOME`. Use `-fs` for files and the `LINK_DIR` macro for directories: `ln -fns` only replaces an existing symlink — if the target is already a real directory, it silently creates the link inside it instead, which the macro guards against. The inverse also holds: when converting a formerly-symlinked directory into a real directory, `rm` the legacy symlink in the recipe first — both `mkdir -p` and `ln -fs` resolve through an existing symlink and would write into the repo itself.
 
 ## Architecture
 

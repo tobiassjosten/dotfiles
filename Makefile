@@ -1,10 +1,11 @@
 DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
-# `ln -fhs` only replaces an existing symlink — if the target is already a
-# real directory, the link is silently created inside it instead.
+# `ln -fns` only replaces an existing symlink — if the target is already a
+# real directory, the link is silently created inside it instead. (`-n` is the
+# portable spelling of BSD's `-h`; GNU coreutils `ln` has no `-h`.)
 define LINK_DIR
 @if [ -d $(2) ] && [ ! -L $(2) ]; then echo "error: $(2) is a real directory — move it aside first"; exit 1; fi
-ln -fhs $(1) $(2)
+ln -fns $(1) $(2)
 endef
 
 .PHONY: all
