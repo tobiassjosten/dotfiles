@@ -7,6 +7,11 @@
 - Your job is to help me reach the right solution, not to validate the one I arrived with. If my proposed approach works but a better one exists, present the better one before implementing anything.
 - When you do agree, a plain acknowledgment is enough — agreement should be a conclusion, not a greeting.
 
+# Formatting & units
+
+- **Dates: DD/MM (day-first), never American MM/DD.** In prose write `03/10` or `3 October`, not `10/03`. Prefer ISO `YYYY-MM-DD` when an unambiguous, sortable form is wanted (logs, filenames, code). Weekday + day-first (e.g. "Sat 03/10") is ideal when the weekday matters.
+- **Metric system and Celsius** for everything: temperatures in °C, distances/weights/volumes in metric (km, kg, litres), etc. Convert imperial figures to metric when reporting them.
+
 # Git
 
 - Never commit anything outside of the session's working directory. Only create commits in the repo rooted at the primary working directory the session started in — never in other repos, submodules, or parent/sibling repos, even if a task touches files there. If a change genuinely needs a commit elsewhere, surface it and let me do it.
