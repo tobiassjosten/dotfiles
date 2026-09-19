@@ -15,7 +15,7 @@ This is the automated far half of your workflow: `/forge` selects, implements, r
 This skill only adds orchestration on top of existing pieces — they remain the single source of truth:
 
 - **The green-baseline check** — which verification checks to run — comes from `~/.claude/skills/verify-core.md` (shared with `/polish`). This skill's disposition on a red check is to stop the ship, not to fix.
-- **Reviewing** is delegated to the `code-reviewer` agent (`~/.claude/agents/code-reviewer.md`), which applies the shared threshold in `~/.claude/skills/review-core.md`. **Spawn it via the Agent tool** — do not inline `/review`, which is interactive (it asks "which to fix?" and then modifies code); `/ship` needs a non-interactive verdict and never fixes. Its isolated context absorbs the diff-reading; you keep only the returned findings to decide the gate.
+- **Reviewing** is delegated to the `code-reviewer` agent (`~/.claude/agents/code-reviewer.md`), which applies the shared threshold in `~/.claude/skills/review-core.md`. **Spawn it via the Agent tool with `model: "opus"`** — do not inline `/review`, which is interactive (it asks "which to fix?" and then modifies code); `/ship` needs a non-interactive verdict and never fixes. Its isolated context absorbs the diff-reading; you keep only the returned findings to decide the gate.
 - **Committing** comes from `/commit` (`~/.claude/skills/commit/SKILL.md`): it groups the outstanding changes into atomic Conventional Commits, pushes, and rebases on a rejected push. It sets `disable-model-invocation: true`, so it can't be invoked through the Skill tool — **read and follow that `SKILL.md` directly** in this (main-loop) context.
 - **Task lifecycle** — `/commit` is deliberately barred from the tracker, and `/forge` defers moving a task to Done to the project's **Finish gate**. `/ship` *is* that gate: after a successful commit it advances the task per the project's documented lifecycle, generically over the work-item source (the same sources `/next` enumerates).
 
@@ -34,9 +34,9 @@ Reviewing or shipping broken code is pointless. Before the review, determine and
 
 ### 3. Review gate — one review, defect bar
 
-Spawn the `code-reviewer` agent (via the Agent tool) to review the **outstanding** diff. It gathers the diff, reads every untracked file in full, applies `~/.claude/skills/review-core.md`, and returns the numbered findings — two sections, Issues then Nitpicks, each carrying a `(defect)` / `(preference)` marker and a fix — as its final message.
+Spawn the `code-reviewer` agent (via the Agent tool with `model: "opus"`) to review the **outstanding** diff. It gathers the diff, reads every untracked file in full, applies `~/.claude/skills/review-core.md`, and returns the numbered findings — two sections, Issues then Nitpicks, each carrying a `(defect)` / `(preference)` marker and a fix — as its final message.
 
-A single review is sufficient: unlike `/polish`, this skill does not mutate the diff between rounds, so there is no changed diff to re-review and no need for `/polish`'s two-consecutive-clean rule.
+A single review is sufficient: unlike `/polish`, this skill does not mutate the diff between rounds, so there is no changed diff to re-review and no need for `/polish`'s consecutive-clean convergence rule.
 
 **Evaluate with the defect bar.** `/ship` gates on what is *wrong*, not on taste. A finding is **blocking** if it is any **Issue**, or a **Nitpick marked `(defect)`** (cosmetic but wrong — a malformed string, an off-by-one, a comment that misstates the code). A finding is **non-blocking** if it is a **Nitpick marked `(preference)`** (a genuine but lateral improvement — extract a helper, rename, reorder). This deliberately differs from `/polish`, whose job is to sweep preferences too; `/ship` is a correctness gate, not a second taste pass, so it will not re-block a freshly-polished change over a fresh preference-level nit. (An Issue always blocks regardless of its marker — Issues are consequential by definition, so err toward blocking.)
 
@@ -65,6 +65,9 @@ Present, in the conversation:
 - **Gate** — passed (shipped) or blocked. If blocked, the blocking findings (Issues and `(defect)` Nitpicks) with their count. Either way, list any `(preference)` Nitpicks that were surfaced — on a pass they rode along as advisory and were **not** fixed; note them so the user can pick them up (e.g. via `/polish`) if they want.
 - **Commits** — when shipped, the `git log --oneline` of the new commits and whether the push succeeded (or diverged and needs manual resolution, per `/commit`).
 - **Task** — the task advanced to its terminal state, or a note that none applied / it was skipped.
+- **Remaining steps** — anything that still has to happen before the work is *actually* done, beyond the code that just shipped. Draw from this conversation's main context and the nature of the change itself. For each item, say plainly **what** must happen and **who/where** (you vs. the user vs. another system). This list is the whole reason `/ship` runs in main context rather than being delegated — surface it prominently. If there is genuinely nothing left, say so explicitly ("Nothing outstanding — the shipped commit completes the work") rather than omitting the section.
+  - **Blocking** — must happen before the change is safe/complete (e.g. run the migration before this deploys, configure the required secret).
+  - **Follow-up** — should happen but doesn't block (e.g. file a ticket for the deferred refactor, update docs elsewhere).
 
 ## Rules
 

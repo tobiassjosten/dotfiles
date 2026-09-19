@@ -17,7 +17,7 @@ An optional argument may follow the command: `$ARGUMENTS`. When present, it is a
 This skill only adds orchestration on top of existing pieces — they remain the single source of truth:
 
 - **Selection, planning, implementation** come from `/next` (`~/.claude/skills/next/SKILL.md`), which owns the plan-approval gate and other user interactions. A subagent can't run those gates, so **read and follow that `SKILL.md` directly** in this (main-loop) context. It sets `disable-model-invocation: true`, so it can't be invoked through the Skill tool anyway.
-- **The review+fix loop** comes from `/polish` (`~/.claude/skills/polish/SKILL.md`): it establishes a green baseline, then loops the `code-reviewer` agent with a strict fix policy until two reviews in a row come back clean or ten runs are spent. It owns user gates too (batched escalations), so **read and follow that `SKILL.md` directly** in this (main-loop) context. It also sets `disable-model-invocation: true`.
+- **The review+fix loop** comes from `/polish` (`~/.claude/skills/polish/SKILL.md`): it establishes a green baseline, then loops the `code-reviewer` agent with a strict fix policy until 2 consecutive clean reviews or 10 runs. `/forge` follows it with no arguments, so polish's defaults (N=10, M=2) apply. It owns user gates too (batched escalations), so **read and follow that `SKILL.md` directly** in this (main-loop) context. It also sets `disable-model-invocation: true`.
 
 ## Procedure
 
@@ -33,7 +33,7 @@ If `/next` finds no actionable task, report that and stop.
 
 ### 2. Harden the change
 
-Follow `~/.claude/skills/polish/SKILL.md` on the change just implemented: it establishes a green baseline and runs the review+fix loop (up to ten runs, converging on two consecutive clean reviews). Retain its per-run tracking and the items of the converging clean reviews — the final summary below folds them in. Its fix policy, escalation gates, and re-verification are authoritative; do not duplicate or override them here.
+Follow `~/.claude/skills/polish/SKILL.md` on the change just implemented: it establishes a green baseline and runs the review+fix loop (up to 10 runs, converging on 2 consecutive clean reviews — polish's defaults, since `/forge` passes no arguments). Retain its per-run tracking and the items of the converging clean reviews — the final summary below folds them in. Its fix policy, escalation gates, and re-verification are authoritative; do not duplicate or override them here.
 
 ### 3. Finish — project Review gate, no commit
 
@@ -46,8 +46,8 @@ Do **not** write the final summary to the task, move it to Done, or commit — t
 Present, in the conversation:
 
 - **Change** — the task worked, and a concise description of the code changes (files and areas touched).
-- **Review turns** — one line per round, from `/polish`: finding count (Issues and Nitpicks), what was fixed automatically, what was escalated and how the user decided. State whether the loop converged on a clean round or hit the ten-round cap with N findings still open (list them).
-- **Last review** — list the items from **both** consecutive clean reviews that ended the loop, grouped by run and labelled (e.g. "Run 5", "Run 6"), one condensed line each (category tag, file:line, and the gist — enough to recognize the finding, not the full explanation/fix block). A clean review carries only settled findings (ones the user directed you to leave as-is) or nothing at all — say "nothing" for any run that returned nothing. Do not collapse them into a verdict or a count; the point is for the user to see exactly what each converging review surfaced and confirm they agree the loop was right to stop. If the ten-run cap was hit without two clean reviews in a row, list instead the final run's items and mark which remain unaddressed.
+- **Review turns** — one line per round, from `/polish`: finding count (Issues and Nitpicks), what was fixed automatically, what was escalated and how the user decided. State whether the loop converged on a clean round or hit the iteration cap with findings still open (list them).
+- **Last review** — list the items from both consecutive clean reviews that ended the loop, grouped by run and labelled (e.g. "Run 5", "Run 6"), one condensed line each (category tag, file:line, and the gist — enough to recognize the finding, not the full explanation/fix block). A clean review carries only settled findings (ones the user directed you to leave as-is) or nothing at all — say "nothing" for any run that returned nothing. Do not collapse them into a verdict or a count; the point is for the user to see exactly what each converging review surfaced and confirm they agree the loop was right to stop. If the iteration cap was hit without 2 consecutive clean reviews, list instead the final run's items and mark which remain unaddressed.
 - **Verification** — the final state of each check in `/polish`'s verification set (name them and their pass/fail state).
 - **Next step** — the task is In Review; the user runs `/commit` when satisfied.
 
@@ -56,4 +56,4 @@ Present, in the conversation:
 - Honor every project Hard Rule and gate (`CLAUDE.md`): plan approval before any file change, at most one task In Progress, and never commit or push without the user's explicit instruction.
 - Fix autonomously within the change's scope; escalate anything requiring judgment — the fix policy and escalation gates live in `/polish`.
 - Boy-scout fixes stay proportionate and adjacent — never a silent refactor of unrelated code.
-- The loop's hard ceiling is ten review runs. Convergence (two clean reviews in a row) ends it sooner; the cap never yields to "just one more run."
+- The loop's hard ceiling is 10 review runs. Convergence (2 consecutive clean reviews) ends it sooner; the cap never yields to "just one more run."
