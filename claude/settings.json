@@ -69,6 +69,7 @@
     "deny": [],
     "defaultMode": "auto"
   },
+  "model": "opus",
   "hooks": {
     "PreToolUse": [
       {
@@ -118,7 +119,7 @@
     "enabled": true,
     "mode": "hold"
   },
+  "skipWorkflowUsageWarning": true,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "skipWorkflowUsageWarning": true
+  "skipAutoPermissionPrompt": true
 }
