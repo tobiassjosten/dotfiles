@@ -48,4 +48,5 @@ brew "wget"
 brew "remotemobprogramming/brew/mob"
 
 cask "ngrok"
+cask "tailscale"
 cask "warp"
