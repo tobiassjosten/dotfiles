@@ -29,17 +29,26 @@ fish: brews
 	@grep -q -F "/fish" "/etc/shells" || (echo "$$(which fish)" | sudo tee -a /etc/shells > /dev/null)
 	@chsh -s $$(which fish)
 
-.PHONY: files
-files:
-	@if [ -L ~/.config/fish ]; then rm ~/.config/fish; fi
-	mkdir -p ~/.config/fish
-	mkdir -p ~/.claude
+# Links only the Claude config into ~/.claude — the portable subset usable on a
+# bare machine (e.g. a dev VM) without the rest of the dotfiles toolchain. The
+# rtk hook self-guards (see claude/settings.json), so rtk is optional here.
+.PHONY: claude
+claude:
+	@missing=""; for t in jq git; do command -v $$t >/dev/null 2>&1 || missing="$$missing $$t"; done; \
+	  if [ -n "$$missing" ]; then echo "error: missing required tools:$$missing"; exit 1; fi
+	@command -v rtk >/dev/null 2>&1 || echo "warning: rtk not found — Bash hook self-skips; install rtk to restore token savings"
+	@mkdir -p ~/.claude
 	ln -fs $(DIR)/claude/CLAUDE.md ~/.claude/CLAUDE.md
 	ln -fs $(DIR)/claude/RTK.md ~/.claude/RTK.md
 	ln -fs $(DIR)/claude/settings.json ~/.claude/settings.json
 	ln -fs $(DIR)/claude/statusline-command.sh ~/.claude/statusline-command.sh
 	$(call LINK_DIR,$(DIR)/claude/skills,~/.claude/skills)
 	$(call LINK_DIR,$(DIR)/claude/agents,~/.claude/agents)
+
+.PHONY: files
+files: claude
+	@if [ -L ~/.config/fish ]; then rm ~/.config/fish; fi
+	mkdir -p ~/.config/fish
 	$(call LINK_DIR,$(DIR)/config/nvim,~/.config/nvim)
 	$(call LINK_DIR,$(DIR)/vim,~/.vim)
 	# fish writes machine state (fish_variables, completions) into ~/.config/fish,
