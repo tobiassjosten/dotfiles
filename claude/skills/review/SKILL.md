@@ -10,7 +10,7 @@ Generate a review of the changes under review and act on it interactively: prese
 
 ## Composed pieces
 
-- **Reviewing** is delegated to the `code-reviewer` agent (`~/.claude/agents/code-reviewer.md`), which applies the shared threshold in `~/.claude/skills/review-core.md` and selects the diff base via `~/.claude/skills/review-diff.sh` (outstanding changes, or the branch diff when the tree is clean). **Spawn it via the Agent tool.** It gathers the diff, reads every untracked file, recovers a truncated diff, applies the bar, and returns the numbered findings — Issues then Nitpicks, each with a fix — as its final message, and never modifies code. Presenting those findings, asking which to fix, and fixing them stays here.
+- **Reviewing** is delegated to the `code-reviewer` agent (`~/.claude/agents/code-reviewer.md`), which applies the shared threshold in `~/.claude/skills/review-core.md` and selects the diff base via `~/.claude/skills/review-diff.sh` (outstanding changes, or the branch diff when the tree is clean). **Spawn it via the Agent tool with `model: "opus"`.** It gathers the diff, reads every untracked file, recovers a truncated diff, applies the bar, and returns the numbered findings — Issues then Nitpicks, each with a fix — as its final message, and never modifies code. Presenting those findings, asking which to fix, and fixing them stays here.
 
 ## Workflow
 
