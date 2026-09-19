@@ -77,7 +77,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "rtk hook claude"
+            "command": "command -v rtk >/dev/null 2>&1 && rtk hook claude || exit 0"
           }
         ]
       }
