@@ -4,6 +4,8 @@
 
 Personal dotfiles, installed by symlinking files from this repo into `$HOME`. There is no build or test suite; "testing" a change means sourcing the file or reloading the affected tool (fish, tmux, nvim, Hammerspoon).
 
+**Keep `README.md` up to date.** When a config area, `make` target, or notable tool is added, removed, or restructured, update the relevant section of `README.md` in the same change so it never drifts from the repo.
+
 ## Commands
 
 - `make` — full setup: symlinks, Homebrew + Brewfile, fish as login shell, vim plugins
