@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Plan Task
 
-Turn one feature-level request into a **set** of ready, well-formed, correctly-sequenced work items. Where `/next` plans and executes a single task, `/plan-task` plans a whole effort, decomposes it into several tasks, wires the dependencies among them, and files them into the project's work-item source. It plans and files; it does not implement — that's `/next`.
+Turn one feature-level request into a **set** of ready, well-formed, correctly-sequenced work items. Where `/next` plans and executes a single task, `/plan-task` plans a whole effort, decomposes it into tasks, wires the dependencies among them, and files them into the project's work-item source. It plans and files; it does not implement — that's `/next`.
 
 This skill owns the **what**: investigate, plan, decompose, sequence, check for readiness, create. Each project owns the **how**: where work items live, the shape they take, and their lifecycle. Discover that from the project — the same way `/next` does — and never hardcode a particular tracker.
 
@@ -46,4 +46,4 @@ You create into that source, in its shape, honoring its lifecycle. Default new i
 
 10. **Report** the created items' identifiers or links in dependency order, the sequence, and the placement.
 
-Scope note: this skill decomposes an effort into a set of *ready* items (the create step at feature scale). It does not plan any individual implementation or start work — that's `/next`. This is for efforts large enough to warrant several sequenced items; a lone task can be filed by hand or by the project's own intake.
+Scope note: this skill decomposes an effort into a set of *ready* items (the create step at feature scale). It does not plan any individual implementation or start work — that's `/next`. Efforts large enough to warrant several sequenced items are the typical case, but a one-item set is valid — `/shape` chains every promoted idea here regardless of size. Scale the ceremony to the effort; outside that chain, a lone task can also be filed by hand or by the project's own intake.
