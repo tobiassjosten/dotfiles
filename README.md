@@ -53,7 +53,8 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 
 ### Claude Code
 
-- `claude/` (→ `~/.claude/`) — user config: `CLAUDE.md`, `RTK.md`, `settings.json`, `statusline-command.sh` (linked individually), plus `skills/` and `agents/` (each linked as a whole directory). `agents/code-reviewer.md` is a read-only reviewer that is the single generator of review findings; the `/review`, `/polish`, and `/ship` skills delegate to it and differ only in disposition. The rest of `~/.claude/` (session transcripts, history, caches) is machine state and is never tracked or symlinked.
+- `claude/` (→ `~/.claude/`) — user config: `CLAUDE.md`, `RTK.md`, `settings.json`, `statusline-command.sh` (linked individually), plus `skills/` and `agents/` (each linked as a whole directory). `agents/code-reviewer.md` is a read-only reviewer that is the single generator of review findings; the `/review`, `/polish`, and `/ship` skills delegate to it and differ only in disposition. The rest of `~/.claude/` (session transcripts, history, caches) is machine state and is never tracked or symlinked. `skills/synced/` is the mirror image: Claude Code's plugin-sync state, generated *inside* the repo because `skills/` is symlinked wholesale, and gitignored for that reason.
+- `claude/statusline-command.sh` renders three lines: working directory and git state; model, rate-limit usage against elapsed window time, context usage and cost; and the last instruction you typed — a slash command in bold, prose dimmed — read back out of the session transcript so it is always clear what Claude is currently working on.
 
 ### Git
 
