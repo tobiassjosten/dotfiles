@@ -2,7 +2,7 @@
 
 ## What this is
 
-Personal dotfiles, installed by symlinking files from this repo into `$HOME`. There is no build, and most of what is here is config: "testing" a change means sourcing the file or reloading the affected tool (fish, tmux, nvim, Hammerspoon). The repo does hold a few first-party scripts (`claude/statusline-command.sh`, `claude/skills/review-pr/gh-pr.sh`, `tmux/scripts/minimize-sibling-pane.sh`, and `claude/skills/review-diff.sh` with its `review-diff.test.sh`); of those, only `review-diff.sh` — which `/review`, `/polish`, `/ship` and the `code-reviewer` agent all depend on — has a test suite, run by `make check`. (`/review-pr` and `/focused-review` gather their own diffs and do not use that script.)
+Personal dotfiles, installed by symlinking files from this repo into `$HOME`. There is no build, and most of what is here is config: "testing" a change means sourcing the file or reloading the affected tool (fish, tmux, nvim, Hammerspoon). The repo does hold a few first-party scripts (`claude/statusline-command.sh`, `claude/notify-stop.sh`, `claude/skills/review-pr/gh-pr.sh`, `tmux/scripts/minimize-sibling-pane.sh`, and `claude/skills/review-diff.sh` with its `review-diff.test.sh`); of those, only `review-diff.sh` — which `/review`, `/polish`, `/ship` and the `code-reviewer` agent all depend on — has a test suite, run by `make check`. (`/review-pr` and `/focused-review` gather their own diffs and do not use that script.)
 
 **Keep `README.md` up to date.** When a config area, `make` target, or notable tool is added, removed, or restructured, update the relevant section of `README.md` in the same change so it never drifts from the repo.
 

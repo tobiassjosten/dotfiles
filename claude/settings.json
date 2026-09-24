@@ -99,7 +99,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$TMUX_PANE\" ] && printf '\\a' > \"$(tmux display-message -t \"$TMUX_PANE\" -p '#{pane_tty}')\" || true"
+            "command": "bash ~/.claude/notify-stop.sh"
           }
         ]
       }
