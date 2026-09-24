@@ -1,0 +1,21 @@
+# Lens: area (deep read of owned files)
+
+You own a slice of the changed files — listed as **owned files** in your prompt, one path per line (the role `area:all` means that list is every changed file). Your job is depth: nothing in your slice should be wrong or improvable when you are done. Whichever cross-cutting lenses the plan includes (claims, tests, contracts, ux, security) run over the whole diff in parallel; you do not need to redo their procedures, but report anything wrong you see — some of them may not have been spawned at all, and the merge step dedupes.
+
+## Procedure
+
+1. **Read every owned file's diff in full** from `files/<path>.diff` in the review directory. Then read each owned file itself far enough to understand the changed code in context — whole functions, not hunks. Owned paths are repo-relative: resolve them against the `Repo root` in your prompt (or `git rev-parse --show-toplevel`) to read the file. If `meta.txt` lists a path under `NO-CONTENT:`, its diff carries no content — because the file is binary, or because it carries a `-diff` attribute. That can come from a `.gitattributes` in the repo — which *is* in the diff if the change touched it, when it is tracked or untracked-and-not-gitignored — or from `.git/info/attributes` or the global or system attributes file, none of which ever appear. So finding no `.gitattributes` change does not mean there is no attribute. When it is text, read it directly and compare it against the base yourself (`git show <FROM>:<path>`, with `FROM` from `meta.txt`; a path the change adds has no base version, and a path it deletes exists only there). When it is a genuine binary, do not read it into your context: count it among your owned files read — the caller checks that numerator against the files you were given — and note alongside the count that it was not reviewable as text.
+2. **Correctness pass**, per changed function or block — apply *How to look* from the shared core:
+   - Walk every changed branch: what happens on the error path, on empty/nil/zero/boundary input, on retry or concurrent invocation, on partial failure?
+   - For state that is written: who else reads it, and does every reader still agree on its shape and meaning?
+   - Resources and cost: outbound calls without timeouts; handles, connections, goroutines or subscriptions not released on every path including the error ones; a buffer, queue or retry loop that can grow without bound; work that becomes N+1 or O(n²) on a hot path. This is the half of `reliability` no other lens covers.
+   - For control flow in non-obvious or declarative languages (workflow YAML, shell, templates, SQL): trace it step by step — every jump target exists, every fall-through lands where intended, every variable used is assigned on every path that reaches it. Shell: `set -e` and `pipefail` interactions, quoting, exit codes.
+   - For prompt or instruction markdown a tool executes (skill, agent, lens and rule files, and the shared files they read): trace it as the program it is. Every file, field and step it references exists; every step can be carried out with the inputs the role that runs it is actually given; every term it uses is defined; every statement about a sibling file matches that file's current wording; every branch of a decision procedure is reachable and no two match the same case; every coverage count it demands can be filled in honestly.
+   - For every changed public symbol: find its callers and check they still hold.
+3. **Craft pass** — the explicit nitpick pass from the shared core, over the changed lines of your slice: names, ordering, guard clauses, nesting, duplication, dead code, idiom, consistency with the neighbouring code. Findings here are usually `(preference)` Nitpicks; a name or comment that *misstates* something is a `(defect)`.
+
+## Coverage line
+
+`Coverage: role=area:<name>; owned files read <n>/<n>; units traced <n> (<functions | blocks | sections>)`
+
+Areas routinely own files that have no functions — config, templates, prose, and instruction markdown that a tool executes. Count whatever unit the file is built from and say which; `units traced 0` over a non-empty slice is a gap — a slice with no functions still has sections or blocks, so count those.
