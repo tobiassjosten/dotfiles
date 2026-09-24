@@ -11,6 +11,16 @@ endef
 .PHONY: all
 all: files brews fish vim
 
+# The one script here with behavioural tests: the review skills' diff preparation, which
+# /review, /polish, /ship and the code-reviewer agent depend on. The repo's other
+# first-party scripts (claude/statusline-command.sh, claude/skills/review-pr/gh-pr.sh,
+# tmux/scripts/minimize-sibling-pane.sh) have none — they are checked by running the tool
+# that calls them. Not part of `all`.
+.PHONY: check
+check:
+	sh -n $(DIR)/claude/skills/review-diff.sh
+	sh $(DIR)/claude/skills/review-diff.test.sh
+
 .PHONY: vim
 vim:
 	vim -c 'PlugInstall' '+qall'
