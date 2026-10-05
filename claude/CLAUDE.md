@@ -16,3 +16,9 @@
 # Git
 
 - Never commit anything outside of the session's working directory. Only create commits in the repo rooted at the primary working directory the session started in — never in other repos, submodules, or parent/sibling repos, even if a task touches files there. If a change genuinely needs a commit elsewhere, surface it and let me do it.
+
+# Claude config on this machine
+
+`~/.claude/` is partly the dotfiles repo at `~/projects/tobiassjosten/dotfiles`. `claude/CLAUDE.md`, `claude/RTK.md`, `claude/settings.json`, `claude/statusline-command.sh`, `claude/skills/` and `claude/agents/` are symlinked into `~/.claude/`, so a path under `~/.claude/` and the matching path under the repo's `claude/` are the same file — editing either spelling edits the repo. A change to these instructions, a skill or an agent is therefore a dotfiles commit, and `make files` is what creates the links on a new machine. The rest of `~/.claude/` — `projects/`, `plans/`, `history.jsonl`, `file-history/`, the caches — is machine state: never tracked, never symlinked. `claude/skills/synced/` is the inverse, generated state that lands inside the repo because `skills/` is symlinked wholesale, and is gitignored for that reason.
+
+The repo is an additional working directory in every session (`permissions.additionalDirectories`), so a session in any project can read this configuration and change it — suggest a system-wide tweak or a skill fix where you notice the need. Commits still belong to the session's own repo, so make the change and leave it uncommitted for a dotfiles session to review and commit.
