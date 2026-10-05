@@ -41,7 +41,11 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_COMMON_DIR G
 script=$(cd "$(dirname "$0")" && pwd)/review-diff.sh
 # A template, so BSD mktemp honours $TMPDIR (it ignores it when given none) and the
 # directory is identifiable if a crash leaves one behind.
-work=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/review-diff-test.XXXXXX")" && pwd -P)
+# Two steps, each checked: with the two in one substitution, a failing mktemp leaves
+# `cd ""`, which succeeds without moving, so $work would become the current directory —
+# the repo, under `make check` — and the EXIT trap would delete it.
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/review-diff-test.XXXXXX") || exit 1
+work=$(cd "$tmp" && pwd -P) || exit 1
 trap 'rm -rf "$work"' EXIT
 passed=0
 failed=0
