@@ -50,7 +50,7 @@ For each confirmed item in the order given:
 
 **Precondition — the tree must be clean.** `sh ~/.claude/skills/review-diff.sh --tree` must equal `git rev-parse -q --verify 'HEAD^{tree}'`. After the first item it will be, because the previous iteration pushed. If it isn't, something was left behind — stop and go to § 4 rather than folding a stray change into this item's commit.
 
-**Plan and implement.** Follow `~/.claude/skills/next/SKILL.md` with this item's identifier as its `$ARGUMENTS`, skipping its selection step — § 1 already resolved it.
+**Plan and implement.** Follow `~/.claude/skills/next/SKILL.md` with this item's identifier as its `$ARGUMENTS`, skipping its selection step — § 1 already resolved it — but not its check that the workspace is free, which runs before anything is claimed.
 
 - The plan-mode gate is a **hard user gate**: surface the plan and wait for the user's `ExitPlanMode` approval. **Do not modify any file before approval.** The plan's own first step is its opening bookkeeping (record the plan, move the item to In Progress, self-assign) — verify it is present.
 - **A rejected plan is not the end of the run.** Treat the rejection as input, draft a fresh plan for the same item, and present it again. If the rejection says to skip the item, skip it per § 4. If it says to stop, stop and report.
@@ -58,17 +58,22 @@ For each confirmed item in the order given:
 
 **Verify to green.** Run the check set from § 2. A red check is this item's to fix: fix and re-check, up to **3 fix → check cycles**. Fix by class, not by instance, and keep the fix inside this item's scope — a red check that turns out to need a change outside it goes to § 4 instead of growing the item.
 
-**Ship.** Follow `~/.claude/skills/ship/SKILL.md` with `now` as its `$ARGUMENTS`: verification runs again as its gate, no review runs, `/commit` commits and pushes, and its Finish gate advances the item. Carry this item's identifier into that Finish gate explicitly — `/ship` otherwise has to infer which item the change belongs to, and in a loop that inference is both unnecessary and the easiest thing to get wrong. If `/ship` stops for any reason — a check it finds red, a failing pre-commit hook, a push that diverged — go to § 4.
+**Ship.** Follow `~/.claude/skills/ship/SKILL.md` with `now` as its `$ARGUMENTS`: verification runs again as its gate, no review runs, `/commit` commits and pushes, and its Finish gate advances the item. Carry this item into `/ship` explicitly, as § 1 resolved it — the source's own id, and for a `TODO.md` item the task line — not the entry as typed: `/ship` resolves the task from the marker `/next` wrote when it claimed the item, and stops if the item passed in is a different one — the cross-check that catches a marker left over from an earlier item, which in a loop is the easiest thing to get wrong. If `/ship` stops for any reason — a check it finds red, a failing pre-commit hook, a push that diverged — go to § 4. So does a ship that went through but left the task marker in place because advancing the item failed: the workspace is still bound to it, and the next item's `/next` would refuse to start.
 
 **Record** the outcome before moving on: the new commits (`git log --oneline`), whether the push succeeded, and the item's final state.
 
 ### 4. Trouble — stop and ask
 
-Reached when verification is still red after its three cycles, when the item turns out to need a decision the approved plan doesn't cover, when the tree wasn't clean at the start of an item, or when `/ship` stopped. Put it to the user in a single `AskUserQuestion`, naming what happened concretely, with three options:
+Reached when verification is still red after its three cycles, when the item turns out to need a decision the approved plan doesn't cover, when the tree wasn't clean at the start of an item, when `/next` stopped (the workspace still bound to an earlier item, for one), or when `/ship` stopped or left the task marker in place. Put it to the user in a single `AskUserQuestion`, naming what happened concretely, with three options:
 
-- **Skip this item and continue** — `git stash -u` whatever this item produced, so nothing is discarded; name the stash in the report. Return the item to the state it was in before the run, so the board doesn't claim work that isn't happening and no item is left In Progress. Continue with the next identifier.
+- **Skip this item and continue** — `git stash -u` whatever this item produced, so nothing is discarded; name the stash in the report. Return the item to the state it was in before the run, so the board doesn't claim work that isn't happening and no item is left In Progress, and clear the workspace's binding to it (`sh ~/.claude/skills/task-marker.sh clear`) — otherwise the next item's `/next` finds the workspace still bound and refuses to claim it. Continue with the next identifier.
 - **Dig in** — work the problem here and now, then rejoin § 3 where it left off. The run continues afterwards.
 - **End the run** — stop, leaving this item's work in the tree as it stands (not stashed — the user is taking it over). Every identifier after it is *not reached*.
+
+Two triggers read these options differently, because the item is not in the failed-before-shipping state the options assume:
+
+- **`/ship` pushed but left the marker in place** — the commit is out, so skipping must *not* return the item to its pre-run state or stash anything. Name the item and why advancing it failed; skip then means leaving the advance to the user and clearing the marker, dig in means retrying the advance and then clearing it.
+- **`/next` found the workspace bound to an earlier item** — the binding is that earlier item's, not this one's. Name it; clearing its marker is offered only as its own explicit choice, never as part of skip, which here just records this item as not started and moves on (and the next item will stop the same way until the binding is resolved).
 
 Never discard an item's work without saying so, and never `git reset --hard` to get out of trouble.
 
@@ -76,11 +81,11 @@ Never discard an item's work without saying so, and never `git reset --hard` to 
 
 One block, covering the whole run:
 
-- **Items** — every identifier from the argument, in the order given, each with an explicit outcome: **shipped** with its commit SHAs, **skipped (\<reason\>)** with its stash name, **dropped at resolution (\<reason\>)**, or **not reached (run ended at `<id>`)**. Never a blank outcome; an identifier the user typed is always findable in this list.
+- **Items** — every identifier from the argument, in the order given, each with an explicit outcome: **shipped** with its commit SHAs, **shipped, not advanced** with its commit SHAs (pushed, but advancing the item was left to the user), **skipped (\<reason\>)** with its stash name when anything was stashed, **not started (workspace bound to \<item\>)**, **dropped at resolution (\<reason\>)**, or **not reached (run ended at `<id>`)**. Never a blank outcome; an identifier the user typed is always findable in this list.
 - **Verification** — the check set settled on in § 2, and its final pass/fail state.
 - **Review directory** — `$(git rev-parse --absolute-git-dir)/review/`, if it exists. Say plainly that no review ran on any item, that `/ship now` never consulted the ledger, and that `/ship` deletes the directory after each successful push — so a directory still there came from something before this run and is the user's to delete.
 - **Remaining steps** — `/ship`'s § 6 bullet, folded across the whole run: what still has to happen before this work is actually done, split into **Blocking** and **Follow-up**, each saying what and who/where. If there is genuinely nothing, say so explicitly.
-- **Next step** — if the run ended early, the exact `/mill` invocation that resumes it (the identifiers not reached). If items were skipped, what each one needs. If everything shipped, say so.
+- **Next step** — if the run ended early or left items not started, the exact `/mill` invocation that resumes it (the identifiers not reached, and those not started once their workspace binding is resolved). If items were skipped, what each one needs. For each item shipped but not advanced, that it still needs moving in its source by the user. Say that everything shipped only when every item's outcome is plain **shipped**.
 
 Ending mid-list is a normal exit, not a failure. The report is what makes resuming cheap.
 

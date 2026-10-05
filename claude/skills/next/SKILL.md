@@ -31,13 +31,28 @@ Otherwise, discover which of these sources the project uses and select the task 
 
 These are examples, not an exhaustive list. If more than one source exists and the project's documentation doesn't disambiguate, ask the user which to use. If no source yields an actionable task, tell the user there is nothing to do and stop.
 
+## Check that this workspace is free
+
+Run this whenever a task has been chosen — also when a caller already resolved it and skipped the selection above — and before planning anything: `sh ~/.claude/skills/task-marker.sh get`. Exit 1 (no marker) means the workspace is free. A marker naming the chosen task means this workspace already holds it — carry on, and reuse the marker's `ID` in the bind step below so it refreshes rather than refuses. Compare like with like, as `/ship` does: ids ignoring a project prefix the source treats as optional, and for `todo`, whose `ID` is only a slug, the marker's `TITLE` against the task line. A marker naming a **different** item means this workspace is still on that one: stop and report it, with nothing claimed or written. It is either unfinished work or a stale marker, and which one is the user's call. Checking here rather than at the bind step is what keeps a refusal from leaving the new task claimed in its source with nothing bound to it.
+
 ## Plan and execute
 
-Enter plan mode and plan the implementation of the selected task. If the task already carries an implementation plan, treat it as a likely-outdated prescription — mine it for useful details, but draft a fresh plan from the current state of the codebase. Where the project's documented lifecycle requires opening steps (e.g. recording the plan on the task and activating it), the plan must include them. The plan must include a final step that marks the task done in its source, matched to that source:
+Enter plan mode and plan the implementation of the selected task. If the task already carries an implementation plan, treat it as a likely-outdated prescription — mine it for useful details, but draft a fresh plan from the current state of the codebase. Where the project's documented lifecycle requires opening steps (e.g. recording the plan on the task and activating it), the plan must include them. The plan must include a final step that hands the task on in its source, matched to that source:
 
 - **`TODO.md`** — remove the task line itself and any adjacent blank lines so no double linebreaks are left behind. Do NOT commit TODO.md after removing the entry.
 - **Per-task file** — delete or move the file per the project's convention (e.g. into a `done/` directory) if the documentation specifies one; otherwise delete it.
-- **Backlog.md board** — follow the project's documented task lifecycle if it defines one (many projects gate completion behind a review status — stop where the project says to stop); otherwise move the task to its terminal status (`backlog task edit <id> -s Done`).
-- **Issue tracker** — transition the issue to its done/closed state via the MCP connection.
+- **Backlog.md board** — follow the project's documented task lifecycle if it defines one, stopping where it says to stop; otherwise move the task to its review status if the board has one, and leave it In Progress if not. **Never move it to Done here.**
+- **Issue tracker** — transition the issue to its review state if the tracker has one, and leave it In Progress if not. **Never close it here.**
 
-Once the user approves the plan via `ExitPlanMode`, implement it — including the final step that marks the task done in its source.
+The terminal move on a board or tracker belongs to the Finish gate — `/ship`, after the change is committed and pushed — which resolves the task from the marker below and refuses one already Done. A change finished any other way (a hand `/commit`) leaves the task for the user to close.
+
+The plan must also bind this workspace to the task, with `sh ~/.claude/skills/task-marker.sh set --source <kind> --id <id> --title <title>`. Place that step **immediately after** the one that claims the task — moves it to In Progress — and never before it, so on a source with a claim state a marker cannot exist without a claim behind it. A source with no claim state (`TODO.md`, per-task files) binds as the first implementation step instead. The marker is what `/ship` resolves its Finish gate from and clears after pushing, so it outlives the final hand-on step above; leave it in place. Per source:
+
+- **`TODO.md`** — `--source todo`, `--id` a short slug of the task line, `--title` the line itself. The slug is only a label; the line in `TITLE` is what identifies the task.
+- **Per-task file** — `--source file`, `--id` the filename.
+- **Backlog.md board** — `--source backlog`, `--id` the task id.
+- **Issue tracker** — `--source` the tracker's name as a lowercase token (`linear`, `jira`), `--id` the issue key.
+
+The workspace-free check above means `set` should not find a different item bound. If it does anyway (exit 2) — the marker changed since — stop, report the item it names, and return the task just claimed to its previous state so it is not left In Progress with nothing bound to it. Never pass `--force` without the user's say-so.
+
+Once the user approves the plan via `ExitPlanMode`, implement it — including the final step that hands the task on in its source.
