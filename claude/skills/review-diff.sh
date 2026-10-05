@@ -309,20 +309,47 @@ awk -v af="$dir/.added" 'FILENAME == af { added[$2] = 1; next } !($2 in added) {
 # content line to the last path line it saw — BSD awk cannot take NUL as a field
 # separator, and `git grep -o` cannot do this tally at all,
 # because its matches are non-overlapping, so a candidate that is a substring of another
-# ("refer" inside "reference") would be undercounted. -F since the terms are literal
-# [a-z0-9]+ by construction; --no-color because a repo may set color.ui=always, which
-# colours a pipe too and would break the "<tree>:" anchor below (the same reason gd()
-# passes it); -I to match how still-in is described. Skipped when there are no candidates:
-# given an empty pattern file git falls back to reading the pattern from the positional
-# arguments, so $tree would become the search term and the tree grep a working-tree one.
+# ("refer" inside "reference") would be undercounted.
+# --no-color because a repo may set color.ui=always, which colours a pipe too and would
+# break the "<tree>:" anchor below (the same reason gd() passes it); grep.lineNumber and
+# grep.column are pinned off for the same reason — either one inserts a further
+# NUL-delimited record per hit, which `tr` then turns into an extra line that the anchor
+# reads as content and tallies terms against. -I to match how still-in is described.
+# Skipped when there are no candidates: git would otherwise read the pattern from the
+# positional arguments, so $tree would become the search term and the tree grep a
+# working-tree one.
 cut -d' ' -f2 <"$dir/.candidates" >"$dir/.terms"
 : >"$dir/.hits"
 if [ -s "$dir/.terms" ]; then
+	# One alternation pattern rather than `-F -f <file>`: given many fixed patterns git
+	# matches every line against each of them in turn, which costs superlinearly in their
+	# number — on an 8000-file tree, 1 term took 0.2s, 10 took 3.9s and the full 80 took
+	# 178s, which is nearly all of what made this script slow. A single pattern is one
+	# automaton over the same bytes: 4.7s under -P, 14s under -E, and byte-identical
+	# output in both cases. Alternation of literals matches exactly what -F did, substring
+	# semantics included, because the terms cannot contain a metacharacter: words() builds
+	# them through `tr -cs 'a-z0-9'`, so each is [a-z0-9]+. That invariant is now load
+	# bearing — a term carrying anything else would be read as a regex and silently
+	# change what gets counted — so it is checked rather than assumed.
+	# One char minimum, not zero: an empty line would make `paste` emit an empty
+	# alternative, which matches every line of the tree and would report every candidate
+	# as still in use everywhere.
+	if LC_ALL=C grep -qv '^[a-z0-9][a-z0-9]*$' "$dir/.terms"; then
+		printf '%s\n' "review-diff.sh: refusing a candidate term outside [a-z0-9]" >&2; exit 1
+	fi
+	alt=$(paste -sd'|' "$dir/.terms")
+	# -P where this git has PCRE2, -E otherwise (it is a build option, and -P on a git
+	# built without it fails with status 128 and no output). Probed against the empty
+	# tree: git compiles the patterns before walking anything, so the probe costs one
+	# process and no blobs, and a working -P reports 1 for "no matches" rather than 0.
+	gp=0; git grep -q -I -P -e x "$empty_tree" -- 2>/dev/null || gp=$?
+	if [ "$gp" -le 1 ]; then re=-P; else re=-E; fi
 	# git grep exits 1 for "no matches" and 2+ for an error. Swallowing everything would
 	# make a sweep that never ran read as a sweep that found nothing — and the claims
 	# lens's coverage is checked against this file's line count, so an empty file reads
 	# as complete coverage.
-	{ git grep -z -i -I -F --no-color -f "$dir/.terms" "$tree" -- || gs=$?; [ "${gs:-0}" -le 1 ] ||
+	{ git -c grep.lineNumber=false -c grep.column=false grep -z -i -I "$re" --no-color \
+		-e "$alt" "$tree" -- || gs=$?; [ "${gs:-0}" -le 1 ] ||
 		printf '%s\n' "review-diff.sh: git grep failed ($gs); removed-terms.txt may be incomplete" >&2; } |
 		tr '\0' '\n' |
 		awk -v tf="$dir/.terms" -v tree="$tree" '
