@@ -17,6 +17,15 @@
 
 - Never commit anything outside of the session's working directory. Only create commits in the repo rooted at the primary working directory the session started in — never in other repos, submodules, or parent/sibling repos, even if a task touches files there. If a change genuinely needs a commit elsewhere, surface it and let me do it.
 
+# Work items
+
+A workspace — a checkout or a linked worktree — is bound to the one work item it is on by a task marker at `$(git rev-parse --absolute-git-dir)/task.txt`, managed only through `sh ~/.claude/skills/task-marker.sh` (`set`, `get`, `check`, `clear`). `/next` and `/ship` handle it themselves; these rules cover work done any other way.
+
+- **Bind when you claim.** When you start work on a specific tracked item outside `/next` — e.g. told in plan mode to tackle an issue — first run `task-marker.sh get`: if a different item is bound, stop and ask before claiming anything. Otherwise bind the workspace right after claiming the item in its source (moving it to In Progress), never before: `task-marker.sh set --source <kind> --id <id> --title <title>`, with `--source` as `/next` spells it (`backlog`, `todo`, `file`, or the tracker's name in lowercase, e.g. `linear`) so `/ship` can act on it. Never pass `--force` unprompted.
+- **A marker at session start is this workspace's task.** It names the item and is not an instruction in itself: read the item from its source, and don't start a different one without the user saying so.
+- **It is advisory.** Before acting on its id — closing, transitioning, commenting — run `task-marker.sh check` and re-read the item in its source; on a mismatch, report it rather than acting.
+- **Whoever finishes the item clears it.** Moving the item to its terminal state outside `/ship` means running `task-marker.sh clear` straight after.
+
 # Claude config on this machine
 
 `~/.claude/` is partly the dotfiles repo at `~/projects/tobiassjosten/dotfiles`. `claude/CLAUDE.md`, `claude/RTK.md`, `claude/settings.json`, `claude/statusline-command.sh`, `claude/skills/` and `claude/agents/` are symlinked into `~/.claude/`, so a path under `~/.claude/` and the matching path under the repo's `claude/` are the same file — editing either spelling edits the repo. A change to these instructions, a skill or an agent is therefore a dotfiles commit, and `make files` is what creates the links on a new machine. The rest of `~/.claude/` — `projects/`, `plans/`, `history.jsonl`, `file-history/`, the caches — is machine state: never tracked, never symlinked. `claude/skills/synced/` is the inverse, generated state that lands inside the repo because `skills/` is symlinked wholesale, and is gitignored for that reason.
