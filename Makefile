@@ -11,8 +11,9 @@ endef
 .PHONY: all
 all: files brews fish vim
 
-# The one script here with behavioural tests: the review skills' diff preparation, which
-# /review, /polish, /ship and the code-reviewer agent depend on. The repo's other
+# The two scripts here with behavioural tests: the review skills' diff preparation, which
+# /review, /polish, /ship and the code-reviewer agent depend on, and the task marker, which
+# /next writes and /ship resolves its Finish gate from. The repo's other
 # first-party scripts (claude/statusline-command.sh,
 # claude/skills/review-pr/gh-pr.sh, tmux/scripts/minimize-sibling-pane.sh) have none — they are checked by running the tool
 # that calls them. Not part of `all`.
@@ -20,6 +21,8 @@ all: files brews fish vim
 check:
 	sh -n $(DIR)/claude/skills/review-diff.sh
 	sh $(DIR)/claude/skills/review-diff.test.sh
+	sh -n $(DIR)/claude/skills/task-marker.sh
+	sh $(DIR)/claude/skills/task-marker.test.sh
 
 .PHONY: vim
 vim:
