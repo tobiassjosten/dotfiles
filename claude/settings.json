@@ -1,4 +1,9 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "permissions": {
     "allow": [
       "Bash(awk:*)",
@@ -66,10 +71,50 @@
       "WebFetch(domain:registry.terraform.io)",
       "WebSearch"
     ],
-    "deny": [],
-    "defaultMode": "auto"
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.claude/.credentials.json)"
+    ],
+    "ask": [
+      "Bash(git push *--force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git checkout -- *)",
+      "Bash(git clean *)",
+      "Bash(terraform destroy *)",
+      "Bash(terraform apply:*)",
+      "Bash(terraform import:*)",
+      "Bash(fly deploy:*)",
+      "Bash(fly secrets:*)",
+      "Bash(fly apps destroy:*)"
+    ],
+    "defaultMode": "auto",
+    "disableBypassPermissionsMode": "disable",
+    "additionalDirectories": [
+      "/Users/tobias.sjosten/projects/tobiassjosten/dotfiles"
+    ]
   },
   "model": "opus[1m]",
+  "skillOverrides": {
+    "anthropic-skills:docs": "user-invocable-only",
+    "anthropic-skills:docx": "user-invocable-only",
+    "anthropic-skills:pptx": "user-invocable-only",
+    "anthropic-skills:xlsx": "user-invocable-only",
+    "anthropic-skills:pdf": "user-invocable-only",
+    "anthropic-skills:google-workspace": "user-invocable-only",
+    "anthropic-skills:import-memory": "user-invocable-only",
+    "anthropic-skills:morning": "user-invocable-only",
+    "anthropic-skills:skill-creator": "user-invocable-only",
+    "artifact-design": "user-invocable-only",
+    "artifact-diagramming": "user-invocable-only",
+    "artifact-capabilities": "user-invocable-only",
+    "dataviz": "user-invocable-only",
+    "fewer-permission-prompts": "user-invocable-only",
+    "keybindings-help": "user-invocable-only",
+    "run": "user-invocable-only",
+    "simplify": "user-invocable-only"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -83,23 +128,35 @@
       }
     ]
   },
+  "enableArtifact": false,
+  "workflowKeywordTriggerEnabled": false,
+  "allowedHttpHookUrls": [],
+  "httpHookAllowedEnvVars": [],
   "statusLine": {
     "type": "command",
-    "command": "bash ~/.claude/statusline-command.sh"
+    "command": "bash ~/.claude/statusline-command.sh",
+    "refreshInterval": 60
   },
   "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": true
   },
-  "alwaysThinkingEnabled": true,
+  "feedbackDrafts": "off",
+  "dialogExpiry": "never",
+  "autoUpdatesChannel": "stable",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
-  "skipWorkflowUsageWarning": true,
+  "timeFormat": "24-hour",
+  "showThinkingSummaries": true,
   "preferredNotifChannel": "iterm2_with_bell",
+  "switchModelsOnFlag": false,
+  "teammateMode": "auto",
+  "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
-  "remoteControlAtStartup": true
+  "disableDeepLinkRegistration": "disable"
 }
