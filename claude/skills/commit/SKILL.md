@@ -36,6 +36,8 @@ Commit all outstanding changes. Group related changes into standalone, logically
 
 - Never use `git add -A` or `git add .` — always add specific files.
 - Never amend existing commits.
+- Commit the working tree exactly as it stands. Never add, restore, reword, or complete content as part of committing — not to satisfy an acceptance criterion, not to match a review summary, not to replace something that looks missing. Content absent from the tree was removed deliberately; the user edits the tree while reviewing, and those edits are their feedback.
+- If the tree contradicts the issue or the review record — a ticked criterion whose change isn't there — stop before committing and report the discrepancy rather than reconciling it yourself.
 - If there are no outstanding changes, inform the user and stop.
 - Do not skip or ignore any changes — everything must be committed.
 - If a pre-commit hook fails, alert the user and abort committing until the issue is resolved. Do not bypass hooks.
