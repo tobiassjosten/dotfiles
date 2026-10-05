@@ -1,0 +1,65 @@
+# herdr configuration. Only settings that differ from the defaults are listed;
+# `herdr --default-config` prints the full annotated set.
+
+onboarding = false
+
+[theme]
+# Take colours from the iTerm2 palette, like tmux's colourNN did.
+name = "nord"
+
+auto_switch = false
+[keys]
+prefix = "ctrl+space"
+
+new_tab = ["prefix+c", "prefix+ctrl+c"]
+edit_scrollback = "prefix+space"
+reload_config = "prefix+r"
+# Resize with the bindings below or by dragging borders instead.
+resize_mode = ""
+resize_pane_left = ["prefix+shift+h", "prefix+ctrl+h"]
+resize_pane_down = ["prefix+shift+j", "prefix+ctrl+j"]
+resize_pane_up = ["prefix+shift+k", "prefix+ctrl+k"]
+resize_pane_right = ["prefix+shift+l", "prefix+ctrl+l"]
+split_horizontal = ["prefix+minus", "prefix+\""]
+split_vertical = ["prefix+v", "prefix+%"]
+move_tab_previous = "prefix+shift+left"
+move_tab_next = "prefix+shift+right"
+# Agents on [ ], workspaces on the shifted { }.
+previous_agent = "prefix+["
+next_agent = "prefix+]"
+previous_workspace = "prefix+{"
+next_workspace = "prefix+}"
+
+[ui]
+sidebar_width = 30
+sidebar_min_width = 20
+sidebar_max_width = 44
+prompt_new_tab_name = false
+# tmux-style internal dividers: no gaps, no outer frame, no scrollbars.
+pane_gaps = false
+pane_outer_borders = false
+pane_scrollbars = false
+show_agent_labels_on_pane_borders = true
+hide_tab_bar_when_single_tab = true
+window_title = "{workspace}"
+agent_panel_sort = "priority"
+status_indicators = "symbols"
+
+[ui.sidebar.agents]
+row_gap = 1
+
+[ui.sidebar.agents.rows_by_agent]
+claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+
+[ui.sidebar.spaces]
+row_gap = 1
+
+[ui.toast]
+# Have iTerm2 raise the desktop banner, as Claude Code's iterm2_with_bell did.
+delivery = "terminal"
+
+[ui.toast.clipboard]
+enabled = false
+
+[ui.sound]
+enabled = false

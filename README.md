@@ -46,6 +46,7 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 
 ### Terminal multiplexer
 
+- `config/herdr/config.toml` (→ `~/.config/herdr/config.toml`) — herdr, the agent-aware multiplexer replacing tmux. Only `config.toml` is linked, since herdr keeps sockets, logs and session state in the same directory. It lists only non-default settings, carrying over the tmux habits that translate (prefix `ctrl+space`, copy mode on `prefix space`, `"`/`%` splits, `hjkl` focus and `HJKL`/`^H^J^K^L` resize, tmux-style dividers) and adding agent navigation on `prefix [`/`]` and workspaces on `prefix {`/`}`. `herdr config check` validates it, including keybinding syntax.
 - `tmux.conf` + `tmux/` (→ `~/.tmux.conf`, `~/.tmux`) — plugins are vendored under `tmux/plugins/` (tpm, extrakto, tmux-cowboy); helper scripts in `tmux/scripts/`.
 - Inactive panes are dimmed via `window-style`/`window-active-style`, which only recolour cells left on the terminal's default background. Vim takes part in this because `vimrc` sets the jellybeans `background` override to `none`, so it paints no background of its own; anything that legitimately has one (the airline statusline, `CursorLine`, `Visual`) keeps it and does not dim. Changing `window-active-style`'s background therefore changes the background of an active Vim too.
 
