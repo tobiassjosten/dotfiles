@@ -47,6 +47,7 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 ### Terminal multiplexer
 
 - `tmux.conf` + `tmux/` (→ `~/.tmux.conf`, `~/.tmux`) — plugins are vendored under `tmux/plugins/` (tpm, extrakto, tmux-cowboy); helper scripts in `tmux/scripts/`.
+- Inactive panes are dimmed via `window-style`/`window-active-style`, which only recolour cells left on the terminal's default background. Vim takes part in this because `vimrc` sets the jellybeans `background` override to `none`, so it paints no background of its own; anything that legitimately has one (the airline statusline, `CursorLine`, `Visual`) keeps it and does not dim. Changing `window-active-style`'s background therefore changes the background of an active Vim too.
 
 ### Hammerspoon
 
