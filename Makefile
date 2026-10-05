@@ -65,6 +65,9 @@ files: claude
 	# fish writes machine state (fish_variables, completions) into ~/.config/fish,
 	# so that stays a real directory and only config.fish is linked into it.
 	ln -fs $(DIR)/config/fish/config.fish ~/.config/fish/
+	# herdr keeps its sockets, logs and session state in ~/.config/herdr too.
+	mkdir -p ~/.config/herdr
+	ln -fs $(DIR)/config/herdr/config.toml ~/.config/herdr/
 	ln -fs $(DIR)/ctags ~/.ctags
 	$(call LINK_DIR,$(DIR)/dlv,~/.dlv)
 	ln -fs $(DIR)/gitconfig ~/.gitconfig
