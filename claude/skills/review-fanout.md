@@ -91,7 +91,7 @@ Entries are one line each, appended by whichever skill made the decision:
 - settled: base=<FROM> <file:line or area> — <finding gist>. Left as-is: <reason / who decided>. (<YYYY-MM-DD>)
 - rejected: base=<FROM> <file:line> — <finding gist>. Wrong because <what was verified, against what>. (<YYYY-MM-DD>)
 - decided: base=<FROM> <topic> — <the decision and why>; do not reverse without asking. (<YYYY-MM-DD>)
-- converged: tree=<TREE> from=<FROM> — <skill>'s full fan-out reviewed exactly this diff and found no defects. (<YYYY-MM-DD>)
+- converged: tree=<TREE> from=<FROM> coverage=<full|delta> — <skill> reviewed this diff and left nothing open; <what the coverage rests on>. (<YYYY-MM-DD>)
 ```
 
 Emit `Ledger base:` on every delta spawn, whether or not a ledger file exists: besides the ledger's `base=` test it is the revision a reviewer diffs its own policy files against (`code-reviewer.md` § 2), and `meta.txt`'s `FROM` in delta mode is the pre-fix snapshot, against which an earlier round's weakening shows no diff.
@@ -103,7 +103,13 @@ In **delta** mode the test is the same but the value is not: `meta.txt`'s `FROM`
 - **settled** — the user was asked and chose to leave it.
 - **rejected** — the finding was checked and is wrong (e.g. verified against official docs).
 - **decided** — a choice between two valid options, typically after two rounds pulled in opposite directions.
-- **converged** — a full review found no defects on exactly this diff — the same base *and* the same snapshot — and nothing has changed since. Both halves matter: the change under review is a diff, and the snapshot alone is invariant under anything that moves `HEAD` without touching files (`git reset --soft`, a branch checkout with matching content), which would otherwise let a gate skip its review over commits no reviewer read. `/ship` uses it to skip a redundant re-review, so the tree named must be the tree the fan-out actually read — never a later tree that only a delta check saw. This entry is **for gating skills only**: reviewers must ignore it. It says the tree under review was already found clean, which is exactly the prior this file withholds from reviewers everywhere else — and it is worst on `/ship review`, the escape hatch a user reaches for when they distrust the record, whose reviewers would be primed by the very claim they were spawned to second-guess.
+- **converged** — this exact diff — the same base *and* the same snapshot — was reviewed with no defect left open (`(preference)` findings may have been reported and left; the gate does not block on them). Both halves of the diff matter: the change under review is a diff, and the snapshot alone is invariant under anything that moves `HEAD` without touching files (`git reset --soft`, a branch checkout with matching content), which would otherwise let a gate skip its review over commits no reviewer read. Nothing may touch the tree after the last review that covers it — the hash is taken last, and a later edit means no record.
+
+  `coverage=` says how the named tree was reached, and the two grades are not equally strong:
+  - **full** — a single full fan-out read this exact tree and found nothing wrong with it. The strong form.
+  - **delta** — a **union**: the full fan-out read the tree as it stood, and a clean delta review read exactly the fixes applied to it afterwards. No single review read this tree end to end, and the gap is a defect that emerges from the *combination* of the reviewed tree and the fixes. The delta review is also narrower by construction — one generalist `lens:delta` reviewer over the fix diff, not the planned set of area and lens roles — so fixes get thinner coverage than the code they amend. A one-round `/polish` records this grade whenever its round found defects to fix; a round that found none applies nothing and records **full** instead.
+
+  `/ship` uses the entry to skip a redundant re-review, on either grade. This entry is **for gating skills only**: reviewers must ignore it. It says the tree under review was already found clean, which is exactly the prior this file withholds from reviewers everywhere else — and it is worst on `/ship review`, the escape hatch a user reaches for when they distrust the record, whose reviewers would be primed by the very claim they were spawned to second-guess.
 
 Dates are ISO `YYYY-MM-DD`: the ledger is an append-only log, and a day-first or month-first entry is ambiguous to the next reader.
 
