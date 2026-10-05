@@ -1,8 +1,11 @@
 #!/bin/sh
 # Bind one workspace to the one work item it is working on, and read that binding back.
-# Shared by /next (writes), /ship (reads, then clears), the /forge and /polish summaries
-# (name it) and the status line (shows ID and TITLE on every render), so the marker's path,
-# format and validation live in one place.
+# Shared by /next (writes), /ship (reads, then clears), /mill (clears on a skipped
+# item), the /forge and /polish summaries (name it), the status line (shows ID and TITLE
+# on every render), the SessionStart hook in settings.json (prints SOURCE, ID, BRANCH and
+# `check` into each new session) and the work-item rules in claude/CLAUDE.md (set, check
+# and clear for work started by hand), so the marker's path, format and validation live
+# in one place.
 #
 # Usage:
 #   task-marker.sh set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]
@@ -23,11 +26,18 @@
 #
 # KEY: value lines, one per line, matching the meta.txt written into each review run
 # directory alongside it rather than the ledger's markdown. Keys:
-#   SOURCE   the work-item source kind — backlog, mcp, todo, file, or whatever else a
-#            project documents. Lowercase token; not validated against a fixed list,
-#            because /next's list of sources is explicitly not exhaustive.
+#   SOURCE   the work-item source kind — backlog, todo, file, a tracker's name (linear,
+#            jira), or whatever else a project documents. Lowercase token; not
+#            validated against a fixed list, because /next's list of sources is
+#            explicitly not exhaustive.
 #   ID       the work item's id in that source. With SOURCE, this is what /ship acts on.
-#   TITLE    a human label, for summaries and the statusline. Optional.
+#   TITLE    a human label, for summaries and the statusline — and, for a todo item
+#            whose ID is only a slug, what /next and /ship match the task line
+#            against.
+#            Optional. It is copied from the work-item source, so for a tracker it is
+#            text anyone who can edit the item controls. The SessionStart hook leaves it
+#            out, so it is not injected into every new session; a caller that reads the
+#            marker (`get`) does see it.
 #   BRANCH   the branch at claim time, or empty on a detached HEAD. `check` compares it
 #            against the current branch — the one cross-check available locally.
 #   BASE     the commit the work started from. Omitted in a repo with no commits yet.
@@ -241,8 +251,8 @@ check)
 
 clear)
 	[ $# -eq 0 ] || die "clear takes no arguments"
-	# Idempotent: /ship clears after a push, and a task that never wrote a marker (a
-	# TODO.md source, or a change made by hand) must not turn that into a failure.
+	# Idempotent: /ship clears after a push, and a task that never wrote a marker (a change
+	# made by hand) must not turn that into a failure.
 	rm -f "$marker"
 	;;
 
