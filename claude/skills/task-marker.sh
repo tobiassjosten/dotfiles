@@ -1,7 +1,8 @@
 #!/bin/sh
 # Bind one workspace to the one work item it is working on, and read that binding back.
-# Shared by /next (writes), /ship (reads, then clears) and the /forge and /polish summaries
-# (name it), so the marker's path, format and validation live in one place.
+# Shared by /next (writes), /ship (reads, then clears), the /forge and /polish summaries
+# (name it) and the status line (shows ID and TITLE on every render), so the marker's path,
+# format and validation live in one place.
 #
 # Usage:
 #   task-marker.sh set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]

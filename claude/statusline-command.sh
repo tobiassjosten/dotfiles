@@ -17,6 +17,11 @@ FG_WHITE='\033[97m'
 # Longest instruction shown on line 3 before it is ellipsised.
 PROMPT_MAX=100
 
+# Longest work-item title shown on line 1 before it is ellipsised. Shorter than
+# PROMPT_MAX: the title shares its line with the directory and git state, and
+# the id next to it is the part that identifies the item.
+TASK_TITLE_MAX=40
+
 # How many lines from the end of the transcript to search before giving up and
 # rereading the whole file. `tail -r` has to buffer all of its input, and a
 # transcript grows without bound during a long session, so the window keeps the
@@ -104,8 +109,13 @@ line1="${BOLD}${FG_CYAN}${dir}${RESET}"
 
 # Git info — use --no-optional-locks throughout to avoid contention
 if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks >/dev/null 2>&1; then
-    branch=$(git -C "$cwd" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null \
-        || git -C "$cwd" --no-optional-locks rev-parse --short HEAD 2>/dev/null)
+    # Two values from one call: the label to print, and the branch name on its
+    # own. The task marker below records a branch and leaves it empty on a
+    # detached HEAD, so comparing it against the SHA this falls back to would
+    # report a mismatch where there is none.
+    head_branch=$(git -C "$cwd" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null) \
+        || head_branch=""
+    branch=${head_branch:-$(git -C "$cwd" --no-optional-locks rev-parse --short HEAD 2>/dev/null)}
 
     # Single porcelain call; reuse output for all marker checks
     status_output=$(git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null)
@@ -139,6 +149,82 @@ if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks >/dev/null 
 
     line1="${line1}  ${FG_BLUE}${branch}${RESET}"
     [ -n "$markers" ] && line1="${line1} ${markers}"
+
+    # --- the work item this workspace is bound to ---
+    # /next writes a marker into the git dir naming the item it claimed and
+    # /ship clears it once the push lands, so a marker present means "this
+    # workspace is mid-item" and its id is the answer to "what are we on?".
+    # It belongs on this line rather than the session line below: the binding
+    # is per-worktree state living in .git, like everything else here.
+    #
+    # Read through task-marker.sh, which is where the marker's location and
+    # validation are defined, instead of reaching into .git/task.txt — one
+    # `get` costs ~30ms of a ~390ms render against ~15ms for a hand-rolled
+    # read, which buys not having to track that path in a second place. Only
+    # the "KEY: value" shape is re-read here, by the same anchored prefix the
+    # script matches on, so a title containing ": " survives.
+    task_marker=""
+    # $0 is the deployed path, ~/.claude/statusline-command.sh, so the skills
+    # directory is its sibling. Made absolute here because the `get` below runs
+    # from $cwd, where a relative path would resolve against the wrong root.
+    task_marker_sh=$(cd "$(dirname "$0")" 2>/dev/null \
+        && printf '%s/skills/task-marker.sh' "$PWD")
+    if [ -f "$task_marker_sh" ]; then
+        # Exit 1 is the ordinary "no marker" answer, and anything on stderr
+        # (not a repo, a malformed field) is for /next and /ship to report,
+        # not for a status line to render.
+        task_marker=$( (cd "$cwd" && sh "$task_marker_sh" get) 2>/dev/null )
+    fi
+
+    if [ -n "$task_marker" ]; then
+        # TITLE comes from a tracker, so it is outside text on its way to
+        # printf '%b', and the script's own validation only rejects newlines.
+        # Clean and clip it the way line 3 cleans an instruction, and for the
+        # same reasons: Cc for the control characters that would recolour or
+        # rewrite the line, Cf for the bidi overrides that would reorder it,
+        # and the clip in jq so a multi-byte character cannot be cut in half.
+        # One field per line rather than the @tsv used for line 2's fields: two
+        # of these three are optional, and tab is an IFS whitespace character,
+        # so an empty field would collapse its delimiters and shift a branch
+        # name into the title. A line each needs no sentinel to avoid that,
+        # and clean() below has already taken the newlines out of the values.
+        { read -r task_id; read -r task_branch; read -r task_title; } < <(
+            printf '%s\n' "$task_marker" | jq -Rrn --argjson max "$TASK_TITLE_MAX" '
+                def clean:
+                    gsub("[\\p{Cc}\\p{Cf}]"; " ") | gsub("\\s+"; " ")
+                    | gsub("^\\s+|\\s+$"; "");
+                def clip:
+                    if (length > $max) then .[0:$max - 1] + "\u2026" else . end;
+                reduce inputs as $line ({};
+                    if   $line | startswith("ID: ")     then .id     = $line[4:]
+                    elif $line | startswith("TITLE: ")  then .title  = $line[7:]
+                    elif $line | startswith("BRANCH: ") then .branch = $line[8:]
+                    else . end)
+                | (.id // "" | clean), (.branch // "" | clean),
+                  (.title // "" | clean | clip)
+            ' 2>/dev/null
+        )
+        task_id=${task_id//\\/\\\\}
+        task_title=${task_title//\\/\\\\}
+        task_branch=${task_branch//\\/\\\\}
+
+        # The marker is advisory — the tracker is the authority on who claimed
+        # what — and task-marker.sh deliberately makes a bad one loud rather
+        # than silent, because /ship acting on a stale id closes the wrong
+        # item. So the two states it can diagnose locally are shown in red: a
+        # marker that names a branch other than the one checked out (with that
+        # branch, so the mismatch is actionable), and one with no id at all,
+        # which no longer names anything. Its remaining note — a BASE that has
+        # left the repository — changes nothing about which item this is.
+        if [ -z "$task_id" ]; then
+            line1="${line1}  ${FG_RED}◆ ?${RESET}"
+        elif [ "$task_branch" != "$head_branch" ]; then
+            line1="${line1}  ${FG_RED}◆ ${task_id} @${task_branch:-(detached)}${RESET}"
+        else
+            line1="${line1}  ${BOLD}${FG_WHITE}◆ ${task_id}${RESET}"
+            [ -n "$task_title" ] && line1="${line1} ${DIM}${task_title}${RESET}"
+        fi
+    fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -168,6 +254,28 @@ IFS=$'\t' read -r transcript_path model \
 
 # --- model (dim) ---
 line2="${DIM}${model}${RESET}"
+
+# --- branched conversation ---
+# /branch (and `f` from a /btw aside) forks the session: Claude Code copies the
+# transcript into a new file and stamps every copied record with the
+# `forkedFrom` provenance of the conversation it came from. The copy is always a
+# prefix of the new file, so line 1 carries the stamp whenever this session is a
+# branch — one line read, nothing to scan in the common unbranched case. The
+# trunk's short session id rides along in the marker because `claude -r <id>` is
+# how you get back to it.
+#
+# Only this kind of branch is detectable: a /rewind continues in the same
+# transcript, and `claude --resume --fork-session` records no provenance.
+if [ "$transcript_path" != "null" ] && [ -f "$transcript_path" ]; then
+    fork_parent=$(head -n 1 "$transcript_path" 2>/dev/null \
+        | jq -Rr 'fromjson? | try (.forkedFrom.sessionId) catch empty
+                  | select(type == "string")' 2>/dev/null)
+    # The stamp reaches printf '%b' further down, so accept it only in the shape
+    # it is meant to have: a UUID, of which the marker shows the first block.
+    [[ $fork_parent =~ ^[0-9a-f]{8}-[0-9a-f-]+$ ]] || fork_parent=""
+    [ -n "$fork_parent" ] \
+        && line2="${line2}  ${FG_YELLOW}⑂ ${fork_parent:0:8}${RESET}"
+fi
 
 # --- rate limits ---
 rl_part=""
