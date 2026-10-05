@@ -104,8 +104,13 @@ let g:incsearch#consistent_n_direction = 1
 Plug 'pangloss/vim-javascript'
 
 Plug 'nanotech/jellybeans.vim'
+" Leave the background unpainted ('guibg': 'none' covers cterm too, and the
+" 'background' key applies to Normal, LineNr and NonText) so tmux's
+" window-style/window-active-style shows through and Vim panes dim when
+" inactive like every other pane. See tmux.conf.
 let g:jellybeans_overrides = {
-\    'SpecialKey': { 'guifg': '303030', 'guibg': '151515' },
+\    'background': { 'guibg': 'none' },
+\    'SpecialKey': { 'guifg': '303030', 'guibg': 'none' },
 \}
 
 " React syntax highlighting and indenting.
