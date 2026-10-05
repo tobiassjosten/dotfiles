@@ -81,28 +81,6 @@
           }
         ]
       }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$TMUX_PANE\" ] && printf '\\a' > \"$(tmux display-message -t \"$TMUX_PANE\" -p '#{pane_tty}')\" || true"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/notify-stop.sh"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -120,6 +98,7 @@
     "mode": "hold"
   },
   "skipWorkflowUsageWarning": true,
+  "preferredNotifChannel": "iterm2_with_bell",
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "remoteControlAtStartup": true

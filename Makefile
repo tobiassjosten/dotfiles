@@ -13,7 +13,7 @@ all: files brews fish vim
 
 # The one script here with behavioural tests: the review skills' diff preparation, which
 # /review, /polish, /ship and the code-reviewer agent depend on. The repo's other
-# first-party scripts (claude/statusline-command.sh, claude/notify-stop.sh,
+# first-party scripts (claude/statusline-command.sh,
 # claude/skills/review-pr/gh-pr.sh, tmux/scripts/minimize-sibling-pane.sh) have none — they are checked by running the tool
 # that calls them. Not part of `all`.
 .PHONY: check
@@ -53,7 +53,6 @@ claude:
 	ln -fs $(DIR)/claude/RTK.md ~/.claude/RTK.md
 	ln -fs $(DIR)/claude/settings.json ~/.claude/settings.json
 	ln -fs $(DIR)/claude/statusline-command.sh ~/.claude/statusline-command.sh
-	ln -fs $(DIR)/claude/notify-stop.sh ~/.claude/notify-stop.sh
 	$(call LINK_DIR,$(DIR)/claude/skills,~/.claude/skills)
 	$(call LINK_DIR,$(DIR)/claude/agents,~/.claude/agents)
 
