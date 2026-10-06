@@ -11,16 +11,19 @@ endef
 .PHONY: all
 all: files brews fish vim
 
-# The two scripts here with behavioural tests: the review skills' diff preparation, which
-# /review, /polish, /ship and the code-reviewer agent depend on, and the task marker, which
-# /next writes and /ship resolves its Finish gate from. The repo's other
-# first-party scripts (claude/statusline-command.sh,
+# The three scripts here with behavioural tests: the review skills' diff preparation, which
+# /review, /polish, /ship and the code-reviewer agent depend on, the review directory and
+# ledger they write through, and the task marker, which /next writes and /ship resolves its
+# Finish gate from. The repo's other
+# first-party scripts (claude/statusline-command.sh, claude/rtk-hook.sh,
 # claude/skills/review-pr/gh-pr.sh, tmux/scripts/minimize-sibling-pane.sh) have none — they are checked by running the tool
 # that calls them. Not part of `all`.
 .PHONY: check
 check:
 	sh -n $(DIR)/claude/skills/review-diff.sh
 	sh $(DIR)/claude/skills/review-diff.test.sh
+	sh -n $(DIR)/claude/skills/review-state.sh
+	sh $(DIR)/claude/skills/review-state.test.sh
 	sh -n $(DIR)/claude/skills/task-marker.sh
 	sh $(DIR)/claude/skills/task-marker.test.sh
 
@@ -45,7 +48,8 @@ fish: brews
 
 # Links only the Claude config into ~/.claude — the portable subset usable on a
 # bare machine (e.g. a dev VM) without the rest of the dotfiles toolchain. The
-# rtk hook self-guards (see claude/settings.json), so rtk is optional here.
+# rtk hook self-guards (see claude/rtk-hook.sh and its settings.json entry), so
+# rtk is optional here.
 .PHONY: claude
 claude:
 	@missing=""; for t in jq git; do command -v $$t >/dev/null 2>&1 || missing="$$missing $$t"; done; \
@@ -56,6 +60,7 @@ claude:
 	ln -fs $(DIR)/claude/RTK.md ~/.claude/RTK.md
 	ln -fs $(DIR)/claude/settings.json ~/.claude/settings.json
 	ln -fs $(DIR)/claude/statusline-command.sh ~/.claude/statusline-command.sh
+	ln -fs $(DIR)/claude/rtk-hook.sh ~/.claude/rtk-hook.sh
 	$(call LINK_DIR,$(DIR)/claude/skills,~/.claude/skills)
 	$(call LINK_DIR,$(DIR)/claude/agents,~/.claude/agents)
 
