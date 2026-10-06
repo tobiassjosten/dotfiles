@@ -66,7 +66,7 @@ No session calls a hook-point from the main checkout on its own initiative; a us
 | preflight | — | the identity check, then `integrate check`, in the tree |
 | 5: ask about ignored files, `ExitWorktree keep` | `/commit` | `/commit` |
 | 6, preconditions: main checkout on `<default>`; local `<default>` contained in the branch | `/commit` | `/commit`, before calling `land`; it stops on either as today |
-| 6: push `<branch>:<default>`, fast-forward the local default branch | `/commit` | the identity check, then `integrate land`, in the main checkout |
+| 6: fast-forward the local default branch onto the branch, then push it (`git push origin <default>`) | `/commit` | the identity check, then `integrate land`, in the main checkout |
 | verify the outcome | — | `/commit` (below) |
 | 7: remove the tree and branch | `/commit`, with `provision teardown` first, if provided | `/commit`, with `provision teardown` first, if provided |
 | 8: report; the task is advanced by `/ship`, never by either | `/commit` | `/commit` |
@@ -104,7 +104,7 @@ The hook never removes the tree or the branch (the ignored-files question that g
 | Exit | On `origin/<default>` | In local `<default>` | Outcome |
 |---|---|---|---|
 | 0 | yes | yes | **integrated** — continue to step 7 |
-| 0 | yes | no | **pushed, local fast-forward pending** — Done; tree and branch kept; reported exactly as `/commit` step 6 reports it today, with the hook's text naming what blocked the fast-forward |
+| 0 | yes | no | **pushed, local fast-forward pending** — Done; tree and branch kept; reported with the hook's text naming what blocked the fast-forward, which the user clears before running `git merge --ff-only <branch>` in the main checkout and removing the tree. Only a hook that pushes before it fast-forwards can produce this; the generic route fast-forwards first and never does |
 | 10 | no | — | **refused** — tree and branch kept; *Finishing by hand* on the hook route (below), leading with the hook's remedy |
 | any | otherwise | | **failure** — state as the two checks show it; nothing removed, Done not claimed |
 
@@ -133,7 +133,7 @@ So a hook can neither fake Done nor hide a push behind a refusal. **Refused mean
 For a project that provides neither hook-point:
 
 - **Provision:** nothing to set up, nothing to tear down.
-- **Integrate:** what `/commit` does from a worktree today, and only where the project opts in in its `CLAUDE.md` on `origin/<default>` — push `<branch>:<default>` from the main checkout, then fast-forward the local default branch, then remove the tree and branch. Without the opt-in: commit on the branch and stop with the by-hand steps.
+- **Integrate:** what `/commit` does from a worktree today, and only where the project opts in in its `CLAUDE.md` on `origin/<default>` — fast-forward the main checkout's default branch onto the branch, then `git push origin <default>` (undoing the fast-forward if the push fails), then remove the tree and branch. Without the opt-in: commit on the branch and stop with the by-hand steps.
 - **Abandon:** the skill's confirmed removal, with nothing to clean up.
 
 A project may provide either hook-point without the other: `provision` alone pairs with the generic route, and `integrate` alone needs no provisioning.
@@ -161,7 +161,7 @@ The skill edits that wiring the hook-points in requires, once INS-355 has answer
 3. **Commit series.** How does the hook recognise, in `--base..<branch>`, a series lumus's `docs/process/deployment.md` wants pushed commit by commit (a commit trailer, migration-stage detection, an env-var diff)? And does it refuse, or push commit by commit, waiting for each deploy?
 4. **Infra-only.** Derive it from `validate.yml`'s `paths-ignore` — read from `origin/main`, per the dependency rule under *Discovery and trust* — or hard-code the paths? And refuse, or land with a notice that the Infrastructure workflow plans it?
 5. **Unsafe provisioning.** Re-run `provision_worktree.py`'s safety checks against `--tree`, loading that script from `origin/main` (stateless; proposed), or have provisioning persist its report for the hook to read?
-6. **Push order.** Adopt push-then-fast-forward in place of lumus's `docs/process/worktree-integration.md` order, fast-forward-then-push? *Refused means nothing pushed* allows a fast-forward to `origin/main` first, but the landing's own fast-forward of the local `main` onto the branch has to come after the push for a rejected push to change nothing locally.
+6. **Push order.** Adopt push-then-fast-forward in place of lumus's `docs/process/worktree-integration.md` order, fast-forward-then-push? *Refused means nothing pushed* allows a fast-forward to `origin/main` first, but the landing's own fast-forward of the local `main` onto the branch has to come after the push for a rejected push to change nothing locally. *Answered by lumus (INS-362, its ADR-43): fast-forward, then `git push origin main`, restoring the local `main` after any failed push; `/commit`'s generic route now does the same.*
 7. **Done.** Lumus's done gate resolves an issue on the worktree commit, before integration; with a refusing hook, an issue can be Done and not deployed. Stop resolving on worktree commits, or keep the gap and document it as deliberate?
 8. **Provision wiring.** With a `--tree` entry added to `provision_worktree.py`, keep or drop the `PostToolUse/EnterWorktree` wiring once a skill calls `provision run`? (`SessionStart` stays either way, for `claude -w` and trees opened by hand.)
 9. **Landing-side state.** Does lumus push a tree's branch as a branch to run Validate without deploying (`docs/process/worktree-push-guard.md`)? If so, should `integrate abandon` delete that remote branch, and should `land` delete it after integrating?
