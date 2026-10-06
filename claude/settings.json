@@ -122,7 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v rtk >/dev/null 2>&1 && rtk hook claude || exit 0"
+            "command": "f=\"$HOME/.claude/rtk-hook.sh\"; [ -f \"$f\" ] || exit 0; sh \"$f\""
           }
         ]
       }

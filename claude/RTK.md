@@ -25,3 +25,5 @@ which rtk             # Verify correct binary
 
 All other commands are automatically rewritten by the Claude Code hook.
 Example: `git status` → `rtk git status` (transparent, 0 tokens overhead)
+
+Exception: in a linked git worktree the hook (`~/.claude/rtk-hook.sh`) leaves `git …` commands unrewritten, because Claude Code's worktree isolation refuses `rtk git`.
