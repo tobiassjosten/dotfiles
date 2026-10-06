@@ -13,6 +13,8 @@ Create a GitHub release. Ensures all local changes are committed and pushed befo
 
 ## Workflow
 
+0. **Run from the main checkout, never a linked worktree.** If `git rev-parse --path-format=absolute --git-dir --git-common-dir` prints two different paths, stop before doing anything: this skill runs as a fork, and `/commit` from a linked worktree has to move the session out of the tree, which a fork cannot do. Tell the user to land the branch first — `/ship` or `/commit` where the project opts in to worktree integration, or by hand — and then run `/release` from a session in the main checkout.
+
 1. **Fetch release tags from the remote**:
 
    ```
