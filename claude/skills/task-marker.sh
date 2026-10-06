@@ -26,6 +26,9 @@
 # It is a SIBLING of review/, not a child: /ship deletes the whole review directory as soon
 # as its push succeeds, and only afterwards advances the task, so a marker stored under
 # review/ would be gone before the step that needs the id.
+# From a linked worktree, /commit removes the whole tree — this marker and review/ alike —
+# after integrating, unless it keeps the tree, so /ship reads the marker before /commit
+# runs, and never clears it there.
 #
 # KEY: value lines, one per line, matching the meta.txt written into each review run
 # directory alongside it rather than the ledger's markdown. Keys:

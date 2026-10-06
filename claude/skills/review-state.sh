@@ -101,8 +101,10 @@ append)
 
 clear)
 	[ $# -eq 0 ] || die "clear takes no arguments"
-	# Idempotent, like task-marker.sh clear: /ship calls it after every successful push,
-	# including for a change that was never reviewed and so never created the directory.
+	# Idempotent, like task-marker.sh clear: /ship calls it after every successful push from
+	# the main checkout (from a linked worktree, /commit removes this with the tree, unless
+	# it keeps the tree), including for a change that was never reviewed and so never
+	# created the directory.
 	# Names the path either way, so a caller can report where it looked.
 	if [ -e "$root" ]; then
 		rm -rf "$root"
