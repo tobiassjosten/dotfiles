@@ -19,6 +19,9 @@
 # is per-worktree on one machine and per-clone across machines without any extra plumbing —
 # the same property that already scopes the review directory. It is inside .git, so it can
 # never be committed, and `git worktree remove` takes it with the worktree it belongs to.
+# In a linked worktree it is also under the main checkout, where a worktree-isolated
+# session may not Edit, Write or `rm "$(git ...)/..."` — so every caller goes through this
+# script, which the isolation checks let through (see review-state.sh for the details).
 #
 # It is a SIBLING of review/, not a child: /ship deletes the whole review directory as soon
 # as its push succeeds, and only afterwards advances the task, so a marker stored under
@@ -77,6 +80,18 @@ usage() {
 
 die() { printf 'task-marker.sh: %s\n' "$1" >&2; exit "${2:-2}"; }
 
+# Answered before the work-tree check, so the usage reads the same from anywhere.
+case ${1:-} in
+-h | --help)
+	usage
+	exit 0
+	;;
+"")
+	usage >&2
+	exit 2
+	;;
+esac
+
 # --show-toplevel, not --absolute-git-dir: the latter succeeds in a bare repo, which has no
 # workspace to bind and where every path below would mean something else. Same guard, and
 # same reason, as review-diff.sh.
@@ -105,11 +120,6 @@ field() {
 cmd=${1:-}
 [ $# -gt 0 ] && shift
 case $cmd in
--h | --help)
-	usage
-	exit 0
-	;;
-
 set)
 	source= id= title= base= force=
 	base_given=
@@ -254,11 +264,6 @@ clear)
 	# Idempotent: /ship clears after a push, and a task that never wrote a marker (a change
 	# made by hand) must not turn that into a failure.
 	rm -f "$marker"
-	;;
-
-"")
-	usage >&2
-	exit 2
 	;;
 
 *)

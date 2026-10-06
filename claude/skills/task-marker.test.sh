@@ -103,6 +103,8 @@ assert_eq "2" "$run_status" "an unknown command exits 2"
 assert_contains "$out" "unknown command" "and names the problem"
 
 cd "$work" || exit 1
+run --help
+assert_eq "0" "$run_status" "--help exits 0 outside a git repository too"
 run get
 assert_eq "1" "$run_status" "outside a git repository it exits 1"
 assert_contains "$out" "not a git repository" "and says so"
