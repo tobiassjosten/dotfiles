@@ -32,7 +32,9 @@
 # contents into full.diff, so anything secret must be gitignored, not merely untracked.
 #
 # Output goes to $(git rev-parse --absolute-git-dir)/review/<timestamp>-<pid>/ — inside
-# .git, so it is per-worktree and never committed. The 5 most recent runs are kept.
+# .git, so it is per-worktree and never committed. The 5 most recent runs are kept. In a
+# linked worktree that is under the main checkout, so a worktree-isolated session writes it
+# only through scripts like this one — see review-state.sh.
 #   meta.txt           MODE, FROM, TREE, DIR, totals, and NO-CONTENT listing any changed
 #                      file whose diff carries no content — a real binary, or one carrying a
 #                      `-diff` attribute — see the NO-CONTENT block further down for the
@@ -232,6 +234,8 @@ if gd --quiet "$from" "$tree"; then
 	exit 0
 fi
 
+# Same root review-state.sh computes — keep the two in step. That script is how the skills
+# append to the ledger beside these run directories and delete the lot after a push.
 root=$(git rev-parse --absolute-git-dir)/review
 dir=$root/$(date +%Y%m%d-%H%M%S)-$$
 mkdir -p "$dir/files"
