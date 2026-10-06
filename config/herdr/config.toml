@@ -8,6 +8,12 @@ onboarding = false
 name = "nord"
 
 auto_switch = false
+
+[theme.custom]
+# Nord's overlay0 (#4c566a) is the sidebar's metadata colour and all but
+# vanishes on the focused agent row's #434c5e; this one stays legible on both.
+overlay0 = "#9aa5bb"
+
 [keys]
 prefix = "ctrl+space"
 
@@ -42,7 +48,6 @@ pane_scrollbars = false
 show_agent_labels_on_pane_borders = true
 hide_tab_bar_when_single_tab = true
 window_title = "{workspace}"
-agent_panel_sort = "priority"
 status_indicators = "symbols"
 
 [ui.sidebar.agents]
