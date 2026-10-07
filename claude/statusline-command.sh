@@ -150,10 +150,10 @@ if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks >/dev/null 
     line1="${line1}  ${FG_BLUE}${branch}${RESET}"
     [ -n "$markers" ] && line1="${line1} ${markers}"
 
-    # --- the work item this workspace is bound to ---
+    # --- the work item this tree is bound to ---
     # /next writes a marker into the git dir naming the item it claimed and
     # /ship clears it once the push lands, so a marker present means "this
-    # workspace is mid-item" and its id is the answer to "what are we on?".
+    # tree is mid-item" and its id is the answer to "what are we on?".
     # It belongs on this line rather than the session line below: the binding
     # is per-worktree state living in .git, like everything else here.
     #
