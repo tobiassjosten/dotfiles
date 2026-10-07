@@ -105,7 +105,7 @@ Only after the commit **and push** succeed — from a worktree, `/commit`'s inte
 
 - **Backlog.md board** — `backlog task edit <id> --append-notes "…"` then `-s Done`, per the project's documented lifecycle.
 - **Issue tracker (MCP)** — transition the issue to its done/closed state.
-- **`TODO.md` / per-task file** — cleared by `/next` when it implemented the task. If the line or file is still there — the task was bound by hand, or inferred with no marker — remove it here as `/next` would have, unless the project's lifecycle says otherwise.
+- **`TODO.md` / per-task file** — cleared by `/next` when it implemented the task. If the line or file is still there — the task was bound by hand, inferred with no marker, or worked in a tree that had no copy of an untracked source (`next/SKILL.md` leaves it to this step) — remove it here as `/next` would have, unless the project's lifecycle says otherwise.
 
 If no task is associated, or the source is ambiguous, say so and skip this step rather than guessing — do not invent or move an unrelated task.
 

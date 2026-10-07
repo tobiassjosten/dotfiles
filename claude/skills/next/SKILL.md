@@ -2,6 +2,7 @@
 name: next
 description: Pick the next task from the project's work-item source, plan its implementation, and execute the plan once approved.
 disable-model-invocation: true
+allowed-tools: EnterWorktree, ExitWorktree, Bash(.claude/workspace/provision run:*)
 ---
 
 ## Selecting the task
@@ -31,20 +32,26 @@ Otherwise, discover which of these sources the project uses and select the task 
 
 These are examples, not an exhaustive list. If more than one source exists and the project's documentation doesn't disambiguate, ask the user which to use. If no source yields an actionable task, tell the user there is nothing to do and stop.
 
+## Enter the task's tree
+
+Once a task is chosen — also when a caller already resolved it and skipped the selection above — and before the workspace check below and before planning anything, follow the *Entering* part of `~/.claude/skills/workspace-tree.md` (steps 1–6), naming the tree as its step 5 says. It puts the session in a tree of its own: a new one in a project that isolates, or the one it is already in when it was started in a linked worktree — or it leaves the session in the main checkout, in place, where the project describes no isolation, the task is already underway there, or the repository has no `origin` default branch. This comes first because the marker is per tree and is written on plan approval: a tree entered later would leave the task bound to the main checkout. If the session is already in plan mode, enter the tree there, before drafting the plan. Everything below runs in whichever tree that leaves the session in. The *Preparing* part (step 7) waits for approval (*Plan and execute*); if the user abandons the task at the plan gate instead, leave the tree as that file's *Dropping the work before it starts* says.
+
 ## Check that this workspace is free
 
-Run this whenever a task has been chosen — also when a caller already resolved it and skipped the selection above — and before planning anything: `sh ~/.claude/skills/task-marker.sh get`. Exit 1 (no marker) means the workspace is free. A marker naming the chosen task means this workspace already holds it — carry on, and reuse the marker's `ID` in the bind step below so it refreshes rather than refuses. Compare like with like, as `/ship` does: ids ignoring a project prefix the source treats as optional, and for `todo`, whose `ID` is only a slug, the marker's `TITLE` against the task line. A marker naming a **different** item means this workspace is still on that one: stop and report it, with nothing claimed or written. It is either unfinished work or a stale marker, and which one is the user's call. Checking here rather than at the bind step is what keeps a refusal from leaving the new task claimed in its source with nothing bound to it.
+Run this in the tree the step above left the session in, before planning anything: `sh ~/.claude/skills/task-marker.sh get`. Exit 1 (no marker) means the workspace is free. A marker naming the chosen task means this workspace already holds it — carry on, and reuse the marker's `ID` in the bind step below so it refreshes rather than refuses. Compare like with like, as `/ship` does: ids ignoring a project prefix the source treats as optional, and for `todo`, whose `ID` is only a slug, the marker's `TITLE` against the task line. In a tree `workspace-tree.md` reported **resumed** — one that already held work — no marker is not free: that work may be anything that shares the tree's name, so stop before claiming and ask (`AskUserQuestion`) whether it is this task's earlier attempt, to carry on with, or something else; on *something else*, leave the tree with `ExitWorktree` action `keep` and stop, naming it, as `workspace-tree.md` step 5 says. A marker naming a **different** item means this workspace is still on that one: stop and report it, with nothing claimed or written. It is either unfinished work or a stale marker, and which one is the user's call. Checking here rather than at the bind step is what keeps a refusal from leaving the new task claimed in its source with nothing bound to it.
 
 ## Plan and execute
 
 Enter plan mode and plan the implementation of the selected task. If the task already carries an implementation plan, treat it as a likely-outdated prescription — mine it for useful details, but draft a fresh plan from the current state of the codebase. Where the project's documented lifecycle requires opening steps (e.g. recording the plan on the task and activating it), the plan must include them. The plan must include a final step that hands the task on in its source, matched to that source:
 
-- **`TODO.md`** — remove the task line itself and any adjacent blank lines so no double linebreaks are left behind. Do NOT commit TODO.md after removing the entry.
+- **`TODO.md`** — remove the task line itself and any adjacent blank lines so no double linebreaks are left behind. Do NOT commit TODO.md after removing the entry. In a tree, the file may not be there at all: a `TODO.md` the project does not track (`git ls-files --error-unmatch TODO.md` fails — gitignored, say) exists only in the main checkout, which the isolated session cannot write. Then this step is not in the plan: say so, and `/ship` removes the line from the main checkout after it pushes (its § 5 already removes one that is still there). The same goes for an untracked per-task file.
 - **Per-task file** — delete or move the file per the project's convention (e.g. into a `done/` directory) if the documentation specifies one; otherwise delete it.
 - **Backlog.md board** — follow the project's documented task lifecycle if it defines one, stopping where it says to stop; otherwise move the task to its review status if the board has one, and leave it In Progress if not. **Never move it to Done here.**
 - **Issue tracker** — transition the issue to its review state if the tracker has one, and leave it In Progress if not. **Never close it here.**
 
 The terminal move on a board or tracker belongs to the Finish gate — `/ship`, after the change is committed and pushed — which resolves the task from the marker below and refuses one already Done. A change finished any other way (a hand `/commit`) leaves the task for the user to close.
+
+Where `workspace-tree.md` step 5 entered a tree (created, reused or resumed), the plan's **first** step is that file's *Preparing* part (step 7, `provision run`) — preceded by the base guard's reset when step 6 deferred it because the session was already in plan mode — ahead of everything else, the claim included.
 
 The plan must also bind this workspace to the task, with `sh ~/.claude/skills/task-marker.sh set --source <kind> --id <id> --title <title>`. Place that step **immediately after** the one that claims the task — moves it to In Progress — and never before it, so on a source with a claim state a marker cannot exist without a claim behind it. A source with no claim state (`TODO.md`, per-task files) binds as the first implementation step instead. The marker is what `/ship` resolves its Finish gate from and clears after pushing, so it outlives the final hand-on step above; leave it in place. Per source:
 
