@@ -1,8 +1,9 @@
 #!/bin/sh
-# Bind one workspace to the one work item it is working on, and read that binding back.
-# Shared by /next (writes), /ship (reads, then clears), /mill (clears on a skipped
-# item), the /forge and /polish summaries (name it), the status line (shows ID and TITLE
-# on every render), the SessionStart hook in settings.json (prints SOURCE, ID, BRANCH and
+# Bind one tree to the one work item it is working on, and read that binding back.
+# Shared by /next (lists every tree's before selecting, then writes), /mill (lists them
+# when resolving its items, and clears on a skipped item), /ship (reads, then clears),
+# the /forge and /polish summaries (name it), the status line (shows ID and TITLE on
+# every render), the SessionStart hook in settings.json (prints SOURCE, ID, BRANCH and
 # `check` into each new session) and the work-item rules in claude/CLAUDE.md (set, check
 # and clear for work started by hand), so the marker's path, format and validation live
 # in one place.
@@ -10,8 +11,9 @@
 # Usage:
 #   task-marker.sh set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]
 #   task-marker.sh get [<key>]     print the whole marker, or one key's value
-#   task-marker.sh check           verify the marker against this workspace
+#   task-marker.sh check           verify the marker against this tree
 #   task-marker.sh clear           remove the marker (silent when there is none)
+#   task-marker.sh list            print every tree's marker in this repository
 #   task-marker.sh -h, --help      print the usage and exit
 #
 # The marker lives at $(git rev-parse --absolute-git-dir)/task.txt. That path resolves to
@@ -50,7 +52,7 @@
 #   CLAIMED  ISO date the marker was written.
 #
 # THE MARKER IS ADVISORY, AND THIS SCRIPT CANNOT MAKE IT AUTHORITATIVE. It records which
-# item this workspace *believes* it owns; the tracker remains the only authority on who
+# item this tree *believes* it owns; the tracker remains the only authority on who
 # claimed what, and it is the only thing that can be seen from another machine. `check`
 # therefore verifies what is checkable locally — the marker is present, well-formed, and
 # names this branch — and callers must re-read the tracker before acting on the id. This
@@ -61,7 +63,8 @@
 # Exit status: 0 success (including `clear` with nothing to remove, and -h/--help);
 # 1 no marker, or `get <key>` for a key the marker does not carry; 2 bad usage, an invalid
 # field value, or a `set` that would replace a different item's marker without --force;
-# 3 `check` found a mismatch. A missing work tree is 1.
+# 3 `check` found a mismatch. A missing work tree is 1. `list` exits 0 whether or not it
+# finds a marker.
 set -eu
 
 # Owner-only, matching review-diff.sh: everything this script writes lands in the same
@@ -72,11 +75,15 @@ usage() {
 	cat <<-'EOF'
 	usage: task-marker.sh <command> [options]
 	  set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]
-	                      bind this workspace to a work item
+	                      bind this tree to a work item
 	  get [<key>]         print the whole marker, or one key's value
 	                      (key names are case-insensitive: SOURCE ID TITLE BRANCH BASE CLAIMED)
 	  check               verify the marker is present, well-formed and names this branch
 	  clear               remove the marker
+	  list                print every tree's marker in this repository, one per line:
+	                      <this> TAB <tree> TAB <SOURCE> TAB <ID> TAB <TITLE>, with <this>
+	                      * for the tree it runs in, - for any other, and ! for a tree
+	                      whose directory is gone (`git worktree prune` drops it)
 	  -h, --help          print this usage and exit
 	EOF
 }
@@ -96,7 +103,7 @@ case ${1:-} in
 esac
 
 # --show-toplevel, not --absolute-git-dir: the latter succeeds in a bare repo, which has no
-# workspace to bind and where every path below would mean something else. Same guard, and
+# tree to bind and where every path below would mean something else. Same guard, and
 # same reason, as review-diff.sh.
 git rev-parse --show-toplevel >/dev/null 2>&1 ||
 	die "not a git repository with a work tree" 1
@@ -106,18 +113,22 @@ marker=$(git rev-parse --absolute-git-dir)/task.txt
 # containing a newline would be read back as a truncated value plus a junk line — and for
 # TITLE, which comes from a tracker and so from outside this repo, that junk line could be
 # spelled to look like another field. Checked by comparing against the value with newlines
-# stripped, because a `case` glob cannot match one.
+# stripped, because a `case` glob cannot match one. A tab is rejected too: `list` prints
+# the fields tab-separated, and a tab inside an ID would split it across columns there.
 validate() {
 	_name=$1 _value=$2
 	[ -n "$_value" ] || die "--${_name} must not be empty"
 	[ "$_value" = "$(printf '%s' "$_value" | tr -d '\n\r')" ] ||
 		die "--${_name} must not contain a newline"
+	[ "$_value" = "$(printf '%s' "$_value" | tr -d '\t')" ] ||
+		die "--${_name} must not contain a tab"
 }
 
-# One key's value, or empty if the marker does not carry that key. Anchored on "KEY: " and
-# splitting on the first occurrence only, so a TITLE containing a colon survives intact.
+# One key's value, or empty if the marker (or the marker file given as $2) does not carry
+# that key. Anchored on "KEY: " and splitting on the first occurrence only, so a TITLE
+# containing a colon survives intact.
 field() {
-	sed -n "s/^$1: //p" "$marker" | head -1
+	sed -n "s/^$1: //p" "${2:-$marker}" | head -1
 }
 
 cmd=${1:-}
@@ -166,14 +177,14 @@ set)
 		base=$(git rev-parse HEAD 2>/dev/null) || base=
 	fi
 
-	# Refuse to silently retarget the workspace. Rewriting the same id is how /next refreshes
+	# Refuse to silently retarget the tree. Rewriting the same id is how /next refreshes
 	# a marker after a rebase or a retitle, so that stays idempotent and needs no --force;
-	# pointing it at a *different* item is the mistake this guard exists to catch, and in
-	# phase 2 it is also where per-workspace WIP=1 bottoms out.
+	# pointing it at a *different* item is the mistake this guard exists to catch, and it is
+	# also where the one-task-per-tree rule (claude/CLAUDE.md § Work items) bottoms out.
 	if [ -e "$marker" ] && [ -z "$force" ]; then
 		old_source=$(field SOURCE) old_id=$(field ID)
 		if [ "$old_source" != "$source" ] || [ "$old_id" != "$id" ]; then
-			printf 'task-marker.sh: this workspace is already bound to %s/%s\n' \
+			printf 'task-marker.sh: this tree is already bound to %s/%s\n' \
 				"${old_source:-?}" "${old_id:-?}" >&2
 			printf '  marker: %s\n' "$marker" >&2
 			printf '  finish or clear it before binding %s/%s, or pass --force\n' \
@@ -182,7 +193,7 @@ set)
 		fi
 	fi
 
-	# Empty on a detached HEAD, which `check` then holds the workspace to.
+	# Empty on a detached HEAD, which `check` then holds the tree to.
 	branch=$(git branch --show-current)
 
 	# Written whole and moved into place: a reader that catches a half-written marker would
@@ -205,7 +216,7 @@ set)
 
 get)
 	[ $# -le 1 ] || die "get takes at most one key"
-	[ -e "$marker" ] || die "no task marker in this workspace ($marker)" 1
+	[ -e "$marker" ] || die "no task marker in this tree ($marker)" 1
 	if [ $# -eq 0 ]; then
 		cat "$marker"
 	else
@@ -226,7 +237,7 @@ get)
 
 check)
 	[ $# -eq 0 ] || die "check takes no arguments"
-	[ -e "$marker" ] || die "no task marker in this workspace ($marker)" 1
+	[ -e "$marker" ] || die "no task marker in this tree ($marker)" 1
 
 	source=$(field SOURCE) id=$(field ID) recorded=$(field BRANCH) base=$(field BASE)
 	status=0
@@ -238,7 +249,7 @@ check)
 
 	current=$(git branch --show-current)
 	if [ "$recorded" != "$current" ]; then
-		printf 'mismatch: marker names branch %s, workspace is on %s\n' \
+		printf 'mismatch: marker names branch %s, tree is on %s\n' \
 			"${recorded:-(detached)}" "${current:-(detached)}"
 		status=3
 	fi
@@ -269,7 +280,47 @@ clear)
 	rm -f "$marker"
 	;;
 
+list)
+	[ $# -eq 0 ] || die "list takes no arguments"
+	# Every tree's marker, so a caller choosing a work item can see what the other trees of
+	# this repository hold — the only claim state a TODO.md or per-task-file source has, and
+	# the only sign of a board claim made on a branch not yet integrated. Two places, not
+	# one: linked worktrees' markers sit under <common>/worktrees/<name>/, and the main
+	# checkout's at <common>/task.txt itself, which a glob over worktrees/ misses. Local to
+	# this clone: another machine's trees are invisible here, and only a tracker sees them.
+	common=$(git rev-parse --path-format=absolute --git-common-dir)
+	for m in "$common/task.txt" "$common"/worktrees/*/task.txt; do
+		[ -f "$m" ] || continue
+		dir=${m%/task.txt}
+		if [ "$dir" = "$common" ]; then
+			# The main checkout is the first entry git lists.
+			tree=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+		elif tree=$(cat "$dir/gitdir" 2>/dev/null); then
+			# A linked worktree's gitdir file names the .git file at its root — relative
+			# to this admin directory under worktree.useRelativePaths, so resolve it there.
+			case $tree in
+			/*) ;;
+			*) tree=$dir/$tree ;;
+			esac
+			tree=${tree%/.git}
+			[ -d "$tree" ] && tree=$(cd "$tree" && pwd -P)
+		else
+			tree='?'
+		fi
+		# * this tree, - another tree, ! a tree whose directory is gone: its admin directory
+		# and marker linger until `git worktree prune`, so it claims nothing any more.
+		this=-
+		if [ "$m" = "$marker" ]; then
+			this='*'
+		elif [ ! -d "$tree" ]; then
+			this='!'
+		fi
+		printf '%s\t%s\t%s\t%s\t%s\n' "$this" "$tree" \
+			"$(field SOURCE "$m")" "$(field ID "$m")" "$(field TITLE "$m")"
+	done
+	;;
+
 *)
-	die "unknown command: $cmd (set, get, check, clear)"
+	die "unknown command: $cmd (set, get, check, clear, list)"
 	;;
 esac
