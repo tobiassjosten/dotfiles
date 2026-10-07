@@ -16,6 +16,7 @@
 # Git
 
 - Never commit anything outside of the session's working directory. Only create commits in the repo rooted at the primary working directory the session started in — never in other repos, submodules, or parent/sibling repos, even if a task touches files there. If a change genuinely needs a commit elsewhere, surface it and let me do it.
+- Land a worktree's branch on the default branch only where the project opts in (see `/commit`) or I ask, and only from the main checkout: fast-forward the local default branch onto it there (`git merge --ff-only <branch>`), then push the default branch by name (`git push origin <default>`). Never push a branch or a commit onto the default branch from elsewhere (`git push origin <branch>:<default>`, `<sha>:<default>`), and never `git pull` or leave a merge commit on it. If that push fails, restore the local default branch to where it was before the fast-forward (`git reset --keep ORIG_HEAD`) rather than pushing differently.
 
 # Work items
 
