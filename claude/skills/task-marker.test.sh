@@ -1,5 +1,5 @@
 #!/bin/sh
-# Behavioural tests for task-marker.sh — the binding between a workspace and the work
+# Behavioural tests for task-marker.sh — the binding between a tree and the work
 # item it is on, which /next writes, /ship resolves its Finish gate from and clears, the
 # status line reads on every render and the SessionStart hook reads once per session.
 # Each case builds a throwaway repo under $TMPDIR and asserts on what the script printed,
@@ -164,6 +164,12 @@ run set --source linear --id INS-1 --title "two
 lines"
 assert_eq "2" "$run_status" "a newline in --title exits 2"
 assert_contains "$out" "newline" "and names the newline"
+run set --source linear --id "INS$(printf '\t')1"
+assert_eq "2" "$run_status" "a tab in --id exits 2"
+assert_eq "task-marker.sh: --id must not contain a tab" "$out" "and names the tab"
+run set --source linear --id INS-1 --title "a$(printf '\t')b"
+assert_eq "2" "$run_status" "a tab in --title exits 2"
+assert_absent "$(marker_path)" "and writes no marker"
 run set --source Linear --id INS-1
 assert_eq "2" "$run_status" "an uppercase --source exits 2"
 run set --source "lin ear" --id INS-1
@@ -229,13 +235,13 @@ assert_eq "ok: linear/INS-4 on main" "$out" "and reports ok"
 git checkout -qb other
 run check
 assert_eq "3" "$run_status" "check on another branch exits 3"
-assert_contains "$out" "mismatch: marker names branch main, workspace is on other" "and names both branches"
+assert_contains "$out" "mismatch: marker names branch main, tree is on other" "and names both branches"
 assert_contains "$out" "this check is local only" "and says the tracker is still authoritative"
 
 git checkout -q --detach main
 run check
 assert_eq "3" "$run_status" "a detached HEAD against a recorded branch exits 3"
-assert_contains "$out" "workspace is on (detached)" "and names the detached state"
+assert_contains "$out" "tree is on (detached)" "and names the detached state"
 git checkout -q main
 
 printf 'SOURCE: linear\nBRANCH: main\n' >"$(marker_path)"
@@ -280,6 +286,61 @@ cd "$work/worktree-feature" || exit 1
 sh "$script" clear
 cd "$main_repo" || exit 1
 assert_eq "MAIN-1" "$(sh "$script" get id)" "clearing a worktree's marker leaves the main checkout's alone"
+
+# --- list: every tree's marker -------------------------------------------------------
+case_name="list"
+tab=$(printf '\t')
+new_repo list
+list_main=$(pwd -P)
+run list
+assert_eq "0" "$run_status" "list with no marker anywhere exits 0"
+assert_eq "" "$out" "and prints nothing"
+run list now
+assert_eq "2" "$run_status" "list takes no arguments"
+
+sh "$script" set --source todo --id main-task --title "Main: task" >/dev/null
+run list
+assert_eq "*${tab}${list_main}${tab}todo${tab}main-task${tab}Main: task" "$out" \
+	"the main checkout's own marker is listed and marked as this tree"
+
+git worktree add -q -b one "$work/list-one"
+git worktree add -q -b two "$work/list-two"
+cd "$work/list-one" || exit 1
+sh "$script" set --source linear --id ONE-1 >/dev/null
+run list
+assert_eq "0" "$run_status" "list from a linked worktree exits 0"
+assert_eq "-${tab}${list_main}${tab}todo${tab}main-task${tab}Main: task
+*${tab}$work/list-one${tab}linear${tab}ONE-1${tab}" "$out" \
+	"from a linked worktree it lists the main checkout's marker too, and marks its own"
+
+cd "$list_main" || exit 1
+sh "$script" clear
+run list
+assert_eq "-${tab}$work/list-one${tab}linear${tab}ONE-1${tab}" "$out" \
+	"a linked worktree's marker is listed from the main checkout; one without a marker is not"
+
+printf 'SOURCE: linear\n' >"$list_main/.git/worktrees/list-two/task.txt"
+run list
+assert_contains "$out" "-${tab}$work/list-two${tab}linear${tab}${tab}" "a malformed marker is still listed, with its ID empty"
+
+# A tree deleted without `git worktree remove` keeps its admin directory and marker.
+rm -rf "$work/list-two"
+run list
+assert_eq "0" "$run_status" "list with a deleted tree still exits 0"
+assert_contains "$out" "!${tab}$work/list-two${tab}linear${tab}${tab}" "a tree whose directory is gone is marked !"
+assert_contains "$out" "-${tab}$work/list-one${tab}linear${tab}ONE-1${tab}" "and the other trees are still listed"
+
+# An admin directory with no gitdir file is listed with ? for its path, not dropped.
+rm "$list_main/.git/worktrees/list-two/gitdir"
+run list
+assert_eq "0" "$run_status" "list with an unreadable gitdir still exits 0"
+assert_contains "$out" "!${tab}?${tab}linear${tab}${tab}" "its tree is ? and marked !"
+assert_contains "$out" "-${tab}$work/list-one${tab}linear${tab}ONE-1${tab}" "and the other trees are still listed"
+
+# worktree.useRelativePaths (git 2.48+) writes the gitdir file relative to the admin dir.
+printf '../../../../list-one/.git\n' >"$list_main/.git/worktrees/list-one/gitdir"
+run list
+assert_contains "$out" "-${tab}$work/list-one${tab}linear${tab}ONE-1${tab}" "a relative gitdir is resolved to the tree's absolute path"
 
 # --- report --------------------------------------------------------------------------
 cd / || exit 1
