@@ -25,7 +25,7 @@ This skill only adds orchestration on top of existing pieces — they remain the
 
 Follow `~/.claude/skills/next/SKILL.md`, treating this skill's argument as its `$ARGUMENTS`.
 
-- The plan-mode gate is a **hard user gate** (project Hard Rule 3): surface the plan and wait for the user's `ExitPlanMode` approval. Do not modify any file before approval. The plan's own first step is its Backlog bookkeeping (record the plan, move the task to In Progress, self-assign) — verify it is present, as the plan-gate hook requires.
+- The plan-mode gate is a **hard user gate** (project Hard Rule 3): surface the plan and wait for the user's `ExitPlanMode` approval. Do not modify any file before approval. After the tree's *Preparing* step where `/next` entered a tree (`workspace-tree.md` step 7, preceded by the base guard's reset when that was deferred), the plan opens with its Backlog bookkeeping (record the plan, move the task to In Progress, self-assign) — verify it is present, as the plan-gate hook requires.
 - Before implementing, record the baseline (`git status` and `git rev-parse HEAD`) so the final summary can describe exactly what changed.
 - Once approved, implement the plan.
 
