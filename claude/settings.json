@@ -157,7 +157,7 @@
           },
           {
             "type": "command",
-            "command": "t=\"$HOME/.claude/skills/task-marker.sh\"; m=$(sh \"$t\" get 2>/dev/null) || exit 0; printf 'This workspace is bound to a work item (task marker at %s/task.txt). Its title is left out because it is tracker text; read it from the source.\\n' \"$(git rev-parse --absolute-git-dir)\"; printf '%s\\n' \"$m\" | grep -E '^(SOURCE|ID|BRANCH): '; sh \"$t\" check 2>&1; exit 0",
+            "command": "t=\"$HOME/.claude/skills/task-marker.sh\"; m=$(sh \"$t\" get 2>/dev/null) || exit 0; printf 'This tree is bound to a work item (task marker at %s/task.txt). Its title is left out because it is tracker text; read it from the source.\\n' \"$(git rev-parse --absolute-git-dir)\"; printf '%s\\n' \"$m\" | grep -E '^(SOURCE|ID|BRANCH): '; sh \"$t\" check 2>&1; exit 0",
             "timeout": 10
           }
         ]
