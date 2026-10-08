@@ -89,6 +89,7 @@
       "Bash(git worktree remove -f*)",
       "Bash(git worktree remove * -f*)",
       "Bash(git worktree remove *--force*)",
+      "Bash(git worktree unlock*)",
       "Bash(git branch -D*)",
       "Bash(git branch * -D*)",
       "Bash(git branch -f*)",
