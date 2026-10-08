@@ -2,11 +2,12 @@
 # Bind one tree to the one work item it is working on, and read that binding back.
 # Shared by /next (lists every tree's before selecting, then writes), /mill (lists them
 # when resolving its items, and clears on a skipped item), /ship (reads, then clears),
-# the /forge and /polish summaries (name it), the status line (shows ID and TITLE on
-# every render), the SessionStart hook in settings.json (prints SOURCE, ID, BRANCH and
-# `check` into each new session) and the work-item rules in claude/CLAUDE.md (set, check
-# and clear for work started by hand), so the marker's path, format and validation live
-# in one place.
+# /abandon (reads the marker of the tree it removes, and lists them to resolve its
+# argument), the /forge and /polish summaries (name it), the status line (shows ID and
+# TITLE on every render), the SessionStart hook in settings.json (prints SOURCE, ID,
+# BRANCH and `check` into each new session) and the work-item rules in claude/CLAUDE.md
+# (set, check and clear for work started by hand), so the marker's path, format and
+# validation live in one place.
 #
 # Usage:
 #   task-marker.sh set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]
