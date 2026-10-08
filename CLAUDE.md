@@ -35,6 +35,10 @@ Fish is the login shell; all shell config (PATH, aliases, functions, prompt) liv
 - `hammerspoon/Spoons/` — Lua Spoons (only the Spoons are symlinked, not the whole Hammerspoon dir)
 - `gitconfig` conditionally includes `gitconfig_stim` (work identity) for repos under `~/projects/stim/`
 
+## TODO.md
+
+`TODO.md` holds only work that is left to do, and is kept current as part of every change: in the same change that handles an item, remove it (or trim it to whatever part is still open); when work turns up something left undone — a follow-up, an unverified assumption, a deferred decision — add it there before finishing. Don't mark items done, strike them through or keep a log of what shipped; git history and the commits themselves record that. Give each item enough context to be picked up cold: what is wrong or missing, why it matters, and any decision or measurement it depends on. `TODO.md` is gitignored (by the global `gitignore`), so it exists only in the main checkout and is never part of a commit; a session in a linked worktree, which isolation keeps from writing there, makes its updates once it is back in the main checkout (after `/commit` or `/ship` has integrated), or lists them in its final report when it ends in the tree.
+
 ## Worktrees
 
 **Tasks here are worked in per-task worktrees** (`claude/skills/workspace-tree.md`): `/next`, and work started any other way, enters a tree under `.claude/worktrees/` before planning or editing.
