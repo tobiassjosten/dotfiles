@@ -36,7 +36,7 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 
 ### Shell
 
-- `config/fish/config.fish` (→ `~/.config/fish/config.fish`) — the login shell: PATH, aliases, functions, prompt. Includes `__gcloud_config_env`, a `--on-variable PWD` hook that scopes `CLOUDSDK_CONFIG` per git repo so each project's gcloud account/project/ADC stays isolated.
+- `config/fish/config.fish` (→ `~/.config/fish/config.fish`) — the login shell: PATH, aliases, functions, prompt. Includes `__gcloud_config_env`, a `--on-variable PWD` hook that scopes `CLOUDSDK_CONFIG` per git repo (worktrees share their main checkout's) so each project's gcloud account/project/ADC stays isolated.
 - `zprofile` (→ `~/.zprofile`) — minimal fallback for macOS's default zsh (puts Homebrew on `PATH`, loads nvm). Everything else belongs in the fish config.
 
 ### Editors

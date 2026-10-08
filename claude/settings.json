@@ -78,6 +78,7 @@
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.config/gcloud/**)",
+      "Read(~/.config/gcloud-repos/**)",
       "Read(~/.claude/.credentials.json)"
     ],
     "ask": [
