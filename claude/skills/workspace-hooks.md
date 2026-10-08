@@ -180,7 +180,7 @@ Client's answers to the draft's open questions (ABC-355, 2026-10-06, and its rev
 
 1. **Opt-in** — a trusted `integrate` on `origin/main` is enough; no `CLAUDE.md` line.
 2. **Verification** — an absent or different `--verified-tree` is a notice, never a refusal; a bare `/commit` integrates too. CI on `main` gates the deploy.
-3. **Commit series** — refused, never pushed commit by commit: more than one commit with any touching migrations or `.env`, or any commit with the trailer `Integrate: by-hand`.
+3. **Commit series** — refused, never pushed commit by commit: a commit after the range's first that adds migration SQL dropping or renaming a schema object, a merge commit in the range, or any commit with the trailer `Integrate: by-hand` (narrowed by ABC-377; `.env` is no longer a trigger).
 4. **Infra-only** — no path is special (reversed during review): what reaches production unchecked wants validation in CI, not a refusal in the hook.
 5. **Unsafe provisioning** — a stateless re-run of the provisioning checks against `--tree`, loaded from `origin/main` with their whole import closure; no persisted report.
 6. **Push order** — fast-forward, then `git push origin main`, restoring the local `main` on any failed push; a non-fast-forward rejection is a refusal (ABC-362, DEC-43, superseding the push-then-fast-forward order first adopted under DEC-41).
