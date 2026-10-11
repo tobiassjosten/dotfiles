@@ -1,7 +1,9 @@
 #!/bin/sh
 # Bind one tree to the one work item it is working on, and read that binding back.
 # Shared by /next (lists every tree's before selecting, then writes), /mill (lists them
-# when resolving its items, and clears on a skipped item), /ship (reads, then clears),
+# when resolving its items, and clears on a skipped item or when it continues past one
+# whose push or advance stopped in the main checkout), /ship (reads, then clears),
+# /commit (rewrites it with the same item when it moves the work onto a new branch),
 # /abandon (reads the marker of the tree it removes, and lists them to resolve its
 # argument), the /forge and /polish summaries (name it), the status line (shows ID and
 # TITLE on every render), the SessionStart hook in settings.json (prints SOURCE, ID,
@@ -10,7 +12,8 @@
 # validation live in one place.
 #
 # Usage:
-#   task-marker.sh set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]
+#   task-marker.sh set --source <kind> --id <id> [--title <text>] [--base <commit>]
+#   task-marker.sh rebind --source <kind> --id <id> [--title <text>] [--base <commit>]
 #   task-marker.sh get [<key>]     print the whole marker, or one key's value
 #   task-marker.sh check           verify the marker against this tree
 #   task-marker.sh clear           remove the marker (silent when there is none)
@@ -29,9 +32,9 @@
 # It is a SIBLING of review/, not a child: /ship deletes the whole review directory as soon
 # as its push succeeds, and only afterwards advances the task, so a marker stored under
 # review/ would be gone before the step that needs the id.
-# From a linked worktree, /commit removes the whole tree — this marker and review/ alike —
-# after integrating, unless it keeps the tree, so /ship reads the marker before /commit
-# runs, and never clears it there.
+# From a linked worktree, /ship's integration (publish.md) removes the whole tree — this
+# marker and review/ alike — once it has landed, unless it keeps the tree, so /ship reads
+# the marker before it publishes, and never clears it there.
 #
 # KEY: value lines, one per line, matching the meta.txt written into each review run
 # directory alongside it rather than the ledger's markdown. Keys:
@@ -63,7 +66,7 @@
 #
 # Exit status: 0 success (including `clear` with nothing to remove, and -h/--help);
 # 1 no marker, or `get <key>` for a key the marker does not carry; 2 bad usage, an invalid
-# field value, or a `set` that would replace a different item's marker without --force;
+# field value, or a `set` that would replace a different item's marker (that is `rebind`);
 # 3 `check` found a mismatch. A missing work tree is 1. `list` exits 0 whether or not it
 # finds a marker.
 set -eu
@@ -75,8 +78,10 @@ umask 077
 usage() {
 	cat <<-'EOF'
 	usage: task-marker.sh <command> [options]
-	  set --source <kind> --id <id> [--title <text>] [--base <commit>] [--force]
-	                      bind this tree to a work item
+	  set --source <kind> --id <id> [--title <text>] [--base <commit>]
+	                      bind this tree to a work item, or refresh the same item's binding
+	  rebind --source <kind> --id <id> [--title <text>] [--base <commit>]
+	                      bind this tree to a work item, replacing a different one
 	  get [<key>]         print the whole marker, or one key's value
 	                      (key names are case-insensitive: SOURCE ID TITLE BRANCH BASE CLAIMED)
 	  check               verify the marker is present, well-formed and names this branch
@@ -135,8 +140,13 @@ field() {
 cmd=${1:-}
 [ $# -gt 0 ] && shift
 case $cmd in
-set)
-	source= id= title= base= force=
+set | rebind)
+	# Two commands rather than `set --force`, so a permission rule can grant `set` — the
+	# idempotent refresh /commit runs when it moves work onto a new branch — without also
+	# granting the retarget, which claude/CLAUDE.md § Work items says never to run
+	# unprompted. The name deliberately shares no prefix with `set`, so a prefix rule on
+	# `set` cannot match it.
+	source= id= title= base=
 	base_given=
 	while [ $# -gt 0 ]; do
 		case $1 in
@@ -144,7 +154,10 @@ set)
 		--id) [ $# -ge 2 ] || die "--id needs a value"; id=$2; shift 2 ;;
 		--title) [ $# -ge 2 ] || die "--title needs a value"; title=$2; shift 2 ;;
 		--base) [ $# -ge 2 ] || die "--base needs a value"; base=$2; base_given=1; shift 2 ;;
-		--force) force=1; shift ;;
+		--force)
+			[ "$cmd" = rebind ] && die "rebind takes no --force: it always replaces the binding"
+			die "set has no --force: replacing a different item's binding is \`rebind\`"
+			;;
 		--source=* | --id=* | --title=* | --base=*)
 			# The = form, so callers need not care which spelling this script prefers.
 			_val=${1#*=}
@@ -156,7 +169,7 @@ set)
 			esac
 			shift
 			;;
-		*) die "unknown option for set: $1" ;;
+		*) die "unknown option for $cmd: $1" ;;
 		esac
 	done
 
@@ -179,16 +192,17 @@ set)
 	fi
 
 	# Refuse to silently retarget the tree. Rewriting the same id is how /next refreshes
-	# a marker after a rebase or a retitle, so that stays idempotent and needs no --force;
-	# pointing it at a *different* item is the mistake this guard exists to catch, and it is
-	# also where the one-task-per-tree rule (claude/CLAUDE.md § Work items) bottoms out.
-	if [ -e "$marker" ] && [ -z "$force" ]; then
+	# a marker after a rebase or a retitle, so that stays idempotent; pointing it at a
+	# *different* item is the mistake this guard exists to catch, and it is also where the
+	# one-task-per-tree rule (claude/CLAUDE.md § Work items) bottoms out. `rebind` is the
+	# deliberate override.
+	if [ -e "$marker" ] && [ "$cmd" = set ]; then
 		old_source=$(field SOURCE) old_id=$(field ID)
 		if [ "$old_source" != "$source" ] || [ "$old_id" != "$id" ]; then
 			printf 'task-marker.sh: this tree is already bound to %s/%s\n' \
 				"${old_source:-?}" "${old_id:-?}" >&2
 			printf '  marker: %s\n' "$marker" >&2
-			printf '  finish or clear it before binding %s/%s, or pass --force\n' \
+			printf '  finish or clear it before binding %s/%s, or use rebind\n' \
 				"$source" "$id" >&2
 			exit 2
 		fi
@@ -322,6 +336,6 @@ list)
 	;;
 
 *)
-	die "unknown command: $cmd (set, get, check, clear, list)"
+	die "unknown command: $cmd (set, rebind, get, check, clear, list)"
 	;;
 esac
