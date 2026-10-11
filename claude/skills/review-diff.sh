@@ -5,23 +5,46 @@
 # gather their own diffs and do not use this script.
 #
 # Usage:
-#   review-diff.sh                 # auto: outstanding, branch, or initial (see below)
+#   review-diff.sh                 # auto: unpublished, outstanding, branch, or initial
 #   review-diff.sh --since <tree>  # delta: only what changed since an earlier snapshot
 #   review-diff.sh --since=<tree>  # the same, = form
+#   review-diff.sh --base <commit> # full: everything since merge-base(<commit>, HEAD)
+#   review-diff.sh --base=<commit> # the same, = form
+#   review-diff.sh --target        # print the publish target auto mode uses, and exit
+#   review-diff.sh --transient <commit>  # print paths an unpublished commit (one no origin/ ref
+#                                  # holds) since merge-base(<commit>, HEAD) touched that the
+#                                  # net diff does not show, and exit
 #   review-diff.sh --tree          # print the working-tree snapshot hash and exit
 #   review-diff.sh -h, --help      # print the usage and exit
 #
-# Modes (auto):
-#   - outstanding — uncommitted changes (staged, unstaged and untracked) against HEAD.
-#   - branch      — clean tree on a non-main branch: merge-base(<main>, HEAD) → HEAD.
-#                   main is whatever origin/HEAD names, then main/master/trunk — taking the
-#                   first candidate that resolves as either a local branch or an origin/ ref,
-#                   so a stale origin/HEAD falls through instead of stranding the run. When
-#                   both the local and origin/ refs exist, the more up-to-date wins so a stale
-#                   local main doesn't blame others' already-merged commits on the branch.
+# Modes (auto). The change under review is everything not yet published: /commit never
+# pushes, so commits can sit unpublished under the working tree, and a review that read
+# only the uncommitted part would let them out unread. So auto mode first names the
+# **publish target** — origin/<branch> when that ref exists and HEAD contains it (a branch
+# already pushed and not rewritten since), otherwise the default branch's origin/ ref
+# (whatever origin/HEAD names, then origin/main, master, trunk, taking the first that
+# resolves, so a stale origin/HEAD falls through) — and diffs from where HEAD meets it.
+#   - unpublished — HEAD holds commits the target lacks: merge-base(<target>, HEAD) → the
+#                   working tree, committed and uncommitted alike. FROM is the merge base's
+#                   tree, as in base mode. No merge base: the empty tree.
+#   - outstanding — nothing unpublished is committed (HEAD is contained in the target, or
+#                   there is no target): uncommitted changes (staged, unstaged and
+#                   untracked) against HEAD. FROM is HEAD^{tree} — the same value an
+#                   unpublished run prints once those changes are committed on a HEAD level
+#                   with the target, so a ledger entry outlives the commit until the push.
+#   - branch      — only with no origin/ ref to publish to: a clean tree on a non-main
+#                   branch, merge-base(<main>, HEAD) → HEAD, main being the first of main,
+#                   master, trunk that exists locally.
 #   - initial     — a repo with no commits yet: the empty tree → the working tree.
-#   - none        — nothing to review: a clean tree on the main branch (or no main branch
-#                   found), or a base that turns out to equal the working tree. Printed on
+#   - base        — with --base: merge-base(<commit>, HEAD) → the working tree, committed and
+#                   uncommitted alike. /ship uses it to review exactly what it is about to
+#                   publish (origin/<default> or the branch's own origin/ ref). FROM is the
+#                   merge base's *tree*, not the commit, so it compares directly with the
+#                   HEAD^{tree} an outstanding run printed — the base= a ledger entry carries.
+#                   No merge base (unrelated histories, an unborn HEAD): the empty tree.
+#   - none        — nothing to review: a clean tree whose HEAD the target already holds, a
+#                   clean tree on the main branch with no target (or no main branch found),
+#                   or a base that turns out to equal the working tree. Printed on
 #                   its own, with no run directory; callers stop on it.
 #
 # The working tree is snapshotted as a tree object (a temporary index + `git add -A`, so
@@ -35,7 +58,10 @@
 # .git, so it is per-worktree and never committed. The 5 most recent runs are kept. In a
 # linked worktree that is under the main checkout, so a worktree-isolated session writes it
 # only through scripts like this one — see review-state.sh.
-#   meta.txt           MODE, FROM, TREE, DIR, totals, and NO-CONTENT listing any changed
+#   meta.txt           MODE, FROM, TREE, DIR, totals, TRANSIENT (unpublished and base mode:
+#                      paths an unpublished commit under review touched that the net diff
+#                      does not show,
+#                      see transient_paths), and NO-CONTENT listing any changed
 #                      file whose diff carries no content — a real binary, or one carrying a
 #                      `-diff` attribute — see the NO-CONTENT block further down for the
 #                      attribute sources and why numstat reports "-" for them.
@@ -84,10 +110,16 @@ umask 077
 
 usage() {
 	cat <<-'EOF'
-	usage: review-diff.sh [--since <tree> | --since=<tree> | --tree | -h | --help]
-	  (no arguments)      prepare the outstanding, branch or initial diff
+	usage: review-diff.sh [--since <tree> | --since=<tree> | --base <commit> | --base=<commit> | --target | --tree | -h | --help]
+	  (no arguments)      prepare everything unpublished (or the outstanding, branch or initial diff)
 	  --since <tree>      prepare only what changed since an earlier snapshot
 	  --since=<tree>      the same, = form
+	  --base <commit>     prepare everything since the merge base of <commit> and HEAD
+	  --base=<commit>     the same, = form
+	  --target            print the publish target auto mode diffs from, and exit
+	  --transient <commit>
+	                      print paths an unpublished commit since merge-base(<commit>, HEAD)
+	                      touched that the net diff to HEAD does not show, and exit
 	  --tree              print the working-tree snapshot hash and exit
 	  -h, --help          print this usage and exit
 	EOF
@@ -127,9 +159,46 @@ snapshot_tree() {
 	GIT_INDEX_FILE=$idx git write-tree
 }
 
+# The publish target (see the header): printed, or exit 1 when there is no origin/ ref to
+# publish to. Needs a HEAD; the caller checks that.
+publish_target() {
+	cur=$(git branch --show-current)
+	if [ -n "$cur" ] && git show-ref -q --verify "refs/remotes/origin/$cur" &&
+		git merge-base --is-ancestor "origin/$cur" HEAD 2>/dev/null; then
+		printf 'origin/%s\n' "$cur"
+		return 0
+	fi
+	head_name=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+	for b in "${head_name#origin/}" main master trunk; do
+		[ -n "$b" ] || continue
+		if git show-ref -q --verify "refs/remotes/origin/$b"; then
+			printf 'origin/%s\n' "$b"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Paths a commit in <range> touched that the net diff <from> → <to> does not show: a file
+# added in one unpublished commit and removed in a later one, or changed and changed back.
+# A tree-to-tree review never sees them, yet a push publishes every commit, so their
+# content reaches origin's history unread — a committed-then-deleted secret is the case
+# that matters. Only commits no origin/ ref holds count — what a push would add: a branch
+# that merged an updated default branch has others' published commits in its range, and
+# their history is not this change's to rewrite. Printed one per line; nothing when none.
+transient_paths() { # <log range> <from tree> <to tree>
+	_td=$(mktemp -d)
+	git log --no-show-signature --no-renames --format= --name-only -z "$1" --not --remotes=origin -- | tr '\0' '\n' | sed '/^$/d' | sort -u >"$_td/touched"
+	git diff --no-renames --name-only -z "$2" "$3" -- | tr '\0' '\n' | sed '/^$/d' | sort -u >"$_td/net"
+	comm -23 "$_td/touched" "$_td/net"
+	rm -rf "$_td"
+}
+
 # Argument dispatch. Anything unrecognised is an error: silently falling through to auto
 # mode would turn a mistyped --since into a full re-review that still looks successful.
 since=""
+pubbase=""
+range=""   # the commits under review, in unpublished and base mode, for the TRANSIENT check
 case ${1:-} in
 	'')
 		[ $# -eq 0 ] || { printf '%s\n' "review-diff.sh: unexpected argument: '$1'" >&2; usage >&2; exit 2; }
@@ -143,6 +212,39 @@ case ${1:-} in
 		[ $# -eq 1 ] || { printf '%s\n' "review-diff.sh: --since= takes no further arguments" >&2; usage >&2; exit 2; }
 		since=$(git rev-parse -q --verify "${1#--since=}^{tree}") ||
 			{ printf '%s\n' "review-diff.sh: --since: not a tree-ish: '${1#--since=}'" >&2; exit 2; }
+		;;
+	--base)
+		[ $# -eq 2 ] || { printf '%s\n' "review-diff.sh: --base needs exactly one commit" >&2; usage >&2; exit 2; }
+		pubbase=$(git rev-parse -q --verify "$2^{commit}") ||
+			{ printf '%s\n' "review-diff.sh: --base: not a commit: '$2'" >&2; exit 2; }
+		pubname=$2
+		;;
+	--base=*)
+		[ $# -eq 1 ] || { printf '%s\n' "review-diff.sh: --base= takes no further arguments" >&2; usage >&2; exit 2; }
+		pubbase=$(git rev-parse -q --verify "${1#--base=}^{commit}") ||
+			{ printf '%s\n' "review-diff.sh: --base: not a commit: '${1#--base=}'" >&2; exit 2; }
+		pubname=${1#--base=}
+		;;
+	--target)
+		[ $# -eq 1 ] || { printf '%s\n' "review-diff.sh: --target takes no arguments" >&2; usage >&2; exit 2; }
+		git rev-parse -q --verify HEAD >/dev/null 2>&1 ||
+			{ printf '%s\n' "review-diff.sh: no commits yet, so nothing to publish" >&2; exit 1; }
+		publish_target ||
+			{ printf '%s\n' "review-diff.sh: no origin/ ref to publish to" >&2; exit 1; }
+		exit 0
+		;;
+	--transient)
+		[ $# -eq 2 ] || { printf '%s\n' "review-diff.sh: --transient needs exactly one commit" >&2; usage >&2; exit 2; }
+		tbase=$(git rev-parse -q --verify "$2^{commit}") ||
+			{ printf '%s\n' "review-diff.sh: --transient: not a commit: '$2'" >&2; exit 2; }
+		git rev-parse -q --verify HEAD >/dev/null 2>&1 ||
+			{ printf '%s\n' "review-diff.sh: no commits yet, so no history to check" >&2; exit 1; }
+		if tmb=$(git merge-base "$tbase" HEAD 2>/dev/null); then
+			transient_paths "$tmb..HEAD" "$tmb" HEAD
+		else
+			transient_paths HEAD "$(git hash-object -t tree /dev/null)" HEAD
+		fi
+		exit 0
 		;;
 	--tree)
 		[ $# -eq 1 ] || { printf '%s\n' "review-diff.sh: --tree takes no arguments" >&2; usage >&2; exit 2; }
@@ -167,9 +269,38 @@ tree=$(snapshot_tree)
 if [ -n "$since" ]; then
 	mode="delta"
 	from=$since
+elif [ -n "$pubbase" ]; then
+	if mb=$(git merge-base "$pubbase" HEAD 2>/dev/null); then
+		mode="base ($pubname...HEAD)"
+		from=$(git rev-parse "$mb^{tree}")
+		range=$mb..HEAD
+	else
+		mode="base (no merge base with $pubname — reviewing everything)"
+		from=$empty_tree
+		git rev-parse -q --verify HEAD >/dev/null 2>&1 && range=HEAD
+	fi
 elif ! git rev-parse -q --verify HEAD >/dev/null 2>&1; then
 	mode="initial"
 	from=$empty_tree
+elif target=$(publish_target); then
+	if ! mb=$(git merge-base "$target" HEAD 2>/dev/null); then
+		mode="unpublished (no merge base with $target — reviewing everything)"
+		from=$empty_tree
+		range=HEAD
+	elif [ "$mb" != "$(git rev-parse HEAD)" ]; then
+		mode="unpublished ($target...HEAD)"
+		from=$(git rev-parse "$mb^{tree}")
+		range=$mb..HEAD
+	else
+		# HEAD is contained in the target: nothing committed is unpublished, so the change is
+		# whatever is uncommitted — the outstanding diff, or nothing at all.
+		from=$(git rev-parse 'HEAD^{tree}')
+		if [ "$tree" = "$from" ]; then
+			printf '%s\n' "MODE: none — nothing unpublished: $target holds HEAD and the working tree is clean"
+			exit 0
+		fi
+		mode="outstanding"
+	fi
 # "Is the tree dirty?" is asked of the snapshot, not of `git status`: the snapshot is what
 # every mode then diffs, and the two disagree under ordinary config. `git status` honours
 # status.showUntrackedFiles=no (so a new file would read as a clean tree while `git add -A`
@@ -178,31 +309,19 @@ elif head_tree=$(git rev-parse 'HEAD^{tree}') && [ "$tree" != "$head_tree" ]; th
 	mode="outstanding"
 	from=$head_tree
 else
-	# Candidates in order: whatever origin/HEAD points at, then the conventional names.
-	# Walk until one actually *resolves*. Testing only whether origin/HEAD produced a name
-	# would strand the review on a stale pointer — an upstream default-branch rename plus a
-	# prune leaves origin/HEAD naming a ref that is gone, and the run would then report
-	# "nothing to review" while sitting on a branch full of commits.
-	head_name=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+	# Reached only when no origin/ ref resolves (publish_target above found none), so the
+	# main branch can only be a local one. Walk until one exists.
 	base=""; main=""
-	for b in "${head_name#origin/}" main master trunk; do
-		[ -n "$b" ] || continue
-		loc=""; rem=""
-		git show-ref -q --verify "refs/heads/$b" && loc=$b
-		git show-ref -q --verify "refs/remotes/origin/$b" && rem=origin/$b
-		[ -n "$loc" ] || [ -n "$rem" ] || continue
-		main=$b
-		if [ -n "$loc" ] && [ -n "$rem" ]; then
-			if git merge-base --is-ancestor "$loc" "$rem" 2>/dev/null; then base=$rem; else base=$loc; fi
-		else
-			base=${loc:-$rem}
+	for b in main master trunk; do
+		if git show-ref -q --verify "refs/heads/$b"; then
+			base=$b; main=$b
+			break
 		fi
-		break
 	done
 	cur=$(git branch --show-current)
 	if [ -z "$base" ] || [ "$cur" = "$main" ]; then
 		if [ -z "$base" ]; then
-			printf '%s\n' "MODE: none — no main branch found (looked for origin/HEAD, then main, master, trunk); nothing to review"
+			printf '%s\n' "MODE: none — no main branch found (no origin/ ref, and no local main, master or trunk); nothing to review"
 		else
 			printf '%s\n' "MODE: none — clean working tree on the main branch $main; nothing to review"
 		fi
@@ -395,6 +514,8 @@ lines=$(wc -l <"$dir/full.diff" | tr -d ' ')
 # One path per line, and everything after the second tab — numstat -z leaves paths
 # unquoted, so a tab or a space inside one must not be split on or joined over.
 nocontent=$(awk -F'\t' '$1 == "-" { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' "$dir/stat.txt")
+transient=""
+[ -n "$range" ] && transient=$(transient_paths "$range" "$from" "$tree")
 {
 	printf '%s\n' "MODE: $mode"
 	printf '%s\n' "FROM: $from"
@@ -404,6 +525,10 @@ nocontent=$(awk -F'\t' '$1 == "-" { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' "$dir
 	if [ -n "$nocontent" ]; then
 		printf '%s\n' "NO-CONTENT: no diff content (binary, or a -diff attribute from any source git honours); open these yourself if they are text:"
 		printf '%s\n' "$nocontent" | sed 's/^/  /'
+	fi
+	if [ -n "$transient" ]; then
+		printf '%s\n' "TRANSIENT: changed by an unpublished commit under review but not in the diff, so no reviewer sees them; a push still publishes that history ($range, less what origin holds):"
+		printf '%s\n' "$transient" | sed 's/^/  /'
 	fi
 } >"$dir/meta.txt"
 

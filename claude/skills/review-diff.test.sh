@@ -154,6 +154,9 @@ echo hello >new.md
 run
 assert_contains "$out" "MODE: initial" "reports initial mode"
 assert_contains "$out" "new.md" "lists the untracked file"
+run_split --target
+assert_eq "1" "$run_status" "--target exits 1 with no commits"
+assert_contains "$out_stderr" "no commits yet, so nothing to publish" "and says why"
 
 # --- outstanding: uncommitted changes, staged, unstaged and untracked ---------------
 case_name="outstanding mode"
@@ -221,6 +224,92 @@ assert_eq "0" "$run_status" "a delta run exits 0"
 assert_contains "$out" "MODE: delta" "reports delta mode"
 assert_contains "$(cat "$(meta DIR "$out")/full.diff")" "later" "the delta holds only the later change"
 assert_eq "" "$(sed -n '/^+work$/p' "$(meta DIR "$out")/full.diff")" "the delta excludes the base change"
+
+# --- base: the publish range, committed and uncommitted -----------------------------
+# /ship commits first and then reviews everything it is about to publish, so a hand commit
+# sitting under new edits cannot ride out unreviewed. FROM must be the merge base's tree:
+# /ship matches a /polish `converged: from=` (an outstanding run's HEAD^{tree}) against it.
+case_name="base mode"
+new_repo base-mode
+start_tree=$(git rev-parse 'HEAD^{tree}')
+git branch published
+echo committed >committed.md
+git add committed.md && git commit -qm committed
+echo dirty >dirty.md
+run --base published
+assert_eq "0" "$run_status" "a base run exits 0"
+assert_contains "$out" "MODE: base (published...HEAD)" "reports base mode, naming the ref"
+assert_eq "$start_tree" "$(meta FROM "$out")" "FROM is the merge base's tree, not the commit"
+# The = form has its own dispatch arm, resolution and name strip.
+run --base=published
+assert_eq "0" "$run_status" "the --base=<commit> form exits 0"
+assert_contains "$out" "MODE: base (published...HEAD)" "and names the ref without the = prefix"
+assert_eq "$start_tree" "$(meta FROM "$out")" "and diffs from the same merge base"
+for f in committed.md dirty.md; do
+	assert_contains "$(cat "$(meta DIR "$out")/stat.txt")" "$f" "the range includes $f"
+done
+# A base ahead of the merge base — the remote moved on — must not blame its commits on HEAD.
+git checkout -q published
+echo theirs >theirs.md
+git add theirs.md && git commit -qm theirs
+git checkout -q main
+run --base published
+assert_eq "$start_tree" "$(meta FROM "$out")" "a base that moved on still diffs from the merge base"
+assert_eq "" "$(sed -n '/theirs\.md/p' "$(meta DIR "$out")/stat.txt")" "and leaves the base's own commits out"
+rm dirty.md
+run --base HEAD
+assert_contains "$out" "MODE: none — the working tree is identical to the base $(git rev-parse 'HEAD^{tree}') (base (HEAD...HEAD))" \
+	"a clean tree at its own base reports none"
+git checkout -q --orphan unrelated
+git rm -rqf .
+echo lone >lone.md
+git add lone.md && git commit -qm lone
+run --base published
+assert_contains "$out" "MODE: base (no merge base with published — reviewing everything)" \
+	"unrelated histories review the whole tree"
+assert_eq "$(git hash-object -t tree /dev/null)" "$(meta FROM "$out")" "from the empty tree"
+
+# --- transient: history the net diff cannot show ------------------------------------
+# A file committed and then deleted inside the range is absent from the tree-to-tree diff,
+# yet a push publishes both commits. meta.txt names it, and --transient prints it for /ship,
+# which checks the history on every path before it reviews anything.
+case_name="transient paths"
+new_repo transient
+git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+echo secret >leak.env && git add leak.env && git commit -qm leak
+git rm -q leak.env && git commit -qm unleak
+echo kept >kept.md && git add kept.md && git commit -qm kept
+run
+assert_contains "$(cat "$(meta DIR "$out")/meta.txt")" "TRANSIENT: changed by an unpublished commit under review but not in the diff" "meta.txt flags transient paths"
+assert_contains "$(cat "$(meta DIR "$out")/meta.txt")" "  leak.env" "naming the file"
+assert_eq "" "$(sed -n '/kept\.md/p' "$(meta DIR "$out")/meta.txt")" "and not the files the diff shows"
+run_split --transient origin/main
+assert_eq "0" "$run_status" "--transient exits 0"
+assert_eq "leak.env" "$out_stdout" "and prints exactly the transient path"
+run --base origin/main
+assert_contains "$(cat "$(meta DIR "$out")/meta.txt")" "  leak.env" "base mode flags it too"
+git reset -q --hard origin/main
+echo plain >plain.md && git add plain.md && git commit -qm plain
+run
+assert_eq "" "$(sed -n '/^TRANSIENT/p' "$(meta DIR "$out")/meta.txt")" "a range with no transient paths prints no TRANSIENT line"
+run_split --transient origin/main
+assert_eq "" "$out_stdout" "and --transient prints nothing"
+# A published add-and-delete merged in from the default branch is already on origin: not
+# this change's history, and not the user's to rewrite.
+git checkout -qb feat
+git update-ref refs/remotes/origin/feat HEAD
+git checkout -q --detach origin/main
+echo theirs >theirs.env && git add theirs.env && git commit -qm theirs
+git rm -q theirs.env && git commit -qm untheirs
+git update-ref refs/remotes/origin/main HEAD
+git checkout -q feat
+git merge -q --no-edit origin/main
+echo after >after.md && git add after.md && git commit -qm after
+run_split --transient origin/feat
+assert_eq "" "$out_stdout" "commits origin already holds are not flagged"
+run
+assert_eq "" "$(sed -n '/^TRANSIENT/p' "$(meta DIR "$out")/meta.txt")" "nor in a pushed branch's meta.txt"
 
 # --- paths git would C-quote, and paths with glob characters ------------------------
 case_name="awkward paths"
@@ -675,59 +764,88 @@ assert_eq "$(git rev-parse 'HEAD^{tree}')" "$(meta FROM "$out")" "FROM is HEAD's
 assert_contains "$out" "FILES: 1 (+1 -0), full.diff 7 lines" "FILES carries both totals"
 assert_contains "$out" "STAT (added removed path):" "the stat header is printed"
 
-# --- branch mode picks its base from origin/HEAD and the local fallbacks ------------
-# No network needed: a remote ref is just a ref. The loc-vs-rem rule exists so a stale
-# local main does not blame others' already-merged commits on the branch.
-case_name="branch mode against origin/HEAD"
-new_repo branch-origin
+# --- unpublished: auto mode reviews everything origin does not hold yet -------------
+# No network needed: a remote ref is just a ref. /commit never pushes, so commits can sit
+# unpublished under the working tree; auto mode must read them with the uncommitted rest,
+# from where HEAD meets the publish target, or they reach origin unread.
+case_name="unpublished mode against origin/HEAD"
+new_repo unpub-origin
+published_tree=$(git rev-parse 'HEAD^{tree}')
+git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+echo committed >committed.md
+git add committed.md && git commit -qm committed
+echo dirty >dirty.md
+run
+assert_contains "$out" "MODE: unpublished (origin/main...HEAD)" "commits on main that origin lacks are unpublished"
+assert_eq "$published_tree" "$(meta FROM "$out")" "FROM is the merge base's tree"
+for f in committed.md dirty.md; do
+	assert_contains "$(cat "$(meta DIR "$out")/stat.txt")" "$f" "the change includes $f"
+done
+run_split --target
+assert_eq "origin/main" "$out_stdout" "--target prints the same target"
+rm dirty.md
+git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+run
+assert_contains "$out" "MODE: none — nothing unpublished: origin/main holds HEAD and the working tree is clean" \
+	"a clean HEAD the target holds has nothing to review"
+echo again >>base.md
+run
+assert_contains "$out" "MODE: outstanding" "uncommitted work on a published HEAD is outstanding"
+assert_eq "$(git rev-parse 'HEAD^{tree}')" "$(meta FROM "$out")" "diffed against HEAD's tree"
+
+# The target moving past the fork point — a fetch bringing in someone else's push — must
+# not show their commits as reverted lines inside this change.
+case_name="unpublished mode with a target that moved on"
+new_repo unpub-moved
+fork_tree=$(git rev-parse 'HEAD^{tree}')
+git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+git checkout -q --detach origin/main
+echo theirs >theirs.md && git add theirs.md && git commit -qm theirs
+git update-ref refs/remotes/origin/main HEAD
+git checkout -q main
+echo mine >mine.md && git add mine.md && git commit -qm mine
+run
+assert_contains "$out" "MODE: unpublished (origin/main...HEAD)" "local commits beside a moved target are unpublished"
+assert_eq "$fork_tree" "$(meta FROM "$out")" "measured from the fork point, not the target"
+assert_eq "" "$(sed -n '/theirs\.md/p' "$(meta DIR "$out")/stat.txt")" "so the target's own commits stay out"
+git reset -q --hard HEAD~1
+run
+assert_contains "$out" "MODE: none — nothing unpublished: origin/main holds HEAD and the working tree is clean" \
+	"a clean HEAD behind its target has nothing to review"
+echo dirty >dirty.md
+run
+assert_contains "$out" "MODE: outstanding" "and uncommitted work on it is outstanding"
+
+case_name="unpublished mode on a feature branch"
+new_repo unpub-feature
+fork_tree=$(git rev-parse 'HEAD^{tree}')
 git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
 git checkout -qb feature
-echo more >>base.md
-git commit -qam more
+echo one >>base.md && git commit -qam one
 run
-assert_contains "$out" "MODE: branch (origin/main...HEAD)" "prefers origin/main when it is up to date"
-
-case_name="branch mode when local main is ahead of origin"
-new_repo branch-local-ahead
-git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
-git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
-echo ahead >>base.md
-git commit -qam "local main moves ahead"
-git checkout -qb feature
-echo more >>base.md
-git commit -qam more
+assert_contains "$out" "MODE: unpublished (origin/main...HEAD)" "a branch never pushed is measured from the default branch"
+assert_eq "$fork_tree" "$(meta FROM "$out")" "from its fork point"
+pushed_tree=$(git rev-parse 'HEAD^{tree}')
+git update-ref refs/remotes/origin/feature "$(git rev-parse HEAD)"
+echo two >>base.md && git commit -qam two
 run
-assert_contains "$out" "MODE: branch (main...HEAD)" "falls back to the more up-to-date local main"
-
-case_name="branch mode falls back to master"
-new_repo branch-master master
-git checkout -qb feature
-echo more >>base.md && git commit -qam more
+assert_contains "$out" "MODE: unpublished (origin/feature...HEAD)" "a pushed branch is measured from its own origin ref"
+assert_eq "$pushed_tree" "$(meta FROM "$out")" "so only the commits not yet pushed are reviewed"
+# A rewritten branch — rebased after it was pushed — no longer contains its origin ref, whose
+# merge base would be the old fork point and pull in everything the rebase brought.
+git checkout -q --detach HEAD~1 && echo diverged >>base.md && git commit -qam diverged
+git update-ref refs/remotes/origin/feature "$(git rev-parse HEAD)"
+git checkout -q feature
 run
-assert_contains "$out" "MODE: branch (master...HEAD)" "finds master when there is no main"
+assert_contains "$out" "MODE: unpublished (origin/main...HEAD)" "a branch rewritten since its push falls back to the default branch"
+run_split --target
+assert_eq "origin/main" "$out_stdout" "and --target says so too"
 
-# --- branch mode falls back to trunk ------------------------------------------------
-case_name="branch mode falls back to trunk"
-new_repo branch-trunk trunk
-git checkout -qb feature
-echo more >>base.md && git commit -qam more
-run
-assert_contains "$out" "MODE: branch (trunk...HEAD)" "finds trunk when there is no main or master"
-
-case_name="branch mode with only origin/main"
-new_repo branch-origin-only
-git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
-git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
-git checkout -qb feature
-echo more >>base.md
-git commit -qam more
-git branch -qD main
-run
-assert_contains "$out" "MODE: branch (origin/main...HEAD)" "falls back to origin when no local main exists"
-
-case_name="branch mode with a stale origin/HEAD"
-new_repo branch-stale-head
+case_name="unpublished mode with a stale origin/HEAD"
+new_repo unpub-stale-head
 git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
 # origin/HEAD still names a ref that was pruned — an upstream rename plus `git remote prune`.
 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
@@ -735,13 +853,43 @@ git checkout -qb feature
 echo more >>base.md
 git commit -qam more
 run
-assert_contains "$out" "MODE: branch (origin/main...HEAD)" \
-	"a stale origin/HEAD falls through to a base that resolves"
+assert_contains "$out" "MODE: unpublished (origin/main...HEAD)" \
+	"a stale origin/HEAD falls through to a target that resolves"
+
+case_name="unpublished mode with no merge base"
+new_repo unpub-orphan
+git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+git checkout -q --orphan unrelated
+git rm -q -rf .
+echo fresh >fresh.md
+git add fresh.md && git commit -qm fresh
+run
+assert_contains "$out" "MODE: unpublished (no merge base with origin/main — reviewing everything)" \
+	"unrelated histories review the whole tree"
+assert_eq "$(git hash-object -t tree /dev/null)" "$(meta FROM "$out")" "from the empty tree"
+
+# --- branch mode: only without an origin/ ref to publish to --------------------------
+case_name="branch mode falls back to master"
+new_repo branch-master master
+git checkout -qb feature
+echo more >>base.md && git commit -qam more
+run
+assert_contains "$out" "MODE: branch (master...HEAD)" "finds master when there is no main"
+run_split --target
+assert_eq "1" "$run_status" "--target exits 1 with no origin/ ref"
+assert_contains "$out_stderr" "no origin/ ref to publish to" "and says why"
+
+case_name="branch mode falls back to trunk"
+new_repo branch-trunk trunk
+git checkout -qb feature
+echo more >>base.md && git commit -qam more
+run
+assert_contains "$out" "MODE: branch (trunk...HEAD)" "finds trunk when there is no main or master"
 
 case_name="no main branch at all"
 new_repo no-main devel
 run
-assert_contains "$out" "MODE: none — no main branch found (looked for origin/HEAD, then main, master, trunk)" \
+assert_contains "$out" "MODE: none — no main branch found (no origin/ ref, and no local main, master or trunk)" \
 	"a clean tree with no main/master/trunk says so specifically"
 assert_eq "0" "$run_status" "and exits 0"
 
@@ -870,7 +1018,9 @@ case_name="argument dispatch exits"
 new_repo dispatch
 echo work >>base.md
 t=$(tree_of)
-for bad in "--tree junk" "--since" "--since $t junk" "--since deadbeef" "--since=deadbeef" "--since=$t junk" "--help junk"; do
+for bad in "--tree junk" "--since" "--since $t junk" "--since deadbeef" "--since=deadbeef" "--since=$t junk" "--help junk" \
+	"--base" "--base HEAD junk" "--base deadbeef" "--base=deadbeef" "--base=HEAD junk" "--base $t" "--target junk" \
+	"--transient" "--transient deadbeef" "--transient HEAD junk"; do
 	# shellcheck disable=SC2086
 	sh "$script" $bad >/dev/null 2>&1
 	assert_eq "2" "$?" "\`$bad\` exits 2"
@@ -878,7 +1028,7 @@ done
 run_split -h
 assert_eq "0" "$run_status" "-h exits 0"
 assert_contains "$out_stdout" "usage: review-diff.sh" "-h prints the usage on stdout"
-for form in "--since <tree>" "--since=<tree>" "--tree" "-h, --help"; do
+for form in "--since <tree>" "--since=<tree>" "--base <commit>" "--base=<commit>" "--target" "--transient <commit>" "--tree" "-h, --help"; do
 	assert_contains "$out_stdout" "$form" "the usage lists $form"
 done
 assert_eq "" "$out_stderr" "and nothing on stderr"
@@ -906,6 +1056,14 @@ run_split --tree junk
 assert_contains "$out_stderr" "--tree takes no arguments" "--tree names its own arity error"
 run_split --since
 assert_contains "$out_stderr" "--since needs exactly one tree-ish" "--since names its own arity error"
+run_split --base deadbeef
+assert_contains "$out_stderr" "--base: not a commit: 'deadbeef'" "an unresolvable --base quotes the value it rejected"
+run_split --base="$t"
+assert_contains "$out_stderr" "--base: not a commit: '$t'" "a tree is not a commit, and the = form says so the same way"
+run_split --base=HEAD junk
+assert_contains "$out_stderr" "--base= takes no further arguments" "the = form of --base names its own arity error"
+run_split --base
+assert_contains "$out_stderr" "--base needs exactly one commit" "--base names its own arity error"
 run_split --nope
 assert_eq "2" "$run_status" "an unknown argument exits 2"
 assert_eq "" "$out_stdout" "with nothing on stdout"
