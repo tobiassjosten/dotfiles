@@ -11,7 +11,8 @@
 
 - **Dates: DD/MM (day-first), never American MM/DD.** In prose write `03/10` or `3 October`, not `10/03`. Prefer ISO `YYYY-MM-DD` when an unambiguous, sortable form is wanted (logs, filenames, code). Weekday + day-first (e.g. "Sat 03/10") is ideal when the weekday matters.
 - **Metric system and Celsius** for everything: temperatures in °C, distances/weights/volumes in metric (km, kg, litres), etc. Convert imperial figures to metric when reporting them.
-- **Never hard-wrap Markdown or plain-text files.** Write each paragraph, list item, or sentence as one continuous line and let the viewer/editor soft-wrap it. Don't insert manual newlines to hit a column width (no wrapping at 80/100 chars). This applies to any file I author or edit — `.md`, `.txt`, commit bodies, prose config — unless the file's existing content is already hard-wrapped, in which case match it rather than mixing styles.
+- **Never hard-wrap Markdown or plain-text files.** Write each paragraph, list item, or sentence as one continuous line and let the viewer/editor soft-wrap it. Don't insert manual newlines to hit a column width (no wrapping at 80/100 chars). This applies to any file I author or edit — `.md`, `.txt`, commit bodies, prose config — unless the file's existing content is already hard-wrapped, in which case match it rather than mixing styles. Code comments are the exception (next item).
+- **Wrap code comments to fill up to column 80.** Break a comment line only when the next word would pass column 80, or at a deliberate boundary — a new sentence or clause that reads better on its own line, a list item, an example. Never break early for no reason, and never go past 80 to avoid a break. A project's own stated convention wins over this, and so does a file whose existing comments already wrap at a different width: match that width rather than mixing two in one file.
 
 # Git
 
