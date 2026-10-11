@@ -94,6 +94,7 @@ new_repo usage
 run --help
 assert_eq "0" "$run_status" "--help exits 0"
 assert_contains "$out" "usage: task-marker.sh" "--help prints the usage"
+assert_contains "$out" "rebind --source" "and lists rebind"
 run -h
 assert_eq "0" "$run_status" "-h exits 0"
 run
@@ -145,7 +146,7 @@ assert_eq "0" "$run_status" "--base is accepted"
 assert_eq "BASE: abc123" "$(grep '^BASE: ' "$(marker_path)")" "--base overrides HEAD"
 assert_eq "" "$(grep '^TITLE: ' "$(marker_path)")" "TITLE is omitted when not given"
 
-run set --source=backlog --id=TASK-7 --title=Equals --force
+run rebind --source=backlog --id=TASK-7 --title=Equals
 assert_eq "0" "$run_status" "the --opt=value form is accepted"
 assert_eq "TASK-7" "$(sh "$script" get id)" "and sets the id"
 assert_eq "Equals" "$(sh "$script" get title)" "and the title"
@@ -185,8 +186,20 @@ case_name="set rebinding"
 new_repo rebind
 sh "$script" set --source linear --id INS-1 --title Old >/dev/null
 run set --source linear --id INS-1 --title New
-assert_eq "0" "$run_status" "re-setting the same item needs no --force"
+assert_eq "0" "$run_status" "re-setting the same item is not a rebind"
 assert_eq "New" "$(sh "$script" get title)" "and refreshes the title"
+# /commit's *Create a branch* moves the work onto a new branch and re-sets the same item so
+# BRANCH follows; /ship's Finish gate then runs `check` against it.
+old_base=$(sh "$script" get base)
+git checkout -qb feature
+# A commit of its own, so HEAD differs from the base and a dropped --base would show.
+git commit -q --allow-empty -m feature
+run set --source linear --id INS-1 --title New --base "$old_base"
+assert_eq "0" "$run_status" "re-setting the same item on a new branch is accepted by set"
+assert_eq "feature" "$(sh "$script" get branch)" "and moves BRANCH to it"
+assert_eq "$old_base" "$(sh "$script" get base)" "while keeping the base passed through"
+run check
+assert_eq "0" "$run_status" "so check passes on the new branch"
 before=$(cat "$(marker_path)")
 run set --source linear --id INS-2
 assert_eq "2" "$run_status" "binding a different item exits 2"
@@ -195,8 +208,18 @@ assert_eq "$before" "$(cat "$(marker_path)")" "and leaves the marker unchanged"
 run set --source jira --id INS-1
 assert_eq "2" "$run_status" "the same id in a different source is a different item"
 run set --source linear --id INS-2 --force
-assert_eq "0" "$run_status" "--force replaces the binding"
+assert_eq "2" "$run_status" "set has no --force"
+assert_contains "$out" "is \`rebind\`" "and names rebind as the override"
+assert_eq "$before" "$(cat "$(marker_path)")" "leaving the marker unchanged"
+run rebind --source linear --id INS-2 --force
+assert_eq "2" "$run_status" "nor does rebind, which needs none"
+assert_contains "$out" "rebind takes no --force" "and says so in its own words"
+run rebind --source linear --id INS-2
+assert_eq "0" "$run_status" "rebind replaces the binding"
 assert_eq "INS-2" "$(sh "$script" get id)" "with the new item"
+run rebind --source linear --id INS-3 --bogus
+assert_eq "2" "$run_status" "rebind rejects an unknown option"
+assert_contains "$out" "unknown option for rebind: --bogus" "naming its own command"
 
 # --- get -----------------------------------------------------------------------------
 case_name="get"
@@ -249,7 +272,7 @@ run check
 assert_eq "3" "$run_status" "a marker without an ID exits 3"
 assert_contains "$out" "malformed: no ID" "and says what is missing"
 
-sh "$script" set --source linear --id INS-4 --force --base 0123456789abcdef0123456789abcdef01234567 >/dev/null
+sh "$script" rebind --source linear --id INS-4 --base 0123456789abcdef0123456789abcdef01234567 >/dev/null
 run check
 assert_eq "0" "$run_status" "a base no longer in the repo still passes"
 assert_contains "$out" "note: recorded base" "but is noted"
@@ -276,7 +299,7 @@ cd "$work/worktree-feature" || exit 1
 run get
 assert_eq "1" "$run_status" "the main checkout's marker is not visible in a linked worktree"
 run set --source linear --id TREE-1
-assert_eq "0" "$run_status" "a linked worktree binds its own item without --force"
+assert_eq "0" "$run_status" "a linked worktree binds its own item with set"
 assert_file "$main_repo/.git/worktrees/worktree-feature/task.txt" "under .git/worktrees/<name>"
 run check
 assert_eq "ok: linear/TREE-1 on feature" "$out" "and checks against its own branch"
