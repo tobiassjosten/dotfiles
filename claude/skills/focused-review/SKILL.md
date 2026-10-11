@@ -39,7 +39,7 @@ If nothing in any of these tiers is worth raising, the right answer is "no impro
 
 ## Workflow
 
-1. **Gather the changes.** Run `git diff HEAD` for staged and unstaged changes together. Run `git status` to find untracked files and read each in full.
+1. **Gather the changes.** Run `git diff HEAD` for staged and unstaged changes together. Run `git status --untracked-files=all` to find untracked files and read each in full.
 
 2. **Understand the intent.** Read surrounding code as needed to know what the change is trying to accomplish and what counts as "the same domain concept." Check for in-repo planned-work notes (e.g., `TODO.md`, `plans/`, `todo/`) — code slated for replacement is generally out of scope unless the finding is a live security or data-integrity risk.
 

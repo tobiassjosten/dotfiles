@@ -47,7 +47,6 @@
       "Bash(git fetch:*)",
       "Bash(git log:*)",
       "Bash(git mv:*)",
-      "Bash(git push)",
       "Bash(git reset:*)",
       "Bash(git revert:*)",
       "Bash(git stash:*)",

@@ -1,6 +1,6 @@
 ---
 name: release
-description: Create a GitHub release. Commits and pushes outstanding changes first, then drafts release notes for confirmation. Deployment is only triggered if the project has a release-triggered workflow.
+description: Create a GitHub release from the default branch. In a trunk project, commits and pushes outstanding changes first; in a feature-branch project, stops if there are any. Then drafts release notes for confirmation. Deployment is only triggered if the project has a release-triggered workflow.
 disable-model-invocation: true
 context: fork
 ---
@@ -9,11 +9,11 @@ context: fork
 
 ## Goal
 
-Create a GitHub release. Ensures all local changes are committed and pushed before creating the release.
+Create a GitHub release. Under trunk, commits and pushes all local changes before creating the release; under feature branches, requires a clean default branch holding nothing `origin` lacks.
 
 ## Workflow
 
-0. **Run from the main checkout, never a linked worktree.** If `git rev-parse --path-format=absolute --git-dir --git-common-dir` prints two different paths, stop before doing anything: this skill runs as a fork, and `/commit` from a linked worktree has to move the session out of the tree, which a fork cannot do. Tell the user to land the branch first — `/ship` or `/commit` where the project opts in to worktree integration, or by hand — and then run `/release` from a session in the main checkout.
+0. **Run from the main checkout, never a linked worktree.** If `git rev-parse --path-format=absolute --git-dir --git-common-dir` prints two different paths, stop before doing anything: this skill runs as a fork, and publishing from a linked worktree (`~/.claude/skills/publish.md` § *Integrate from a linked worktree*) has to move the session out of the tree, which a fork cannot do. Tell the user to land the branch first — `/ship` where the project opts in to worktree integration, or by hand — and then run `/release` from a session in the main checkout.
 
 1. **Fetch release tags from the remote**:
 
@@ -25,7 +25,11 @@ Create a GitHub release. Ensures all local changes are committed and pushed befo
 
 2. **Commit and push outstanding changes**:
 
-   Run the `/commit` skill to commit and push any outstanding changes. If there are no changes, continue to the next step.
+   Check before committing anything, so a release never leaves work committed somewhere it did not mean to:
+   - **On the default branch.** Name `<default>` as `~/.claude/skills/publish.md` § *Names used below* does; if `git branch --show-current` prints anything else, stop and say a release is cut from the default branch.
+   - **By the branch model** (`publish.md` § *Branch model*). Under **feature branches** the default branch takes no commits from here: if there are outstanding changes (`git status --porcelain --untracked-files=all` prints anything) or commits `origin` lacks (`git rev-list --count origin/<default>..HEAD` above zero), stop and name them — `git status --porcelain --untracked-files=all` for the uncommitted ones, `git log --oneline origin/<default>..HEAD` for the commits — they belong on a branch and a pull request, which is the user's to arrange; with neither, continue to the next step. Under **trunk**, go on below.
+
+   Then, under trunk: if there are outstanding changes, commit them by following the `/commit` skill; it never pushes. Then push whatever the default branch holds that `origin` lacks (`git rev-list --count origin/<default>..HEAD` above zero), per `publish.md` § *Push the default branch*. If there is nothing to commit or push, continue to the next step.
 
 3. **Detect previous release**:
 
