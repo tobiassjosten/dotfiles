@@ -26,6 +26,10 @@ A resumed item is not trusted on the marker's word: *Check that this tree is fre
 - **If an argument is given**, treat it as a hint to find a *specific* work item, and select the one that best matches it. The hint may be a task number/ID, a filename, or text describing the task — interpret it against whatever source the project uses (a matching line in `TODO.md`, a per-task filename or its contents, an issue key or summary in the tracker).
 - **If no argument is given**, select the *first* unclaimed task, however "first" is defined by the source: the first content line in `TODO.md`, the lowest-numbered or lowest-sorting per-task file, or the top of the tracker's order.
 
+### Parent items
+
+An item with open children — the source's parent/child relation, as `~/.claude/skills/slicing.md` § *Tracking* describes it — is never worked itself: its children are. **No argument** — pass over it as a claimed item is passed over, reporting it as a parent; its children are candidates in their own right, in the source's order and subject to their blockers. **An argument naming a parent** — stop with nothing selected, claimed or written: name its children that are ready (open, unclaimed, every blocker in its terminal state) and point at `/forge <parent>`, which works them in parallel, or `/next <child>` for one of them. A parent whose children are all in their terminal state is not a task either: say so, and that `/forge <parent>` closes it.
+
 ### Skip claimed items
 
 An item is **claimed** when its source shows someone working it — a state past the queue (In Progress, In Review, or the source's equivalent) or an assignee, anyone's — or when another tree's marker names it. `sh ~/.claude/skills/task-marker.sh list` prints every tree's marker in this repository, one line each: `<this>`, tree path, `SOURCE`, `ID`, `TITLE`, tab-separated. Run it once, before selecting, and match its lines against items as *Check that this tree is free* compares them. By `<this>`:

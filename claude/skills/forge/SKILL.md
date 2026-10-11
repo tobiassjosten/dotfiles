@@ -1,6 +1,6 @@
 ---
 name: forge
-description: Pick the next task, implement it, then harden it with /polish's fanned-out review — every defect fixed, preferences reported, the fixes delta-reviewed — leaving it reviewed and ready for the user to ship.
+description: Pick the next task, implement it, then harden it with /polish's fanned-out review — every defect fixed, preferences reported, the fixes delta-reviewed — leaving it reviewed and ready for the user to ship. Given a parent item, forges its ready children in parallel, one tree and one background agent each, behind a single plan gate for the wave.
 disable-model-invocation: true
 ---
 
@@ -10,7 +10,7 @@ Take one work item from selection all the way to a review-hardened change: run t
 
 ## Argument
 
-An optional argument may follow the command: `$ARGUMENTS`. When present, it is a hint (task ID, filename, or descriptive text) forwarded to the `/next` selection step. When absent, `/next` picks the first task by its source's order.
+An optional argument may follow the command: `$ARGUMENTS`. When present, it is a hint (task ID, filename, or descriptive text) forwarded to the `/next` selection step. When absent, `/next` picks the first task by its source's order. When it resolves to a **parent item** — one with children in its source (`~/.claude/skills/slicing.md` § *Tracking*) — the run follows § *A parent item* below instead of the single-task procedure.
 
 ## Composed pieces
 
@@ -54,6 +54,54 @@ Present, in the conversation:
 - **Task marker** — the work item this tree is bound to, by `ID` and `TITLE` (`sh ~/.claude/skills/task-marker.sh get`), and its path, `$(git rev-parse --absolute-git-dir)/task.txt`. `/ship` resolves its Finish gate from it and clears it once the change is on the default branch, or — in the main checkout — once it has pushed a feature branch, leaving the item in its review state until the pull request merges (a tree that pushed a branch keeps its marker with the tree); after any other ending — a hand `/commit`, which only commits, or an abandoned change — tell the user to clear it themselves (`sh ~/.claude/skills/task-marker.sh clear`), or the next `/next` in this tree refuses to claim a different item — where the project works in place; where it isolates, `/next` opens a new tree instead, and the marker stays behind for the user to clear. From a linked worktree, `/ship`'s integration removes the marker with the tree, unless it keeps the tree; `/abandon` removes it with a tree whose work is dropped. With no marker, say so in one line.
 - **Verification** — the final state of each check in `/polish`'s verification set (name them and their pass/fail state).
 - **Next step** — branch on how `/polish` ended. **Converged:** the task is In Review; `/ship` reviews (or reuses the convergence record, though if step 3 wrote to the repo — a Backlog.md board does — the tree has moved on and it will review), commits and publishes, and closes the task out once the change is on the default branch — a pushed feature branch leaves it In Review until its pull request merges. On a `coverage=delta` record, say that `/ship` would skip a full read of a tree no single review saw end to end. **Finished with open findings:** they still stand and `/ship` will block on any defect among them, so fix them first. Preferences `/polish` merely reported are not among those — `/ship` does not block on them, and `/review` is where to apply the ones worth applying. **Stopped on an incomplete review:** the named role's slice was never reviewed at this bar — re-run `/polish` before shipping. **Stopped before the loop on a red baseline:** the change is implemented and uncommitted, and step 3 was skipped, so its task is still In Progress — but the verification set was red before this change and `/polish` did not widen scope to repair it. Repair the named check outside this change, then run `/polish` again and carry on from step 3. **Stopped before the loop with nothing outstanding:** step 1 produced no file changes at all, so there is nothing to harden or ship; find out why the task implemented nothing. In both pre-loop cases, re-run `/forge` from the tree the task was worked in, where `/next` resumes the task its marker names; from anywhere else — the main checkout of a project that isolates — bare `/forge` skips the task as claimed and starts the next one in a new tree, while `/forge <id>` re-enters the task's own tree and resumes it there. To drop the task instead, return it to To Do and clear its marker from inside its tree (`task-marker.sh clear`) — the marker alone keeps the task claimed for every later `/next` — or, for a task worked in a linked worktree, run `/abandon`, which removes the tree with its marker and offers to return a tracker item to the queue. In every case, `/commit` only commits — it never pushes — and goes no further: no review, no task update, and it leaves the review directory and the task marker in place; `/ship` then publishes the committed work, reviewing everything it publishes — and reusing the convergence record when the commits hold exactly the converged diff.
+
+## A parent item: forge its children, wave by wave
+
+A parent is never worked itself (`slicing.md` § *Tracking*); `/forge <parent>` works its children instead. One run handles one **wave** — the children ready now — each in its own tree, implemented and hardened by its own background agent, all behind one plan gate. A wave ends with its children In Review for the user to `/ship`; shipping them unblocks the next wave, which the user starts by running `/forge <parent>` again. The single-task procedure above stays the source of truth for what happens to each child — this section only fans it out.
+
+### P1. Where it runs
+
+Resolve the argument with `/next`'s *Determine the work-item source* and its hint matching, and read the parent's children from the source. The run needs the **main checkout of a project that isolates** (`~/.claude/skills/workspace-tree.md` steps 1–2), since it creates one tree per child and every child's work happens outside the session's own tree. In a linked worktree, stop: that tree holds one task, and the parent is not one — run `/forge <parent>` from the main checkout. In a project that works in place, children cannot run side by side: name the ready ones (P2) and stop, pointing at `/forge <child>` for each in turn.
+
+### P2. The wave
+
+Classify every child, using the source's states, assignees and blocked-by relations, and `sh ~/.claude/skills/task-marker.sh list` run once:
+
+- **Done** — in its terminal state.
+- **In flight** — claimed, as `/next` § *Skip claimed items* defines it. One In Review in its own tree awaits `/ship` there; one In Progress is a run that stopped short — it resumes with `/forge <child>` in its tree. Report them; the wave does not touch them.
+- **Blocked** — any blocker not yet in its terminal state. A blocker In Review still blocks: its change is not on the default branch, which is where the child's tree will be based.
+- **Ready** — the rest.
+
+Every child done → the closing run. Go through the parent's acceptance criteria beyond "every child done" — an end-to-end check the slices could not make alone — with the user, from the main checkout: run what can be run without editing anything (a project's local server where its port is free, say), ask the user to confirm what only they can judge, and tick each criterion that holds. All hold → move the parent to its terminal state, say so, and stop. One fails → leave the parent open, propose a fix child for it (the project's rules for filing items apply), and stop. A tracker that already closed the parent has skipped this check: say so, and run it anyway. Nothing ready → report the in-flight and blocked children, with what each waits on, and stop. More than four ready → ask (`AskUserQuestion`, multi-select) which to take now, up to four: each one runs a full implementation and a fanned-out review concurrently, and the rest wait for the next run.
+
+### P3. One tree per child
+
+For each child in the wave, from the main checkout: the *Entering* part of `workspace-tree.md` (steps 3–6) with the tree named for the child's id, then `ExitWorktree` action `keep` to return to the main checkout for the next one. A **resumed** tree is settled as `/next` § *Check that this tree is free* settles it: a marker naming this child resumes it; a marker naming another item drops the child from the wave, reported; no marker asks whether it holds this child's earlier attempt. A base-guard reset step 6 deferred because the session was already in plan mode becomes that child's first approved step.
+
+Named trees, not the Agent tool's `isolation: "worktree"`: measured 2026-10-11, that creates `.claude/worktrees/agent-<id>` on `worktree-agent-<id>`, unprovisioned (an `EnterWorktree` hook never fires for it) and named for no item, so `/next <id>`, `/ship` and every later `/forge` would not find the child's work.
+
+### P4. One plan gate for the wave
+
+Enter plan mode. Investigate each child in parallel — one `Explore` agent per child, against the code as `origin/<default>` has it, which is what each tree is based on — then draft one plan with a section per child, headed by the child's id (`## <id> <title>`), each exactly what `/next` § *Plan and execute* would plan for that child alone in its tree: the *Preparing* step first (the deferred reset, if any, then `provision run`), the claim with its bookkeeping, the bind step right after it (`task-marker.sh set`, run inside the child's tree), the implementation, and the hand-on step — so every project gate that reads a plan (a plan-gate hook checking each id-headed section for its own bookkeeping, say) finds it in every section. Open the plan with the wave: the children, their trees, and that each runs in parallel through `/polish` to its review state, uncommitted.
+
+One `ExitPlanMode` approves the whole wave. `/mill`'s rule that a plan gate is never batched protects one tree from holding two changes; here every child has a tree of its own and a plan section of its own, so batching the gate costs no traceability. A rejection is input: revise and re-present. If it drops a child, leave that child's tree as `workspace-tree.md` § *Dropping the work before it starts* says — re-enter it (`EnterWorktree` with its `path`) and leave it with `ExitWorktree` action `remove`, since it still holds nothing.
+
+### P5. Run the children in parallel
+
+After approval, spawn one background `general-purpose` agent per child, in one message, without `isolation`. Each brief carries:
+
+- the child, its tree's absolute path and branch, and its approved plan section verbatim;
+- **confinement**: the agent is not worktree-isolated, so every shell command starts with `cd <tree> &&` and every file path is absolute under the tree; nothing outside it is touched — not the main checkout, not another child's tree;
+- **the procedure**, read from the files themselves: `workspace-tree.md` step 7, then the approved section (claim, bind, implement), this skill's step 1 baseline record, step 2 (`/polish` with no arguments, its reviewers spawned from the agent itself), and step 3's review gate;
+- **user gates stay with the user**: wherever `/next` or `/polish` would ask — a batched escalation, a takeover question, a material deviation from the plan — the agent stops and returns the question with the state it stopped in, never deciding it;
+- **never** commit, push, or start anything that holds a port every tree shares (lumus's `make serve`, say);
+- **the report**: step 4's bullets for its child.
+
+Don't poll; each agent notifies when it stops. When one returns questions, put them to the user — batched across children when several are waiting — and resume that agent with the answers (`SendMessage`). Children of one wave work concurrently on the same base, so anything numbered sequentially (migrations) can collide between them; the project's own rule for that applies at integration, when the second one lands.
+
+### P6. Report the wave
+
+Per child: step 4's bullets, compacted, with its outcome. Then the wave: the children now In Review and how to ship each — `/ship` from a session opened in its tree (`.claude/worktrees/<id>`), or from this session after asking it to enter that tree; within a wave the order is free, and each integration rebases onto whatever the previous one landed. Name the children still blocked and what unblocks them, and say that `/forge <parent>` again, once this wave has shipped, starts the next. Each child's review directory lives in its own tree's git directory: name each one, per the rule below.
 
 ## Rules
 
