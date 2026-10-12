@@ -20,6 +20,12 @@ set -gx EDITOR vim
 set -gx VISUAL $EDITOR
 set -gx PAGER less
 
+# herdr renders OSC 8 hyperlinks but sets TERM_PROGRAM=herdr, which hyperlink
+# detection (Claude Code's included) doesn't recognise, so force them inside it.
+if set -q HERDR_ENV
+    set -gx FORCE_HYPERLINK 1
+end
+
 alias cat="bat"
 alias cdr="cd (git rev-parse --show-toplevel)"
 alias k="kubectl"
