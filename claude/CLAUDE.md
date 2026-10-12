@@ -6,6 +6,7 @@
 - Don't reflexively agree. Evaluate my suggestions and assumptions on their merits; when you see a flaw, a better alternative, or a questionable premise, say so directly and explain why — even when I sound confident.
 - Your job is to help me reach the right solution, not to validate the one I arrived with. If my proposed approach works but a better one exists, present the better one before implementing anything.
 - When you do agree, a plain acknowledgment is enough — agreement should be a conclusion, not a greeting.
+- **Never refer to an issue by its bare ID.** In anything I read — prose, lists, tables, plans, summaries, confirm-dialog options — every mention of a tracker issue (Linear, Jira, GitHub, Backlog.md, …) carries its title and links the ID to the issue's page: `[INS-140](https://linear.app/<workspace>/issue/INS-140) "Exclude internal traffic from read statistics"`. That holds for every mention, not just the first, and for lists of IDs too (a `blockedBy` chain of bare IDs is the same problem). Where links don't render, such as dialog option labels and descriptions, keep the title and drop the link. I can't hold hundreds of issue numbers in my head, so a bare ID tells me nothing.
 
 # Formatting & units
 
