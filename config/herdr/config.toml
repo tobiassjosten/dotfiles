@@ -35,6 +35,16 @@ previous_agent = "prefix+["
 next_agent = "prefix+]"
 previous_workspace = "prefix+{"
 next_workspace = "prefix+}"
+# terminal.new_cwd is one policy for panes, tabs and workspaces alike. Keep it
+# at "follow" for panes and tabs, and open new workspaces in $HOME through the
+# custom command below, which takes over the default new_workspace key.
+new_workspace = ""
+
+[[keys.command]]
+key = "prefix+shift+n"
+type = "shell"
+command = "\"$HERDR_BIN_PATH\" workspace create --cwd \"$HOME\" --focus"
+description = "new workspace in ~"
 
 [ui]
 sidebar_width = 30
