@@ -36,8 +36,9 @@ next_agent = "prefix+]"
 previous_workspace = "prefix+{"
 next_workspace = "prefix+}"
 # terminal.new_cwd is one policy for panes, tabs and workspaces alike. Keep it
-# at "follow" for panes and tabs, and open new workspaces in $HOME through the
-# custom command below, which takes over the default new_workspace key.
+# at "follow" for panes and tabs, and open workspaces created with the key in
+# $HOME through the custom command below, which takes over the default
+# new_workspace key. The sidebar's "+ new workspace" still follows new_cwd.
 new_workspace = ""
 
 [[keys.command]]
