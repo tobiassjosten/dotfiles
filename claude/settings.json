@@ -1,11 +1,11 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
+  },
   "attribution": {
     "commit": "",
     "pr": "",
     "sessionUrl": false
-  },
-  "env": {
-    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
   },
   "permissions": {
     "allow": [
