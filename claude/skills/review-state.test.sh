@@ -28,6 +28,10 @@ script=$(cd "$(dirname "$0")" && pwd)/review-state.sh
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/review-state-test.XXXXXX") || exit 1
 work=$(cd "$tmp" && pwd -P) || exit 1
 trap 'rm -rf "$work"' EXIT
+# record also writes a log outside the repository; keep it in the scratch area, never the
+# real ~/.claude/review-rounds.log.
+REVIEW_ROUNDS_LOG=$work/logs/review-rounds.log
+export REVIEW_ROUNDS_LOG
 passed=0
 failed=0
 
@@ -73,8 +77,11 @@ run_status=0
 out=""
 run() { out=$(sh "$script" "$@" 2>&1); run_status=$?; }
 run_in() { out=$(printf '%s' "$1" | sh "$script" append 2>&1); run_status=$?; }
+run_rec() { out=$(printf '%s' "$1" | sh "$script" record 2>&1); run_status=$?; }
 
 settled='- settled: base=abc123 a.sh:1 — gist. Left as-is: user call. (2026-10-06)'
+round_full='- round: base=abc123 tree=def456 kind=full by=/polish defects=9 fix-written=0 rejected=1 preferences=4 (2026-10-14)'
+round_delta='- round: base=abc123 tree=fed789 kind=delta by=/polish defects=2 fix-written=2 rejected=0 preferences=0 (2026-10-14)'
 converged='- converged: tree=def456 from=abc123 coverage=delta — /polish left nothing open; fan-out plus delta. (2026-10-06)'
 
 # --- usage ---------------------------------------------------------------------------
@@ -153,16 +160,80 @@ assert_eq "2" "$run_status" "empty stdin exits 2"
 run append extra
 assert_eq "2" "$run_status" "append takes no arguments"
 
+# --- rounds and record ---------------------------------------------------------------
+case_name="record"
+new_repo record
+run rounds
+assert_eq "1" "$run_status" "rounds exits 1 before anything is recorded"
+run_rec "$round_full
+$round_delta"
+assert_eq "0" "$run_status" "record exits 0 on well-formed records"
+assert_eq "$round_full
+$round_delta" "$(cat .git/review/rounds.md)" "and writes them, creating the directory"
+assert_eq "$round_full
+$round_delta" "$out" "and prints them"
+assert_absent "$repo/.git/review/ledger.md" "recording creates no ledger"
+run rounds
+assert_eq "0" "$run_status" "rounds then exits 0"
+assert_eq "$repo/.git/review/rounds.md" "$out" "and prints the records' path"
+tab=$(printf '\t')
+assert_eq "record${tab}main${tab}$round_full
+record${tab}main${tab}$round_delta" "$(cat "$REVIEW_ROUNDS_LOG")" "the log gets each record prefixed with repository and branch"
+git switch -q --detach
+run_rec "$round_full"
+assert_eq "0" "$run_status" "record exits 0 on a detached HEAD"
+assert_eq "record${tab}(detached)${tab}$round_full" "$(tail -n 1 "$REVIEW_ROUNDS_LOG")" "and logs the branch as (detached)"
+git switch -q main
+before=$(cat .git/review/rounds.md)
+log_before=$(cat "$REVIEW_ROUNDS_LOG")
+run_rec "$round_full
+- round: base=abc123 tree=def456 kind=full by=/polish defects=9 rejected=1 preferences=4 (2026-10-14)"
+assert_eq "2" "$run_status" "a batch with a record missing a field exits 2"
+assert_contains "$out" "not a round record" "and names the problem"
+assert_eq "$before" "$(cat .git/review/rounds.md)" "and records none of the batch"
+assert_eq "$log_before" "$(cat "$REVIEW_ROUNDS_LOG")" "and logs none of it"
+run_rec "$round_full and some words"
+assert_eq "2" "$run_status" "free text after a record is refused"
+run_rec "- round: base=abc123 tree=def456 kind=partial by=/polish defects=9 fix-written=0 rejected=1 preferences=4 (2026-10-14)"
+assert_eq "2" "$run_status" "an unknown kind is refused"
+run_rec "- round: base=abc123 tree=def456 kind=full by=/forge defects=9 fix-written=0 rejected=1 preferences=4 (2026-10-14)"
+assert_eq "2" "$run_status" "an unknown recorder is refused"
+run_rec "- round: base=abc123 tree=def456 kind=full by=/polish defects=nine fix-written=0 rejected=1 preferences=4 (2026-10-14)"
+assert_eq "2" "$run_status" "a non-numeric count is refused"
+run_rec "- round: base=\$(id) tree=def456 kind=full by=/polish defects=9 fix-written=0 rejected=1 preferences=4 (2026-10-14)"
+assert_eq "2" "$run_status" "a base that is not a hash is refused"
+run_rec "$settled"
+assert_eq "2" "$run_status" "a ledger entry is not a round record"
+run_rec "$round_full
+
+$round_delta"
+assert_eq "2" "$run_status" "a blank line inside a batch is refused"
+run_rec "$round_full$(printf '\r')"
+assert_eq "2" "$run_status" "a carriage return is refused"
+assert_eq "$before" "$(cat .git/review/rounds.md)" "none of the refused batches recorded anything"
+run_in "$round_full"
+assert_eq "2" "$run_status" "append refuses a round record: it belongs in rounds.md, not the ledger"
+run_rec ""
+assert_eq "2" "$run_status" "empty stdin exits 2"
+run record extra
+assert_eq "2" "$run_status" "record takes no arguments"
+run rounds extra
+assert_eq "2" "$run_status" "rounds takes no arguments"
+
 # --- clear ---------------------------------------------------------------------------
 case_name="clear"
 new_repo clear
 run_in "$settled"
 assert_eq "0" "$run_status" "the seeding append exits 0"
+run_rec "$round_full"
+assert_eq "0" "$run_status" "the seeding record exits 0"
+log_before=$(cat "$REVIEW_ROUNDS_LOG")
 mkdir -p .git/review/20260101-000000-1
 run clear
 assert_eq "0" "$run_status" "clear exits 0"
 assert_eq "removed $repo/.git/review" "$out" "and says what it removed"
-assert_absent "$repo/.git/review" "the whole directory is gone, ledger and runs"
+assert_absent "$repo/.git/review" "the whole directory is gone, ledger, round records and runs"
+assert_eq "$log_before" "$(cat "$REVIEW_ROUNDS_LOG")" "the log outlives the directory"
 run clear
 assert_eq "0" "$run_status" "clear with nothing there still exits 0"
 assert_eq "nothing to remove at $repo/.git/review" "$out" "and names where it looked"
@@ -181,6 +252,11 @@ run_in "$converged"
 assert_eq "0" "$run_status" "a linked worktree appends to its own ledger"
 run ledger
 assert_eq "$main_repo/.git/worktrees/worktree-feature/review/ledger.md" "$out" "under .git/worktrees/<name>"
+run_rec "$round_full"
+assert_eq "0" "$run_status" "a linked worktree records its own rounds"
+run rounds
+assert_eq "$main_repo/.git/worktrees/worktree-feature/review/rounds.md" "$out" "under .git/worktrees/<name>"
+assert_eq "worktree${tab}feature${tab}$round_full" "$(tail -n 1 "$REVIEW_ROUNDS_LOG")" "and logs under the main checkout's name"
 run clear
 assert_eq "0" "$run_status" "the worktree's clear exits 0"
 cd "$main_repo" || exit 1
