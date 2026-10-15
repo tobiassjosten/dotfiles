@@ -64,7 +64,7 @@ Do not paste the diff or the ledger into the prompt — reviewers read those fro
 
 ## 4. Collect and verify coverage
 
-Every reviewer ends its report with a `Suppressed by ledger:` line and then a `Coverage:` line (format in its lens file). Check each:
+Every fan-out reviewer ends its report with a `Suppressed by ledger:` line and then a `Coverage:` line (format in its lens file). Check each:
 
 - **Missing `Suppressed by ledger:` line, missing coverage line, or gaps** → re-run that one role once with the same prompt plus `Your previous run did not complete its report: <what was missing>.` Four of the counts have a denominator you can check against the review directory rather than judge: an area's `owned files read <n>/<n>` must equal the files it was given, `lens:tests`' `touched tests read <n>/<n>` must equal the test files in `stat.txt`, `lens:claims`' `removed-terms reviewed <n>/<n>` must equal `wc -l < removed-terms.txt`, and `lens:delta`'s `hunks checked <n>/<n>` must equal `grep -c '^@@'` over the diff it owns — the only mechanical check delta mode has. The rest are judgment — treat a count that is implausibly small for the change's size as a gap, but read the lens's own note first: several say explicitly what "nothing in scope" looks like, and a genuine zero is not a gap.
 - **Failed or stalled reviewer** (an error, a rate limit, no progress) → first resume it with a message asking it to finish and report; if that fails, re-run the role fresh once. On a rate limit, wait for the reset rather than dropping the role.
@@ -75,9 +75,10 @@ Every reviewer ends its report with a `Suppressed by ledger:` line and then a `C
 Combine all reviewers' findings into one list:
 
 1. **Drop** anything the ledger records as settled, rejected or decided **in a live entry** — one whose `base=` equals this run's `FROM` in full mode, or the `Ledger base:` value passed to the reviewers in delta mode — and anything a reviewer reported as ledger-suppressed. Count the expired entries you declined to apply, too, and say so: an expired ledger should be visibly expired rather than quietly ineffective. Reviewers report their suppressions rather than dropping them silently (`review-core.md`, Rules), so sum those counts with your own: a review made quiet by the ledger must not be indistinguishable from a review that found nothing.
-2. **Dedupe by root cause.** Two findings about the same wrong statement, the same missing test, or the same bug are one finding: keep the clearest explanation, union the locations, keep the more severe tier and `(defect)` over `(preference)`.
-3. **Order** Issues first, then Nitpicks; most severe first within each.
-4. **Number** continuously across both sections, in the format from `review-core.md` (category tag, marker, location, problem, fix). Keep each finding's fix text as the reviewer wrote it — including its options `a.`/`b.`.
+2. **Fix mis-paired markers.** An Issue is always `(defect)` (`review-core.md` § *Defect versus preference*). An Issue marked `(preference)` becomes a `(defect)` Issue. The merge never moves a finding down; only the verifier's re-mark does (`review-fix.md` step 1), which `/ship` does not run.
+3. **Dedupe by root cause.** Two findings about the same wrong statement, the same missing test, or the same bug are one finding: keep the clearest explanation, union the locations, keep the more severe tier and `(defect)` over `(preference)`.
+4. **Order** Issues first, then Nitpicks; most severe first within each.
+5. **Number** continuously across both sections, in the format from `review-core.md` (category tag, marker, location, problem, fix). Keep each finding's fix text as the reviewer wrote it — including its options `a.`/`b.`.
 
 The merged list is the review. Report alongside it, in one line, the plan, each role's coverage, the number of findings the ledger suppressed, and the number of entries ignored as expired (e.g. `Coverage: 8/8 reviewers complete — areas 34/34 files; claims 212; tests 41 behaviours; …; 3 findings dropped per ledger; 4 entries ignored as expired`). If there are no findings after merging, the review is clean — but only if it is complete.
 
@@ -131,7 +132,7 @@ Write records **only** with `sh ~/.claude/skills/review-state.sh record`, the li
 - `tree=` — `TREE` from that review's `meta.txt`: the snapshot it read.
 - `defects=` — open Issues plus open `(defect)` Nitpicks after § 5's merge, before anything is confirmed or fixed.
 - `fix-written=` — how many of those defects point at a line written after the change's **first recorded full review**: one that `git diff -U0 <tree of the first kind=full record with this base> <this tree>` shows as added (read the `+<start>,<count>` ranges of each hunk, in the file the finding names). That is mostly text earlier fixes wrote, but a hand edit made after the first review counts too. The first full review records 0, since nothing was written after it.
-- `rejected=` — of those defects, how many confirmation rejected (`review-fix.md` step 1). `/ship` confirms nothing and records 0.
+- `rejected=` — of those defects, how many confirmation rejected (`review-fix.md` step 1), re-marked `(preference)` ones included. `/ship` confirms nothing and records 0.
 - `preferences=` — open `(preference)` findings after the merge.
 
 **Who records, and when.** `/polish` and `/review` record each full review and each delta check once its findings are confirmed, so `rejected=` counts what confirmation rejected; `/ship` records its gate review once the review is complete, before evaluating it. A review that never completed (`review-fanout.md` § 4) is not recorded, and neither is a gate that passed on a convergence record or was skipped, since no review ran.
