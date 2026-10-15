@@ -354,7 +354,8 @@ if gd --quiet "$from" "$tree"; then
 fi
 
 # Same root review-state.sh computes — keep the two in step. That script is how the skills
-# append to the ledger beside these run directories and delete the lot after a push.
+# append to the ledger and the round records beside these run directories and delete the
+# lot after a push.
 root=$(git rev-parse --absolute-git-dir)/review
 dir=$root/$(date +%Y%m%d-%H%M%S)-$$
 mkdir -p "$dir/files"

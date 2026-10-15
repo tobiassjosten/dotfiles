@@ -15,16 +15,18 @@
 # The directory is $(git rev-parse --absolute-git-dir)/review — the same root review-diff.sh
 # writes its run directories under, computed the same way — with the ledger at
 # review/ledger.md (format and lifecycle: review-fanout.md § The review ledger) and the
-# round records at review/rounds.md (review-fanout.md § Round records). `record` also
-# appends each record to a log that outlives the directory, $REVIEW_ROUNDS_LOG or
-# ~/.claude/review-rounds.log, prefixed with the repository and branch. In a
-# linked worktree that resolves to <main>/.git/worktrees/<name>/review: inside the main
+# round records at review/rounds.md (review-fanout.md § Round records). In a linked
+# worktree that resolves to <main>/.git/worktrees/<name>/review: inside the main
 # checkout, so a worktree-isolated Claude Code session may not touch it with Edit or
 # Write, nor with a shell command that nests `$(git ...)` inside another command — the
 # harness's isolation checks refuse both and cannot be configured to allow them. A plain
 # `sh review-state.sh <command>` passes those checks, which is why the skills mutate this
 # directory only through here (and read it with a literal path this script printed), the
 # same way task-marker.sh owns task.txt next to it.
+#
+# `record` also appends each record to a log outside the repository that outlives the
+# directory, $REVIEW_ROUNDS_LOG or ~/.claude/review-rounds.log, prefixed with the
+# repository and branch.
 #
 # Exit status: 0 success (including `clear` with nothing to remove, and -h/--help);
 # 1 the directory, ledger or round records do not exist (dir, ledger, rounds), or no work

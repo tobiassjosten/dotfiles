@@ -2,7 +2,7 @@
 
 Personal macOS development environment, installed by symlinking files from this repo into `$HOME`. It covers the shell (fish), editors (Vim, plus a Neovim setup being trialed), tmux, Hammerspoon automation, git, a set of Homebrew packages, and Claude Code customization (skills, agents, review workflow).
 
-There is no build, and most of what is here is config: "testing" a change means sourcing the file or reloading the affected tool (fish, tmux, nvim, Hammerspoon). Of the few first-party scripts, only `claude/skills/review-diff.sh` — which the `/review`, `/polish` and `/ship` skills and the `code-reviewer` agent depend on — `claude/skills/review-state.sh` — through which those skills write the review ledger and delete the review directory — and `claude/skills/task-marker.sh` — which `/next` writes and `/ship` reads — have test suites; `make check` runs them.
+There is no build, and most of what is here is config: "testing" a change means sourcing the file or reloading the affected tool (fish, tmux, nvim, Hammerspoon). Of the few first-party scripts, only `claude/skills/review-diff.sh` — which the `/review`, `/polish` and `/ship` skills and the `code-reviewer` agent depend on — `claude/skills/review-state.sh` — through which those skills write the review ledger and the round records and delete the review directory — and `claude/skills/task-marker.sh` — which `/next` writes and `/ship` reads — have test suites; `make check` runs them.
 
 ## Requirements
 
