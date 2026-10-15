@@ -1,14 +1,15 @@
 #!/bin/sh
 # Behavioural tests for review-state.sh — the one way the review skills locate, append to
-# and delete the review directory and its ledger. Each case builds a throwaway repo under
-# $TMPDIR and asserts on what the script printed, wrote and exited with. Nothing here
-# touches the repo it lives in.
+# and delete the review directory, its ledger and its round records. Each case builds a
+# throwaway repo under $TMPDIR and asserts on what the script printed, wrote and exited
+# with. Nothing here touches the repo it lives in.
 #
 # Run it with `make check`, or directly: sh claude/skills/review-state.test.sh
 #
 # The exit codes are the contract: callers treat dir's and ledger's 1 as "nothing there"
-# (no ledger line in a reviewer prompt, nothing to name in a summary), and append's 2 as
-# "nothing written". So every case checks the exit status.
+# (no ledger line in a reviewer prompt, nothing to name in a summary), rounds' 1 as
+# "nothing recorded" (no Trend to show), and append's and record's 2 as "nothing
+# written". So every case checks the exit status.
 set -u
 
 # Hermetic, for the same reasons as review-diff.test.sh.
@@ -29,9 +30,11 @@ tmp=$(mktemp -d "${TMPDIR:-/tmp}/review-state-test.XXXXXX") || exit 1
 work=$(cd "$tmp" && pwd -P) || exit 1
 trap 'rm -rf "$work"' EXIT
 # record also writes a log outside the repository; keep it in the scratch area, never the
-# real ~/.claude/review-rounds.log.
+# real ~/.claude/review-rounds.log. HOME moves too, so a script that stopped honouring
+# REVIEW_ROUNDS_LOG still could not reach the real log.
 REVIEW_ROUNDS_LOG=$work/logs/review-rounds.log
-export REVIEW_ROUNDS_LOG
+HOME=$work/home
+export REVIEW_ROUNDS_LOG HOME
 passed=0
 failed=0
 
@@ -183,7 +186,21 @@ git switch -q --detach
 run_rec "$round_full"
 assert_eq "0" "$run_status" "record exits 0 on a detached HEAD"
 assert_eq "record${tab}(detached)${tab}$round_full" "$(tail -n 1 "$REVIEW_ROUNDS_LOG")" "and logs the branch as (detached)"
+git switch -q -c 'a&b|c'
+run_rec "$round_full"
+assert_eq "0" "$run_status" "record exits 0 on a branch named with & and |"
+assert_eq "record${tab}a&b|c${tab}$round_full" "$(tail -n 1 "$REVIEW_ROUNDS_LOG")" "and logs the branch name verbatim"
 git switch -q main
+for by in /ship /review; do
+	line=$(printf '%s\n' "$round_full" | sed "s|by=/polish|by=$by|")
+	run_rec "$line"
+	assert_eq "0" "$run_status" "record accepts by=$by"
+	assert_eq "$line" "$(tail -n 1 .git/review/rounds.md)" "and records the by=$by line"
+done
+out=$(printf '%s' "$round_full" | env -u REVIEW_ROUNDS_LOG sh "$script" record 2>&1)
+run_status=$?
+assert_eq "0" "$run_status" "record exits 0 without REVIEW_ROUNDS_LOG"
+assert_eq "record${tab}main${tab}$round_full" "$(cat "$HOME/.claude/review-rounds.log")" "and logs to ~/.claude/review-rounds.log by default"
 before=$(cat .git/review/rounds.md)
 log_before=$(cat "$REVIEW_ROUNDS_LOG")
 run_rec "$round_full
@@ -261,6 +278,19 @@ run clear
 assert_eq "0" "$run_status" "the worktree's clear exits 0"
 cd "$main_repo" || exit 1
 assert_eq "$settled" "$(cat .git/review/ledger.md)" "clearing a worktree's directory leaves the main checkout's alone"
+
+# --- a common dir that is not .git: the log names the work tree ---------------------
+case_name="separate-git-dir"
+git init -q -b main --separate-git-dir "$work/sep.git" "$work/sepwt"
+cd "$work/sepwt" || exit 1
+git config user.email test@example.com
+git config user.name Test
+echo base >base.md
+git add base.md
+git commit -qm base || { echo "FATAL: could not commit in a throwaway repo" >&2; exit 1; }
+run_rec "$round_full"
+assert_eq "0" "$run_status" "record exits 0 with a separate git dir"
+assert_eq "sepwt${tab}main${tab}$round_full" "$(tail -n 1 "$REVIEW_ROUNDS_LOG")" "and logs under the work tree's name"
 
 # --- report --------------------------------------------------------------------------
 cd / || exit 1

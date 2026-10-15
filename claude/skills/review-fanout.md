@@ -134,6 +134,6 @@ Write records **only** with `sh ~/.claude/skills/review-state.sh record`, the li
 - `rejected=` — of those defects, how many confirmation rejected (`review-fix.md` step 1). `/ship` confirms nothing and records 0.
 - `preferences=` — open `(preference)` findings after the merge.
 
-**Who records, and when.** `/polish` and `/review` record each full review once its findings are confirmed, and each delta check once it has been read; `/ship` records its gate review once it has evaluated it. A review that never completed (`review-fanout.md` § 4) is not recorded, and neither is a gate that passed on a convergence record or was skipped, since no review ran.
+**Who records, and when.** `/polish` and `/review` record each full review and each delta check once its findings are confirmed, so `rejected=` counts what confirmation rejected; `/ship` records its gate review once the review is complete, before evaluating it. A review that never completed (`review-fanout.md` § 4) is not recorded, and neither is a gate that passed on a convergence record or was skipped, since no review ran.
 
 **The log.** `record` also appends each record, prefixed with the repository (the main checkout's directory name) and branch, tab-separated, to `~/.claude/review-rounds.log`. That file is machine state, never tracked, and outlives the review directory: it is how the effect of a change to the review skills is measured across many changes. `/ship`'s `review-state.sh clear` deletes `rounds.md` with the rest of the directory and leaves the log alone.
