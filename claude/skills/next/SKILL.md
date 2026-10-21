@@ -24,7 +24,11 @@ A resumed item is not trusted on the marker's word: *Check that this tree is fre
 ## Selecting the task
 
 - **If an argument is given**, treat it as a hint to find a *specific* work item, and select the one that best matches it. The hint may be a task number/ID, a filename, or text describing the task — interpret it against whatever source the project uses (a matching line in `TODO.md`, a per-task filename or its contents, an issue key or summary in the tracker).
-- **If no argument is given**, select the *first* unclaimed task, however "first" is defined by the source: the first content line in `TODO.md`, the lowest-numbered or lowest-sorting per-task file, or the top of the tracker's order.
+- **If no argument is given**, select the *first* unclaimed task, however "first" is defined by the source: the first content line in `TODO.md`, the lowest-numbered or lowest-sorting per-task file, or the top of the tracker's order — or the order the project's own instructions define, such as the first issue of the highest-priority started project.
+
+### Project arguments
+
+Where the source groups items into **projects** (Linear projects; `slicing.md` § *Tracking*), an argument may name a project — by name, identifier or slug — rather than an item. An argument that matches both an item and a project → ask (`AskUserQuestion`) which was meant. A project argument selects among that project's items only: the first queued one in the project's order (its description's list, then `blockedBy`) that is unclaimed (§ *Skip claimed items*) and has every blocker in its terminal state. **Before selecting**, check the project's status: one not in its started state (Linear: In Progress) is not being worked, so ask (`AskUserQuestion`) whether to start it — moving it to its started state the way the project's own instructions say (dates, its items queued) — or stop with nothing selected. With no item ready, report the project's items with what each waits on, and stop.
 
 ### Parent items
 

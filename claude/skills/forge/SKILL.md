@@ -10,7 +10,7 @@ Take one work item from selection all the way to a review-hardened change: run t
 
 ## Argument
 
-An optional argument may follow the command: `$ARGUMENTS`. When present, it is a hint (task ID, filename, or descriptive text) forwarded to the `/next` selection step. When absent, `/next` picks the first task by its source's order. When it resolves to a **parent item** — one with children in its source (`~/.claude/skills/slicing.md` § *Tracking*) — the run follows § *A parent item* below instead of the single-task procedure.
+An optional argument may follow the command: `$ARGUMENTS`. When present, it is a hint (task ID, filename, or descriptive text) forwarded to the `/next` selection step. When absent, `/next` picks the first task by its source's order. When it resolves to a **parent item** — one with children in its source (`~/.claude/skills/slicing.md` § *Tracking*) — the run follows § *A parent item* below instead of the single-task procedure. When it resolves to a **project** (`/next` § *Project arguments*), the run follows § *A parent item* too, with the project in the parent's place: its items are the children, `/next`'s not-started prompt comes before P1, and the closing run checks the project's done-when in place of the parent's criteria and moves the project to its completed state.
 
 ## Composed pieces
 
