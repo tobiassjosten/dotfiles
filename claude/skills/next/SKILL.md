@@ -18,6 +18,7 @@ Run `sh ~/.claude/skills/task-marker.sh get`. Exit 1 (no marker) means nothing i
 - **No argument** — resume the marked item: select it, say that it is resumed from this tree's marker, and skip the selection below.
 - **An argument that matches the marker's item** (compared as *Check that this tree is free* compares them) — resume it the same way.
 - **An argument naming a different item** — stop and report the bound item, with nothing selected, claimed or written. Finishing it (`/ship`), or clearing a stale marker, is the user's call; a second task means a second tree.
+- **An argument naming a project** (§ *Project arguments*) — resume the marked item the same way if it is one of that project's items; otherwise stop as for a different item.
 
 A resumed item is not trusted on the marker's word: *Check that this tree is free* verifies it against its source before anything is claimed, as it does for every resume.
 
@@ -28,7 +29,7 @@ A resumed item is not trusted on the marker's word: *Check that this tree is fre
 
 ### Project arguments
 
-Where the source groups items into **projects** (Linear projects; `slicing.md` § *Tracking*), an argument may name a project — by name, identifier or slug — rather than an item. An argument that matches both an item and a project → ask (`AskUserQuestion`) which was meant. A project argument selects among that project's items only: the first queued one in the project's order (its description's list, then `blockedBy`) that is unclaimed (§ *Skip claimed items*) and has every blocker in its terminal state. **Before selecting**, check the project's status: one not in its started state (Linear: In Progress) is not being worked, so ask (`AskUserQuestion`) whether to start it — moving it to its started state the way the project's own instructions say (dates, its items queued) — or stop with nothing selected. With no item ready, report the project's items with what each waits on, and stop.
+Where the source groups items into **projects** (Linear projects; `~/.claude/skills/slicing.md` § *Tracking*), an argument may name a project — by name, identifier or slug — rather than an item. An argument that matches both an item and a project → ask (`AskUserQuestion`) which was meant. A project argument selects among that project's items only: the first queued one in the project's order (`blockedBy`, then whatever order the repository's instructions give, else the tracker's) that is unclaimed (§ *Skip claimed items*) and has every blocker in its terminal state. **Before selecting**, check the project's status: one not yet started (Linear: Backlog or Planned) is not being worked, so ask (`AskUserQuestion`) whether to start it — moving it to its started state (Linear: In Progress) the way the repository's instructions say (dates, its items queued) — or stop with nothing selected. One in any other state but its started one (completed, canceled, paused) is never moved from here: report its state and stop with nothing selected. With no item ready, report the project's items with what each waits on, and stop; for a project whose items are all in their terminal state, say so, and that `/forge <project>` closes it.
 
 ### Parent items
 
