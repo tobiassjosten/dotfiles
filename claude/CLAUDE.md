@@ -15,6 +15,10 @@
 - **Never hard-wrap Markdown or plain-text files.** Write each paragraph, list item, or sentence as one continuous line and let the viewer/editor soft-wrap it. Don't insert manual newlines to hit a column width (no wrapping at 80/100 chars). This applies to any file I author or edit — `.md`, `.txt`, commit bodies, prose config — unless the file's existing content is already hard-wrapped, in which case match it rather than mixing styles. Code comments are the exception (next item).
 - **Wrap code comments to fill up to column 80.** Break a comment line only when the next word would pass column 80, or at a deliberate boundary — a new sentence or clause that reads better on its own line, a list item, an example. Never break early for no reason, and never go past 80 to avoid a break. A project's own stated convention wins over this, and so does a file whose existing comments already wrap at a different width: match that width rather than mixing two in one file.
 
+# Live systems
+
+- **Never write your own program or script that connects to anything** — a production or staging database, a cloud API, a third-party service — without my explicit permission for that specific program, even when it would only read, and even as a throwaway outside the repo. Reach live systems only through the project's sanctioned tools (e.g. a project CLI, `gcloud logging read`) as they exist. When those tools can't answer the question, stop, say what is missing, and propose extending the tool rather than working around it.
+
 # Git
 
 - Never commit anything outside of the session's working directory. Only create commits in the repo rooted at the primary working directory the session started in — never in other repos, submodules, or parent/sibling repos, even if a task touches files there. If a change genuinely needs a commit elsewhere, surface it and let me do it.
