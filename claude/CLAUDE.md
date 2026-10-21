@@ -17,7 +17,7 @@
 
 # Live systems
 
-- **Never write your own program or script that connects to anything** — a production or staging database, a cloud API, a third-party service — without my explicit permission for that specific program, even when it would only read, and even as a throwaway outside the repo. Reach live systems only through the project's sanctioned tools (e.g. a project CLI, `gcloud logging read`) as they exist. When those tools can't answer the question, stop, say what is missing, and propose extending the tool rather than working around it.
+- **Never write your own program or script that connects to a live system** — a production or staging database, a cloud API, a third-party service — without my explicit permission for that specific program, even when it would only read, and even as a throwaway outside the repo. Reach live systems only through the project's sanctioned tools (e.g. a project CLI, `gcloud logging read`) as they exist. When those tools can't answer the question, stop, say what is missing, and propose extending the tool rather than working around it.
 
 # Git
 
