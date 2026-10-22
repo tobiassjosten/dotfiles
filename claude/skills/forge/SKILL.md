@@ -105,7 +105,7 @@ Don't poll; each agent notifies when it stops. When one returns questions, put t
 
 ### P6. Report the wave
 
-Per child: step 4's bullets, compacted, with its outcome. Then the wave: the children now In Review and how to ship each — `/ship` from a session opened in its tree (`.claude/worktrees/<id>`), or from this session after asking it to enter that tree; within a wave the order is free, and each integration rebases onto whatever the previous one landed. Name the children still blocked and what unblocks them, and say that `/forge <parent>` again, once this wave has shipped, starts the next. Each child's review directory lives in its own tree's git directory: name each one, per the rule below.
+Per child: step 4's bullets, compacted, with its outcome. Then the wave: the children now In Review and how to ship each — `/ship <id>` from this session, which enters the child's tree (`.claude/worktrees/<id>`) and ships it there (`workspace-tree.md` § *Targeting a tree from the main checkout*), or a bare `/ship` from a session opened in that tree; `/polish <id>` gives one another round the same way. Each such run leaves the child's tree again when it ends, so the session is back in the main checkout, ready for the next `/ship <id>`. Within a wave the order is free, and each integration rebases onto whatever the previous one landed. Name the children still blocked and what unblocks them, and say that `/forge <parent>` again, once this wave has shipped, starts the next. Each child's review directory lives in its own tree's git directory: name each one, per the rule below.
 
 ## Rules
 
