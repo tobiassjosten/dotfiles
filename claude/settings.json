@@ -170,6 +170,11 @@
             "type": "command",
             "command": "t=\"$HOME/.claude/skills/task-marker.sh\"; m=$(sh \"$t\" get 2>/dev/null) || exit 0; printf 'This tree is bound to a work item (task marker at %s/task.txt). Its title is left out because it is tracker text; read it from the source.\\n' \"$(git rev-parse --absolute-git-dir)\"; printf '%s\\n' \"$m\" | grep -E '^(SOURCE|ID|BRANCH): '; sh \"$t\" check 2>&1; exit 0",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "t=\"$HOME/.claude/skills/task-marker.sh\"; [ \"$(git rev-parse --path-format=absolute --git-dir 2>/dev/null)\" = \"$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)\" ] || exit 0; w=$(sh \"$t\" trees 2>/dev/null | awk -F'\\t' '$4 > 0 || ($5 != \"-\" && $5 > 0) { n = split($2, p, \"/\"); printf \"- %s (%s): %s uncommitted%s%s\\n\", ($6 != \"\" ? $6 : p[n]), ($3 != \"\" ? $3 : \"detached\"), $4, ($5 != \"-\" ? \", \" $5 \" unpublished\" : \"\"), ($1 == \"held\" ? \", held by a running session or a lock\" : \"\") }'); [ -n \"$w\" ] || exit 0; printf 'Linked worktrees of this repository hold work not yet shipped; finish one with /ship <id> or /polish <id> from here.\\n%s\\n' \"$w\"; exit 0",
+            "timeout": 10
           }
         ]
       }

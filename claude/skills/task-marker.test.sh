@@ -365,6 +365,98 @@ printf '../../../../list-one/.git\n' >"$list_main/.git/worktrees/list-one/gitdir
 run list
 assert_contains "$out" "-${tab}$work/list-one${tab}linear${tab}ONE-1${tab}" "a relative gitdir is resolved to the tree's absolute path"
 
+# --- trees: every task tree and what it still holds ----------------------------------
+case_name="trees"
+new_repo trees
+trees_main=$(pwd -P)
+run trees
+assert_eq "0" "$run_status" "trees with no linked tree exits 0"
+assert_eq "" "$out" "and prints nothing"
+run trees now
+assert_eq "2" "$run_status" "trees takes no arguments"
+
+# Only trees under .claude/worktrees/ are task trees; one elsewhere is not listed.
+git worktree add -q -b elsewhere "$work/trees-elsewhere"
+git worktree add -q -b worktree-a "$trees_main/.claude/worktrees/a"
+run trees
+assert_eq "-${tab}$trees_main/.claude/worktrees/a${tab}worktree-a${tab}0${tab}-${tab}" \
+	"$out" "an idle tree without any origin ref: 0 uncommitted, - unpublished, no ID"
+
+# A bare origin, so unpublished commits can be counted; no origin/HEAD is needed.
+git init -q --bare "$work/trees-origin.git"
+git remote add origin "$work/trees-origin.git"
+git push -q origin main
+cd "$trees_main/.claude/worktrees/a" || exit 1
+echo new >new.md
+sh "$script" set --source linear --id A-1 --title "Tree: a" >/dev/null
+run trees
+assert_eq "-${tab}$trees_main/.claude/worktrees/a${tab}worktree-a${tab}1${tab}0${tab}A-1" \
+	"$out" "an untracked file counts as uncommitted, and the marker's ID is shown"
+git add new.md
+git commit -qm new
+run trees
+assert_eq "-${tab}$trees_main/.claude/worktrees/a${tab}worktree-a${tab}0${tab}1${tab}A-1" \
+	"$out" "a commit no origin ref holds counts as unpublished"
+git push -q origin worktree-a
+run trees
+assert_eq "-${tab}$trees_main/.claude/worktrees/a${tab}worktree-a${tab}0${tab}0${tab}A-1" \
+	"$out" "a branch pushed under its own name has nothing unpublished"
+cd "$trees_main" || exit 1
+trees_a="-${tab}$trees_main/.claude/worktrees/a${tab}worktree-a${tab}0${tab}0${tab}A-1"
+
+# Locks: this shell's own pid and start time stand in for a running session.
+trees_start=$(TZ=UTC ps -p $$ -o lstart= | tr -s ' ' | sed 's/^ //; s/ $//')
+git worktree lock --reason "claude session a (pid $$ start $trees_start)" \
+	"$trees_main/.claude/worktrees/a"
+run trees
+assert_contains "$out" "held${tab}$trees_main/.claude/worktrees/a${tab}" \
+	"a lock whose pid runs with the lock's start time is held"
+git worktree unlock "$trees_main/.claude/worktrees/a"
+git worktree lock --reason "claude session a (pid $$ start Mon Jan 1 00:00:00 2001)" \
+	"$trees_main/.claude/worktrees/a"
+run trees
+assert_contains "$out" "-${tab}$trees_main/.claude/worktrees/a${tab}" \
+	"a lock whose pid now has another start time is left by an exited session"
+git worktree unlock "$trees_main/.claude/worktrees/a"
+trees_dead=$(sh -c 'echo $$')
+git worktree lock --reason "claude session a (pid $trees_dead start $trees_start)" \
+	"$trees_main/.claude/worktrees/a"
+run trees
+assert_contains "$out" "-${tab}$trees_main/.claude/worktrees/a${tab}" \
+	"a lock whose pid no longer runs is left by an exited session"
+git worktree unlock "$trees_main/.claude/worktrees/a"
+git worktree lock --reason "moving disks" "$trees_main/.claude/worktrees/a"
+run trees
+assert_contains "$out" "held${tab}$trees_main/.claude/worktrees/a${tab}" \
+	"a lock with any other reason counts as held"
+git worktree unlock "$trees_main/.claude/worktrees/a"
+git worktree lock "$trees_main/.claude/worktrees/a"
+run trees
+assert_contains "$out" "held${tab}$trees_main/.claude/worktrees/a${tab}" \
+	"a lock with no reason counts as held"
+git worktree unlock "$trees_main/.claude/worktrees/a"
+
+# Two trees whose fields differ both ways: nothing carries over from one to the next.
+git worktree add -q --detach "$trees_main/.claude/worktrees/c"
+git worktree lock --reason "moving disks" "$trees_main/.claude/worktrees/c"
+run trees
+assert_contains "$out" "$trees_a" "a free tree on a branch beside a locked detached one"
+assert_contains "$out" "held${tab}$trees_main/.claude/worktrees/c${tab}${tab}0${tab}0${tab}" \
+	"a detached tree has an empty branch, and its own lock"
+git worktree unlock "$trees_main/.claude/worktrees/c"
+git worktree remove "$trees_main/.claude/worktrees/c"
+
+# A tree whose directory is gone is prunable, and not listed.
+git worktree add -q -b worktree-b "$trees_main/.claude/worktrees/b"
+rm -rf "$trees_main/.claude/worktrees/b"
+run trees
+assert_eq "0" "$run_status" "trees with a deleted tree still exits 0"
+case $out in
+	*"/.claude/worktrees/b"*) fail "a tree whose directory is gone is not listed" "$out" ;;
+	*) ok ;;
+esac
+assert_contains "$out" "$trees_a" "and the other trees are still listed"
+
 # --- report --------------------------------------------------------------------------
 cd / || exit 1
 echo "task-marker.test.sh: $passed passed, $failed failed"
