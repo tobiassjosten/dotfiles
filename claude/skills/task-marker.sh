@@ -6,8 +6,10 @@
 # /commit (rewrites it with the same item when it moves the work onto a new branch),
 # /abandon (reads the marker of the tree it removes, and lists them to resolve its
 # argument), the /forge and /polish summaries (name it), the status line (shows ID and
-# TITLE on every render), the SessionStart hook in settings.json (prints SOURCE, ID,
-# BRANCH and `check` into each new session) and the work-item rules in claude/CLAUDE.md
+# TITLE on every render, and in a main checkout the trees `trees` finds waiting), the
+# SessionStart hook in settings.json (prints SOURCE, ID, BRANCH and `check` into each
+# new session, and in a main checkout the waiting trees), /ship and /polish (pick a
+# target tree from `trees`) and the work-item rules in claude/CLAUDE.md
 # (set, check and clear for work started by hand), so the marker's path, format and
 # validation live in one place.
 #
@@ -18,6 +20,7 @@
 #   task-marker.sh check           verify the marker against this tree
 #   task-marker.sh clear           remove the marker (silent when there is none)
 #   task-marker.sh list            print every tree's marker in this repository
+#   task-marker.sh trees           print every task tree with what it still holds
 #   task-marker.sh -h, --help      print the usage and exit
 #
 # The marker lives at $(git rev-parse --absolute-git-dir)/task.txt. That path resolves to
@@ -67,8 +70,8 @@
 # Exit status: 0 success (including `clear` with nothing to remove, and -h/--help);
 # 1 no marker, or `get <key>` for a key the marker does not carry; 2 bad usage, an invalid
 # field value, or a `set` that would replace a different item's marker (that is `rebind`);
-# 3 `check` found a mismatch. A missing work tree is 1. `list` exits 0 whether or not it
-# finds a marker.
+# 3 `check` found a mismatch. A missing work tree is 1. `list` and `trees` exit 0 whether
+# or not they find anything.
 set -eu
 
 # Owner-only, matching review-diff.sh: everything this script writes lands in the same
@@ -90,6 +93,12 @@ usage() {
 	                      <this> TAB <tree> TAB <SOURCE> TAB <ID> TAB <TITLE>, with <this>
 	                      * for the tree it runs in, - for any other, and ! for a tree
 	                      whose directory is gone (`git worktree prune` drops it)
+	  trees               print every task tree under .claude/worktrees/, one per line:
+	                      <held> TAB <tree> TAB <branch> TAB <uncommitted> TAB
+	                      <unpublished> TAB <ID>, with <held> `held` for a tree a running
+	                      session (or a deliberate lock) holds and - otherwise, and
+	                      <unpublished> the commits no origin ref holds, or - without
+	                      any origin ref
 	  -h, --help          print this usage and exit
 	EOF
 }
@@ -335,7 +344,74 @@ list)
 	done
 	;;
 
+trees)
+	[ $# -eq 0 ] || die "trees takes no arguments"
+	# Every task tree under .claude/worktrees/ with what it still holds, so a main
+	# checkout that looks clean can show the work waiting in its trees: the status
+	# line and the SessionStart hook print it, and /ship and /polish pick a target
+	# tree from it (workspace-tree.md § Targeting a tree from the main checkout).
+	# One line per tree, tab-separated: held, path, branch, uncommitted, unpublished,
+	# ID. No TITLE: it is tracker text, and both printers leave it out.
+	main=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+	# Unpublished means on no origin ref, so a feature branch already pushed counts
+	# none. Without any origin ref there is nothing to count against.
+	has_origin=$(git for-each-ref --count=1 --format=1 refs/remotes/origin/)
+	# held, from the harness's lock line: a running process with the lock's pid and
+	# start time (UTC, as /abandon compares them) means a session is in the tree.
+	# A lock with any other reason was set on purpose and counts as held too.
+	held_by() { # <lock reason, empty for a bare lock>
+		case $1 in
+		'claude session '*' (pid '*' start '*')') ;;
+		*) echo held; return ;;
+		esac
+		_pid=$(printf '%s' "$1" | sed 's/.* (pid \([0-9]*\) start .*/\1/')
+		_start=$(printf '%s' "$1" | sed 's/.* start \(.*\))$/\1/' | tr -s ' ')
+		_live=$(TZ=UTC ps -p "$_pid" -o lstart= 2>/dev/null | tr -s ' ' |
+			sed 's/^ //; s/ $//') || _live=
+		if [ -n "$_live" ] && [ "$_live" = "$_start" ]; then echo held; else echo -; fi
+	}
+	emit() {
+		[ -n "$path" ] || return 0
+		case $path in "$main"/.claude/worktrees/*) ;; *) return 0 ;; esac
+		[ -z "$prunable" ] && [ -d "$path" ] || return 0
+		held=-
+		[ -n "$locked" ] && held=$(held_by "${lock_reason}")
+		# No optional locks: another session may be committing in this tree, and a
+		# status that refreshes its index would take the index.lock from under it.
+		uncommitted=$(git --no-optional-locks -C "$path" status --porcelain \
+			--untracked-files=all 2>/dev/null | wc -l | tr -d ' ')
+		unpublished=-
+		[ -n "$has_origin" ] && [ -n "$head" ] &&
+			unpublished=$(git rev-list --count "$head" --not --remotes=origin \
+				2>/dev/null) ||
+			unpublished=-
+		id=
+		tree_marker=$(git -C "$path" rev-parse --absolute-git-dir 2>/dev/null)/task.txt
+		[ -f "$tree_marker" ] && id=$(field ID "$tree_marker")
+		printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$held" "$path" "$branch" \
+			"$uncommitted" "$unpublished" "$id"
+	}
+	path= head= branch= locked= lock_reason= prunable=
+	git worktree list --porcelain | {
+		while IFS= read -r line; do
+			case $line in
+			'worktree '*) path=${line#worktree } ;;
+			'HEAD '*) head=${line#HEAD } ;;
+			'branch refs/heads/'*) branch=${line#branch refs/heads/} ;;
+			locked) locked=1 lock_reason= ;;
+			'locked '*) locked=1 lock_reason=${line#locked } ;;
+			prunable | 'prunable '*) prunable=1 ;;
+			'')
+				emit
+				path= head= branch= locked= lock_reason= prunable=
+				;;
+			esac
+		done
+		emit
+	}
+	;;
+
 *)
-	die "unknown command: $cmd (set, rebind, get, check, clear, list)"
+	die "unknown command: $cmd (set, rebind, get, check, clear, list, trees)"
 	;;
 esac

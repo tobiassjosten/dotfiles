@@ -225,6 +225,45 @@ if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks >/dev/null 
             [ -n "$task_title" ] && line1="${line1} ${DIM}${task_title}${RESET}"
         fi
     fi
+
+    # --- task trees still holding work, seen from the main checkout ---
+    # After a /forge wave the main checkout looks clean while each child waits
+    # in a tree of its own, so list the trees with uncommitted or unpublished
+    # work here: `/ship <id>` from this checkout finishes one. Main checkout
+    # only (its git dir is the common one), since from inside a tree the other
+    # trees are not this session's to finish. Free trees in yellow, trees a
+    # running session or a deliberate lock holds dimmed. Labels are marker IDs,
+    # or the tree's name.
+    git_dirs=$(git -C "$cwd" --no-optional-locks rev-parse --path-format=absolute \
+        --git-dir --git-common-dir 2>/dev/null)
+    if [ -f "$task_marker_sh" ] \
+        && [ "$(printf '%s\n' "$git_dirs" | sort -u | wc -l)" -eq 1 ]; then
+        waiting=$( (cd "$cwd" && sh "$task_marker_sh" trees) 2>/dev/null \
+            | awk -F'\t' '$4 > 0 || ($5 != "-" && $5 > 0) {
+                n = split($2, p, "/"); label = ($6 != "" ? $6 : p[n])
+                print $1 "\t" label }' \
+            | jq -Rrn '
+                def clean:
+                    gsub("[\\p{Cc}\\p{Cf}]"; " ") | gsub("\\s+"; " ")
+                    | gsub("^\\s+|\\s+$"; "");
+                inputs | split("\t") | .[0] + "\t" + (.[1] | clean)' 2>/dev/null)
+        if [ -n "$waiting" ]; then
+            shown=""
+            count=0
+            while IFS=$'\t' read -r w_held w_label; do
+                count=$((count + 1))
+                [ "$count" -gt 3 ] && continue
+                w_label=${w_label//\\/\\\\}
+                if [ "$w_held" = "held" ]; then
+                    shown="${shown} ${DIM}${w_label}${RESET}"
+                else
+                    shown="${shown} ${FG_YELLOW}${w_label}${RESET}"
+                fi
+            done <<< "$waiting"
+            [ "$count" -gt 3 ] && shown="${shown} ${DIM}+$((count - 3))${RESET}"
+            line1="${line1}  ${FG_YELLOW}⇡${RESET}${shown}"
+        fi
+    fi
 fi
 
 # ---------------------------------------------------------------------------
