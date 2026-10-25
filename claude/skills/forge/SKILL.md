@@ -1,12 +1,12 @@
 ---
 name: forge
-description: Pick the next task, implement it, then harden it with /polish's fanned-out review — every defect fixed, preferences reported, the fixes delta-reviewed — leaving it reviewed and ready for the user to ship. Given a parent item, or a tracker project standing in for one, forges its ready children in parallel, one tree and one background agent each, behind a single plan gate for the wave.
+description: Pick the next task, implement it, then harden it with /polish's fanned-out review — every defect and confirmed preference fixed, the fixes delta-reviewed — leaving it reviewed and ready for the user to ship. Given a parent item, or a tracker project standing in for one, forges its ready children in parallel, one tree and one background agent each, behind a single plan gate for the wave.
 disable-model-invocation: true
 ---
 
 # Forge
 
-Take one work item from selection all the way to a review-hardened change: run the `/next` workflow to pick, plan, and implement a task, then hand the result to `/polish` for a strict fanned-out review — fixing everything a strict senior developer would call *wrong*, reporting the preferences it does not apply, and delta-reviewing those fixes. Finish by moving the task to In Review and summarizing the change and every review round. **Never commit** — the change is left In Review for the user to `/ship`.
+Take one work item from selection all the way to a review-hardened change: run the `/next` workflow to pick, plan, and implement a task, then hand the result to `/polish` for a strict fanned-out review — fixing everything a strict senior developer would call *wrong* along with the preferences its verifier confirms, and delta-reviewing those fixes. Finish by moving the task to In Review and summarizing the change and every review round. **Never commit** — the change is left In Review for the user to `/ship`.
 
 ## Argument
 
