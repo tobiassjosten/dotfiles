@@ -2,7 +2,7 @@
 
 > **Status: final (2026-10-07).** Settled with lumus INS-355, its first consumer — its answers to the draft's open questions and its revised push order (INS-362, ADR-43); lumus's side is its `docs/process/worktree-integrate-hook.md` and ADR-41. `/ship` runs `integrate check` and `integrate land` (`publish.md` § *Integrate from a linked worktree*) and `provision teardown` before it removes a tree — `/commit` only commits, and before 2026-10-09 it was `/commit` that integrated; `provision run` is called by `workspace-tree.md` step 7, which `/next` runs once the plan is approved, and the `claude/CLAUDE.md` § Work items rule runs for work started outside it — after approval too, or right after entering where there is no plan gate; `integrate abandon` and `provision teardown` are also run by `/abandon` (`abandon/SKILL.md`), which discards a tree whose work is dropped (*Wired in*, at the end).
 
-Two optional, per-project executables that let a project extend the worktree lifecycle the skills drive, without the skills learning anything project-specific: `.claude/workspace/provision` gives a new tree what its tracked files do not (secrets, ports, per-tree tool config) and takes back what it set up outside the tree when the tree goes, and `.claude/workspace/integrate` lands a finished tree's branch on the default branch, or cleans up its landing-side state when the tree is discarded instead. A project that provides neither gets the generic behaviour under *Defaults*.
+Two optional, per-project executables that let a project extend the worktree lifecycle the skills drive, without the skills learning anything project-specific: `.claude/workspace/provision` gives a new tree what its tracked files do not (secrets, ports, per-tree tool config) and takes back what it set up outside the tree when the tree goes, and `.claude/workspace/integrate` lands a finished tree's branch on the default branch, or cleans up its landing-side state when the tree is discarded instead. A project that provides neither gets the generic behaviour under *Defaults*. Beside them sits one declaration that is not executed: `.claude/workspace/disposable`, the gitignored paths a tree may lose on removal without a question (§ *`disposable`*).
 
 Terms: a **tree** is any working tree — the **main checkout** or a linked **worktree** (for one the harness created, `.claude/worktrees/<name>` on branch `worktree-<name>`; a hook must not rely on that pattern, since a tree made by hand can be anywhere on any branch). To **integrate** is to land a worktree's branch on the default branch and push it; to **remove** is to take the tree and its branch down afterwards; to **abandon** is to remove a tree whose work is discarded rather than integrated. To **sync** is to fast-forward the local default branch to `origin/<default>` — never a landing, since it brings in only what is already on `origin`.
 
@@ -91,7 +91,7 @@ Steps are those of `publish.md` § *Integrate from a linked worktree*, which `/s
 | 3: may this project integrate? | the `CLAUDE.md` line | the step-3 trust tests above; a hook that fails them stops here |
 | 4: rebase onto `origin/<default>` | `/ship` (and re-verifies) | `/ship` (and re-verifies) |
 | preflight | — | the identity check, then `integrate check`, in the tree |
-| 5: ask about ignored files, `ExitWorktree keep` | `/ship` | `/ship` |
+| 5: ask about ignored files not declared disposable, `ExitWorktree keep` | `/ship` | `/ship` |
 | 6: fetch from the main checkout, sync, empty range, moved remote, preconditions (*Landing* 1–5) | `/ship` | `/ship`; an empty range skips `land` |
 | 6: fast-forward the local default branch onto the branch, then `git push origin <default>`, restoring on failure | `/ship` | the identity check, then `integrate land`, in the main checkout |
 | verify the outcome | — | `/ship` (below) |
@@ -155,6 +155,15 @@ So a hook can neither fake Done nor hide a push behind a refusal. After a refusa
 
 **Relation to a project's own provisioning hook.** In lumus, `.claude/hooks/provision_worktree.py` already provisions a tree from `SessionStart` and `PostToolUse/EnterWorktree` (`.env.local`, `.env.worktree`, `.claude/settings.local.json` and the per-tree MCP server, and the push guard). `.claude/workspace/provision` is not a second implementation: `run` is a thin entry into that same script — which needs a command-line entry taking `--tree` beside its hook-payload one — so the work is one implementation reached two ways, and `teardown` is the inverse that script does not have yet. A project that provides `provision` while keeping such wirings of its own runs the same work twice on every entry — harmless only while `run` stays idempotent — so it should keep one entry point and retire the other.
 
+## `disposable`
+
+Removing a tree after an integration deletes its gitignored files, and `/ship` asks before it does (`publish.md` § *Integrate from a linked worktree* step 5). In a project whose provisioning writes ignored files into every tree, that question comes back with the same list every time and stops meaning anything, so a project can list those paths in `.claude/workspace/disposable` — gitignore syntax, one pattern per line, `#` comments — and `/ship` then asks only about ignored files the list does not cover, and nothing at all when it covers every one.
+
+- **What belongs in it:** what `provision run` (or the project's own provisioning) recreates in any tree, and output a build or test run regenerates — per-tree env files, a generated `.claude/settings.local.json`, a per-tree binary, `__pycache__/`. Never a pattern broad enough to catch a hand-made file, such as notes or a database dump: those are what the question exists for. A `.claude/settings.local.json` also collects permissions granted in the tree, which then go without a question.
+- **A symlink git lists on its own needs no entry.** Removing a symlink deletes the link, never its target, so an ignored symlink counts as disposable whether or not the list names it — lumus's `.env.local`, a link to the main checkout's file, for one. Git lists an ignored directory as one entry, though, so a symlink inside a directory nothing tracked lives in is covered only by a pattern matching that directory or the link.
+- **Trusted as committed on `origin/<default>`**, read with `git show origin/<default>:.claude/workspace/disposable` and piped into `git ls-files --others --directory --no-empty-directory --exclude-from=/dev/stdin`; the tree's own copy is never read. A branch cannot make its own removal quieter, and adding a pattern is a change landed like any other.
+- **Not used by `/abandon`.** An abandon discards work on purpose, and its one confirmation lists every ignored file (§ *Abandoning*).
+
 ## Defaults
 
 For a project that provides neither hook-point:
@@ -162,6 +171,7 @@ For a project that provides neither hook-point:
 - **Provision:** nothing to set up, nothing to tear down.
 - **Integrate:** only where the project opts in in its `CLAUDE.md` on `origin/<default>` — *Landing*, generic route: fetch from the main checkout and sync, fast-forward its default branch onto the branch, then `git push origin <default>` (undoing the fast-forward if the push fails), then remove the tree and branch. Without the opt-in, a project whose branch model is trunk commits on the branch and stops with the by-hand steps; one that says nothing about its branch model, or says it works with feature branches, has the tree's branch pushed to `origin` instead (`publish.md` § *Branch model*, § *Push a branch*).
 - **Abandon:** the skill's confirmed removal, with nothing to clean up.
+- **Disposable:** no file — every ignored entry git lists but a symlink is asked about before `/ship` removes a tree.
 
 A project may provide either hook-point without the other: `provision` alone pairs with the generic route, and `integrate` alone needs no provisioning.
 
@@ -173,7 +183,7 @@ A project may provide either hook-point without the other: `provision` alone pai
 
 ## Wired in
 
-- `/ship` (`publish.md` § *Integrate from a linked worktree*): the three-state trust check at step 3, the identity check and `integrate check` before leaving the tree, *Landing* 1–5 on both routes, the identity check and `integrate land` in place of the generic fast-forward and push, the outcome table, `provision teardown` before removal, and *Finishing by hand* split by route.
+- `/ship` (`publish.md` § *Integrate from a linked worktree*): the three-state trust check at step 3, the identity check and `integrate check` before leaving the tree, *Landing* 1–5 on both routes, the identity check and `integrate land` in place of the generic fast-forward and push, the outcome table, the `disposable` list in step 5's question about ignored files, `provision teardown` before removal, and *Finishing by hand* split by route.
 - `/ship` passes `--verified-tree`; `/mill` reaches all of it through `/ship`. `/commit` reaches none of it: it only commits.
 - `workspace-tree.md` step 7: `provision run` once the plan is approved, granted in `/next`'s `allowed-tools` when `/next` is invoked; `/forge` and `/mill` reach the step by following `/next`, where the call is prompted for (*Calling convention*) — and `/forge <parent>`'s background agents run it in each child's tree, in that child's *Preparing* step, after any deferred reset.
 - `/abandon` (`abandon/SKILL.md`): the one confirmation listing what would be lost, `ExitWorktree keep`, the fetch and sync, the abandon-time trust test and `integrate abandon`, `provision teardown`, and the removal — forced only where that confirmation listed the reason.
