@@ -1,6 +1,6 @@
 # Applying review findings (shared core)
 
-How `/review` and `/polish` turn findings into changes. The goal: each fix leaves **no instance** of its problem behind and **introduces nothing new**, so the next review does not spend a round on either. Which findings to fix is the invoking skill's decision — `/review` fixes what the user picks, `/polish` fixes every open defect and reports `(preference)` findings without applying them.
+How `/review` and `/polish` turn findings into changes. The goal: each fix leaves **no instance** of its problem behind and **introduces nothing new**, so the next review does not spend a round on either. Which findings to fix is the invoking skill's decision — `/review` fixes what the user picks, `/polish` fixes every open defect and every confirmed `(preference)` finding of its full review, and reports a delta check's preferences without applying them.
 
 ## Before fixing: snapshot
 
