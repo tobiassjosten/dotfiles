@@ -35,7 +35,7 @@ An optional free-text argument may follow the command: `$ARGUMENTS`. It sets two
 
 Every token left over once the dial phrases are read is tried as the target, so `/ship INS-140 now` is a target and the skip dial. A leftover token that resolves to no tree is not a target — it is part of an argument that did not read cleanly, and stops the run like any other (below); so does a second leftover token.
 
-There is no dial *above* the default. Preference-level polish is `/polish`'s to apply, and `/polish` fixes those findings rather than stopping on them — which is the useful thing to do with them and not something a gate should be asked to do. Note also that `only check for defects` and `skip preferences` name the default rather than changing it: preference nits never blocked. Their one real effect is on reporting (§ 3).
+There is no dial *above* the default. Preference-level polish is `/polish`'s to apply, and `/polish` fixes the ones its full review confirms rather than stopping on them — which is the useful thing to do with them and not something a gate should be asked to do. Note also that `only check for defects` and `skip preferences` name the default rather than changing it: preference nits never blocked. Their one real effect is on reporting (§ 3).
 
 **Resolve by meaning, not by literal match.** The phrasings above are examples of two intents, not a grammar — `asap` and `without the review` are the skip dial; `nits are fine` and `don't stop for nitpicks` are the `issues` bar. Both dials may appear at once (`/ship now ignore nitpicks`); with the review skipped the bar is simply inert, since there are no findings to weigh, so say that rather than calling it an error.
 
