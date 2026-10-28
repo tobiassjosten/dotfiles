@@ -66,8 +66,8 @@ Run this first to discover what accounts, calendars, and teams are available, an
 | Level | Allowed operations |
 |-------|-------------------|
 | **read-only** | List, search, and read emails, threads, folders, events, contacts, meetings, teams |
-| **triage** | Everything in read-only plus all write operations: drafts, team comments, email actions (archive, move, pin, snooze, assign, etc.), contact actions (block, accept, categorize, etc.) |
-| **send** | Everything in triage plus mail-emitting operations: sending drafts (`action send`, including scheduled "Send Later"), and the entire `event` command: `event create` / `event update` / `event delete` / `event rsvp`, including attaching or detaching attendees via `--add` / `--remove` and the iTIP REQUEST / UPDATE / CANCEL / REPLY mail that goes with them. |
+| **triage** | Everything in read-only plus every write operation not listed under **send**: drafts, team comments, email actions (archive, move, pin, snooze, assign, etc.), contact actions (block, accept, categorize, etc.) |
+| **send** | Everything in triage plus: sending drafts (`action send`, including scheduled "Send Later"), cancelling a scheduled send (`action unschedule`), and the entire `event` command: `event create` / `event update` / `event delete` / `event rsvp`, including attaching or detaching attendees via `--add` / `--remove` and the iTIP REQUEST / UPDATE / CANCEL / REPLY mail that goes with them. |
 
 Access levels are configured separately for each account and each shared inbox in Spark Desktop under Settings -> AI Agents. Shared inboxes can have a different access level than the parent account - for example, a personal account may have triage access while a shared inbox under the same team is read-only or disabled.
 
@@ -276,7 +276,7 @@ On success the output includes the draft's `ID:` (use it with `--edit` and `acti
 
 Use `emails` to find message IDs for `--edit`, `--reply-to`, `--reply-all`, and `--forward`.
 Use `accounts` to find account emails for `--account` - personal accounts, their `Alias:` entries, and shared inboxes are all listed there, and any of them can be used as the from address when the account has draft & comment access.
-Use `teams` to find team names for `--team` and team member emails for `--user`.
+Use `team` to find team names for `--team` and team member emails for `--user`.
 
 **Threading is critical.** Whenever a new message belongs to an existing conversation, you **must** pass `--reply-to` with the **last message in that thread**. This is what attaches the draft to the conversation (correct In-Reply-To / References headers, same thread in the recipient's mailbox). Without `--reply-to` the draft starts a brand new thread, which is almost always wrong when the user asked you to "reply", "respond", "follow up", "answer", or "ping" anyone in the context of an existing conversation. Use `thread <id>` to inspect the conversation and pick the most recent message's ID as `--reply-to`. On a thread with several participants, use `--reply-all` unless the user wants a private answer to the sender.
 
