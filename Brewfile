@@ -45,6 +45,7 @@ brew "unix2dos"
 brew "vim"
 brew "wget"
 
+brew "ivankovic/omnidiff/omnidiff"
 brew "remotemobprogramming/brew/mob"
 
 cask "ngrok"

@@ -62,7 +62,7 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 
 ### Git
 
-- `gitconfig` (→ `~/.gitconfig`) — conditionally includes `gitconfig_stim` (work identity) for repos under `~/projects/stim/`.
+- `gitconfig` (→ `~/.gitconfig`) — conditionally includes `gitconfig_stim` (work identity) for repos under `~/projects/stim/`. Uses omnidiff (on trial in place of difftastic, which the `Brewfile` still installs for a revert) as git's external diff, in side-by-side layout, and as the default `git difftool`.
 - `gitignore` (→ `~/.gitignore`) — global ignore rules.
 - `ctags` (→ `~/.ctags`) — universal-ctags configuration.
 
