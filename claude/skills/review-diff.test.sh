@@ -708,7 +708,7 @@ assert_eq "5" "$(ls -1d "$reviewroot"/*/ | wc -l | tr -d ' ')" "and the total is
 # user's own config — and the suite nulls out the global config, so nothing else here
 # would notice if they were dropped. Repo-local config is still read under
 # GIT_CONFIG_GLOBAL=/dev/null, so setting it here keeps the suite hermetic while pinning
-# all three. This repo's own gitconfig ships diff.external=difft and color.ui=always.
+# all three. This repo's own gitconfig sets diff.external and color.ui=always.
 case_name="hostile git config"
 new_repo hostile-config
 git config diff.external /usr/bin/true
