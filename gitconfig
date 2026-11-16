@@ -34,7 +34,15 @@
   branch = false
 
 [diff]
-    external = difft
+    # Trialling omnidiff in place of difftastic (`external = difft`).
+    external = omnidiff --layout side-by-side
+    tool = omnidiff
+
+[difftool]
+    prompt = false
+
+[difftool "omnidiff"]
+    cmd = omnidiff \"$LOCAL\" \"$REMOTE\"
 
 [commit]
 	gpgsign = true
