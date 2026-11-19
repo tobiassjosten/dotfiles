@@ -76,6 +76,9 @@ files: claude
 	# herdr keeps its sockets, logs and session state in ~/.config/herdr too.
 	mkdir -p ~/.config/herdr
 	ln -fs $(DIR)/config/herdr/config.toml ~/.config/herdr/
+	# direnv keeps its allow/deny state outside, in ~/.local/share/direnv.
+	mkdir -p ~/.config/direnv
+	ln -fs $(DIR)/config/direnv/direnvrc ~/.config/direnv/
 	ln -fs $(DIR)/ctags ~/.ctags
 	$(call LINK_DIR,$(DIR)/dlv,~/.dlv)
 	ln -fs $(DIR)/gitconfig ~/.gitconfig

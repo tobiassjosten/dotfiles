@@ -100,45 +100,11 @@ end
 
 source "/Users/tobias.sjosten/google-cloud-sdk/path.fish.inc"
 
-# Per-repo gcloud config isolation.
-# GCP's Application Default Credentials live in one global file, so authing for
-# one project clobbers the identity others rely on. Pointing CLOUDSDK_CONFIG at a
-# per-repo directory isolates each project's account/project/ADC. The per-repo
-# dirs live under ~/.config/gcloud-repos/, not ~/.config/gcloud/, whose own
-# subdirectories (cache, logs, configurations, ...) would otherwise opt in any
-# repo of the same name.
-#
-# Opt a repo in by creating its config dir once, then authing into it:
-#   mkdir -p ~/.config/gcloud-repos/<reponame>
-#   set -x CLOUDSDK_CONFIG ~/.config/gcloud-repos/<reponame>
-#   gcloud auth login ...; gcloud auth application-default login; gcloud config set project ...
-# A repo opted in under the old ~/.config/gcloud/<reponame> location is moved with
-#   mkdir -p ~/.config/gcloud-repos && mv ~/.config/gcloud/<reponame> ~/.config/gcloud-repos/
-# Repos with no such directory fall back to the global default. <reponame> is the
-# main checkout's directory, read from the common git dir when that is a .git
-# directory, so linked worktrees share their main checkout's config. Otherwise
-# (bare repo, --separate-git-dir, submodule) it is the worktree's own directory.
-function __gcloud_config_env --on-variable PWD --description "Scope CLOUDSDK_CONFIG to the current git repo"
-    set -l dirs (git rev-parse --path-format=absolute --show-toplevel --git-common-dir 2>/dev/null)
-    set -l cfg
-    if test (count $dirs) -eq 2
-        set -l name (basename $dirs[1])
-        if test (basename $dirs[2]) = .git
-            set name (basename (dirname $dirs[2]))
-        end
-        set cfg $HOME/.config/gcloud-repos/$name
-    end
-
-    if test -n "$cfg"; and test -d "$cfg"
-        set -gx CLOUDSDK_CONFIG $cfg
-    else if set -q CLOUDSDK_CONFIG; and string match -q -- "$HOME/.config/gcloud-repos/*" $CLOUDSDK_CONFIG; or string match -q -- "$HOME/.config/gcloud/*" $CLOUDSDK_CONFIG
-        # only clear configs we set, leave a manually-exported one alone; the
-        # gcloud/ prefix covers values set before the dirs moved to gcloud-repos/
-        set -e CLOUDSDK_CONFIG
-    end
+# Per-project environment from .envrc files (direnv). Used to scope gcloud per
+# project with `use gcloud [name]`, defined in ~/.config/direnv/direnvrc.
+if command -q direnv
+    direnv hook fish | source
 end
-
-__gcloud_config_env
 
 # bun
 set --export BUN_INSTALL "$HOME/.bun"

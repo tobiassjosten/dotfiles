@@ -1,6 +1,8 @@
 .DS_Store
 /tags
 /TODO.md
+.direnv/
+.envrc
 
 **/.claude/settings.local.json
 **/.claude/worktrees/

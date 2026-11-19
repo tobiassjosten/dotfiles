@@ -36,8 +36,9 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 
 ### Shell
 
-- `config/fish/config.fish` (→ `~/.config/fish/config.fish`) — the login shell: PATH, aliases, functions, prompt. Includes `__gcloud_config_env`, a `--on-variable PWD` hook that scopes `CLOUDSDK_CONFIG` per git repo (worktrees share their main checkout's) so each project's gcloud account/project/ADC stays isolated.
-- `zprofile` (→ `~/.zprofile`) — minimal fallback for macOS's default zsh (puts Homebrew on `PATH`, loads nvm). Everything else belongs in the fish config.
+- `config/fish/config.fish` (→ `~/.config/fish/config.fish`) — the login shell: PATH, aliases, functions, prompt. Hooks in direnv, which loads a project's `.envrc` on entering it.
+- `config/direnv/direnvrc` (→ `~/.config/direnv/direnvrc`) — helpers available to every `.envrc`. `use gcloud [name]` points `CLOUDSDK_CONFIG` at `~/.config/gcloud-repos/<name>` (default: the `.envrc`'s directory name), so each project's gcloud account/project/ADC stays isolated; projects sharing an identity pass the same name. Keep `.envrc` in the main checkout: a linked worktree under `.claude/worktrees/` has none of its own, so direnv finds the main checkout's one level up.
+- `zprofile` (→ `~/.zprofile`) — minimal fallback for macOS's default zsh (puts Homebrew on `PATH`, hooks in direnv, loads nvm). Everything else belongs in the fish config.
 
 ### Editors
 
@@ -63,7 +64,7 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 ### Git
 
 - `gitconfig` (→ `~/.gitconfig`) — conditionally includes `gitconfig_stim` (work identity) for repos under `~/projects/stim/`. Uses omnidiff (on trial in place of difftastic, which the `Brewfile` still installs for a revert) as git's external diff, in side-by-side layout, and as the default `git difftool`.
-- `gitignore` (→ `~/.gitignore`) — global ignore rules.
+- `gitignore` (→ `~/.gitignore`) — global ignore rules, including direnv's `.envrc` and `.direnv/`.
 - `ctags` (→ `~/.ctags`) — universal-ctags configuration.
 
 ### Other dotfiles
@@ -74,7 +75,7 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 
 ### Tools
 
-- `Brewfile` — the Homebrew manifest (~50 packages and casks): fish, tmux, vim, ripgrep, bat, tree, gh, jq, go, rust, node, pyenv, tfenv, database CLIs (mycli, pgcli, mysql-client), `rtk`, and more. Casks: ngrok, tailscale. Installed and updated by `make brews`.
+- `Brewfile` — the Homebrew manifest (~50 packages and casks): fish, tmux, vim, ripgrep, bat, tree, gh, jq, go, rust, node, pyenv, tfenv, direnv, database CLIs (mycli, pgcli, mysql-client), `rtk`, and more. Casks: ngrok, tailscale. Installed and updated by `make brews`.
 
 ## Maintenance
 
