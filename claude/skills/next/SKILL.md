@@ -52,7 +52,7 @@ A project's own rules still bind where they are stricter: where they cap In Prog
 
 A caller that resolved the item already and skips the selection (`/mill`) settles the claim itself before calling.
 
-The markers are this machine's only: a claim made in another clone shows only in a tracker. `TODO.md` and per-task files have no claim state at all, so for them a marker is the whole claim; a Backlog.md board's claim is made on the tree's branch and stays invisible to every other tree until that branch is integrated. For all three, the markers are the only claim another tree on this machine can see, and a tree working such an item without a marker cannot be seen at all. A project's own selection rule still takes precedence (*Determine the work-item source*) — client, for one, resumes in-flight work assigned to you that no tree's marker names.
+The markers are this machine's only: a claim made in another clone shows only in a tracker. `TODO.md` and per-task files have no claim state at all, so for them a marker is the whole claim; a Backlog.md board's claim is made on the tree's branch and stays invisible to every other tree until that branch is integrated. For all three, the markers are the only claim another tree on this machine can see, and a tree working such an item without a marker cannot be seen at all. A project's own selection rule still takes precedence (*Determine the work-item source*) — one may resume in-flight work assigned to you that no tree's marker names, for instance.
 
 ## Determine the work-item source
 

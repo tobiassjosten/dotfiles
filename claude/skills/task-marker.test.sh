@@ -165,7 +165,7 @@ run set --source linear --id ABC-1 --title "two
 lines"
 assert_eq "2" "$run_status" "a newline in --title exits 2"
 assert_contains "$out" "newline" "and names the newline"
-run set --source linear --id "INS$(printf '\t')1"
+run set --source linear --id "ABC$(printf '\t')1"
 assert_eq "2" "$run_status" "a tab in --id exits 2"
 assert_eq "task-marker.sh: --id must not contain a tab" "$out" "and names the tab"
 run set --source linear --id ABC-1 --title "a$(printf '\t')b"

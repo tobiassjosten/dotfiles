@@ -98,7 +98,7 @@ After approval, spawn one background `general-purpose` agent per child, in one m
 - **confinement**: the agent is not worktree-isolated, so every shell command starts with `cd <tree> &&` and every file path is absolute under the tree; nothing outside it is touched — not the main checkout, not another child's tree;
 - **the procedure**, read from the files themselves: the approved section in order — its *Preparing* step (the deferred reset, if any, then `workspace-tree.md` step 7), claim, bind, this skill's step 1 baseline record, implement — then step 2 (`/polish` with no arguments, its reviewers spawned from the agent itself), and step 3's review gate;
 - **user gates stay with the user**: wherever `/next` or `/polish` would ask — a batched escalation, a takeover question, a material deviation from the plan — the agent stops and returns the question with the state it stopped in, never deciding it;
-- **never** commit, push, or start anything that holds a port every tree shares (client's `make serve`, say);
+- **never** commit, push, or start anything that holds a port every tree shares (a dev server, say);
 - **the report**: step 4's bullets for its child.
 
 Don't poll; each agent notifies when it stops. When one returns questions, put them to the user — batched across children when several are waiting — and resume that agent with the answers (`SendMessage`). Children of one wave work concurrently on the same base, so anything numbered sequentially (migrations) can collide between them; the project's own rule for that applies at integration, when the second one lands.
