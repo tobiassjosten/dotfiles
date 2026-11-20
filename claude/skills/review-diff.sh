@@ -21,7 +21,10 @@
 # pushes, so commits can sit unpublished under the working tree, and a review that read
 # only the uncommitted part would let them out unread. So auto mode first names the
 # **publish target** — origin/<branch> when that ref exists and HEAD contains it (a branch
-# already pushed and not rewritten since), otherwise the default branch's origin/ ref
+# already pushed and not rewritten since); else, for a branch in a gh stack stack, its
+# parent (the nearest unmerged branch below it, or the stack's trunk) as origin/<parent>
+# when HEAD contains that, or as the local <parent> when only that is contained (the stack
+# was rebased and the parent not yet pushed); otherwise the default branch's origin/ ref
 # (whatever origin/HEAD names, then origin/main, master, trunk, taking the first that
 # resolves, so a stale origin/HEAD falls through) — and diffs from where HEAD meets it.
 #   - unpublished — HEAD holds commits the target lacks: merge-base(<target>, HEAD) → the
@@ -159,6 +162,33 @@ snapshot_tree() {
 	GIT_INDEX_FILE=$idx git write-tree
 }
 
+# The branch below the current branch <branch> in its gh stack (github/gh-stack) stack: the
+# nearest one not yet merged, else the stack's trunk. Exits 1 when the repo has no stack,
+# the branch is in none, or gh stack cannot answer — the last with a warning, since the
+# caller then falls back to the default branch. Asks gh stack itself rather than reading
+# its catalog file, whose format is the extension's. gh stack view answers for the
+# current branch only, and outside a stack fails with "… is not part of a stack".
+stack_parent() { # <branch>
+	[ -f "$(git rev-parse --git-common-dir)/gh-stack" ] || return 1
+	if ! command -v gh >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+		printf '%s\n' "review-diff.sh: warning: a gh stack catalog exists but gh or jq is missing; not looking for a stack parent" >&2
+		return 1
+	fi
+	if ! view=$(GH_STACK_NO_UPDATE_NOTIFIER=1 gh stack view --json </dev/null 2>&1); then
+		case $view in
+		*'not part of a stack'*) ;;
+		*) printf 'review-diff.sh: warning: gh stack view failed, not looking for a stack parent: %s\n' \
+			"$(printf '%s\n' "$view" | head -n 1)" >&2 ;;
+		esac
+		return 1
+	fi
+	printf '%s\n' "$view" | jq -er --arg b "$1" '
+		. as $s | ([.branches[].name] | index($b)) as $i
+		| if $i == null then empty
+		  else ([$s.branches[:$i][] | select(.isMerged | not) | .name] | last) // $s.trunk
+		  end'
+}
+
 # The publish target (see the header): printed, or exit 1 when there is no origin/ ref to
 # publish to. Needs a HEAD; the caller checks that.
 publish_target() {
@@ -167,6 +197,19 @@ publish_target() {
 		git merge-base --is-ancestor "origin/$cur" HEAD 2>/dev/null; then
 		printf 'origin/%s\n' "$cur"
 		return 0
+	fi
+	# A stacked branch publishes onto its parent: measured from the default branch, the
+	# review would take in the work of every branch below it, and /polish would fix that
+	# work on the wrong branch. The local parent is the fallback for a stack just rebased,
+	# whose origin/<parent> still points at the parent's old tip.
+	if [ -n "$cur" ] && parent=$(stack_parent "$cur"); then
+		for p in "origin/$parent" "$parent"; do
+			if git rev-parse -q --verify "$p^{commit}" >/dev/null &&
+				git merge-base --is-ancestor "$p" HEAD 2>/dev/null; then
+				printf '%s\n' "$p"
+				return 0
+			fi
+		done
 	fi
 	head_name=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
 	for b in "${head_name#origin/}" main master trunk; do
