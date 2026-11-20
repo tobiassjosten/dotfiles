@@ -12,8 +12,12 @@
 # Create it once with
 #   mkdir -p ~/.config/gcloud-repos/<name>
 #   export CLOUDSDK_CONFIG=~/.config/gcloud-repos/<name>
-#   gcloud auth login; gcloud auth application-default login
+#   gcloud auth login
+#   env -u GOOGLE_APPLICATION_CREDENTIALS gcloud auth application-default login
 #   gcloud config set project <project>
+# Run the application-default login that way inside the project too: with the
+# variable set, gcloud stops to suggest unsetting it, which is wrong here (it
+# writes the same file through CLOUDSDK_CONFIG), and fails with no terminal.
 use_gcloud() {
   local cfg="$HOME/.config/gcloud-repos/${1:-$(basename "$PWD")}"
   export CLOUDSDK_CONFIG=$cfg
