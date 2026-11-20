@@ -26,6 +26,8 @@ check:
 	sh $(DIR)/claude/skills/review-state.test.sh
 	sh -n $(DIR)/claude/skills/task-marker.sh
 	sh $(DIR)/claude/skills/task-marker.test.sh
+	sh -n $(DIR)/claude/skills/push-runs.sh
+	sh $(DIR)/claude/skills/push-runs.test.sh
 
 .PHONY: vim
 vim:
