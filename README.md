@@ -37,8 +37,8 @@ Symlinks use `ln -fs` for files and a `LINK_DIR` macro for directories. The macr
 ### Shell
 
 - `config/fish/config.fish` (→ `~/.config/fish/config.fish`) — the login shell: PATH, aliases, functions, prompt. Hooks in direnv, which loads a project's `.envrc` on entering it.
-- `config/direnv/direnvrc` (→ `~/.config/direnv/direnvrc`) — helpers available to every `.envrc`. `use gcloud [name]` points `CLOUDSDK_CONFIG` at `~/.config/gcloud-repos/<name>` (default: the `.envrc`'s directory name), so each project's gcloud account/project/ADC stays isolated; projects sharing an identity pass the same name. Keep `.envrc` in the main checkout: a linked worktree under `.claude/worktrees/` has none of its own, so direnv finds the main checkout's one level up.
-- `zprofile` (→ `~/.zprofile`) — minimal fallback for macOS's default zsh (puts Homebrew on `PATH`, hooks in direnv, loads nvm). Everything else belongs in the fish config.
+- `config/direnv/direnvrc` (→ `~/.config/direnv/direnvrc`) — helpers available to every `.envrc`. `use gcloud [name]` points `CLOUDSDK_CONFIG` at `~/.config/gcloud-repos/<name>` (default: the `.envrc`'s directory name), so each project's gcloud account/project/ADC stays isolated; projects sharing an identity pass the same name. Keep `.envrc` in the main checkout: a linked worktree under `.claude/worktrees/` has none of its own, so direnv finds the main checkout's in a parent directory.
+- `zprofile` (→ `~/.zprofile`) — minimal fallback for macOS's default zsh (puts Homebrew on `PATH`, hooks in direnv, loads nvm); being a login-shell file, it leaves a non-login zsh without direnv. Everything else belongs in the fish config.
 
 ### Editors
 

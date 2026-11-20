@@ -125,9 +125,8 @@ record)
 	bad=$(printf '%s\n' "$entries" | grep -Evn '^- round: base=[0-9a-f]+ tree=[0-9a-f]+ kind=(full|delta) by=/(polish|ship|review) defects=[0-9]+ fix-written=[0-9]+ rejected=[0-9]+ preferences=[0-9]+ \([0-9]{4}-[0-9]{2}-[0-9]{2}\)$' | head -1)
 	[ -z "$bad" ] || die "not a round record (see review-fanout.md § Round records), line $bad"
 	# The log is keyed by the main checkout's directory name, so a linked worktree's rounds
-	# land under the repository they belong to — the rule __gcloud_config_env uses. A
-	# common dir that is not a .git directory (bare, --separate-git-dir, a submodule) falls
-	# back to the work tree's own name.
+	# land under the repository they belong to. A common dir that is not a .git directory
+	# (bare, --separate-git-dir, a submodule) falls back to the work tree's own name.
 	common=$(git rev-parse --path-format=absolute --git-common-dir)
 	case $common in
 	*/.git) repo=$(basename "$(dirname "$common")") ;;

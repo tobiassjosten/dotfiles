@@ -5,17 +5,18 @@
 # Points CLOUDSDK_CONFIG at ~/.config/gcloud-repos/<name>, so the project gets
 # its own gcloud account, project and Application Default Credentials instead of
 # the global ones. <name> defaults to the directory holding the .envrc; projects
-# sharing an identity pass the same name. Fails if the directory is missing
-# rather than silently falling back to the global identity. Create it once with
+# sharing an identity pass the same name. A missing directory is still exported,
+# with an error, so gcloud fails as not logged in instead of acting as the
+# global identity. Create it once with
 #   mkdir -p ~/.config/gcloud-repos/<name>
-#   set -x CLOUDSDK_CONFIG ~/.config/gcloud-repos/<name>
+#   export CLOUDSDK_CONFIG=~/.config/gcloud-repos/<name>
 #   gcloud auth login; gcloud auth application-default login
 #   gcloud config set project <project>
 use_gcloud() {
   local cfg="$HOME/.config/gcloud-repos/${1:-$(basename "$PWD")}"
+  export CLOUDSDK_CONFIG=$cfg
   if [[ ! -d $cfg ]]; then
-    log_error "use gcloud: $cfg does not exist"
+    log_error "use gcloud: $cfg does not exist; create it and log in to gcloud with CLOUDSDK_CONFIG set to it (steps in ~/.config/direnv/direnvrc)"
     return 1
   fi
-  export CLOUDSDK_CONFIG=$cfg
 }
