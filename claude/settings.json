@@ -202,7 +202,16 @@
   },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": false,
-    "gopls-lsp@claude-plugins-official": true
+    "gopls-lsp@claude-plugins-official": true,
+    "stim-docs@claude-stim": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-stim": {
+      "source": {
+        "source": "github",
+        "repo": "stimtech/claude-stim"
+      }
+    }
   },
   "feedbackDrafts": "off",
   "dialogExpiry": "never",
