@@ -1013,13 +1013,123 @@ terms="$(meta DIR "$out")/removed-terms.txt"
 assert_eq "80" "$(wc -l <"$terms" | tr -d ' ')" "91 candidates are capped at 80"
 assert_contains "$(head -1 "$terms")" "topterm  removed=4" "and the most-removed term ranks first"
 
+# --- a branch in a gh stack publishes onto its parent ---------------------------------
+# gh stack (github/gh-stack) is stood in for by a shim that answers `gh stack view --json`
+# from a file, so no network and no real stack are needed; the script finds a stack by the
+# catalog file under the common git dir, which the case creates by hand. jq parses the
+# answer, so without it the stack logic cannot run at all.
+if command -v jq >/dev/null 2>&1; then
+	case_name="stacked branch target"
+	new_repo stack
+	git update-ref refs/remotes/origin/main "$(git rev-parse HEAD)"
+	git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+	git checkout -qb b1 && echo one >one.md && git add one.md && git commit -qm one
+	git checkout -qb b2 && echo two >two.md && git add two.md && git commit -qm two
+	ghdir=$work/gh-shim
+	mkdir -p "$ghdir"
+	cat >"$ghdir/gh" <<SHIM
+#!/bin/sh
+echo "\$*" >>"$work/gh-calls"
+[ "\$*" = "stack view --json" ] || exit 99
+if [ -f "$work/gh-fail" ]; then cat "$work/gh-fail" >&2; exit 1; fi
+cat "$work/gh-view.json"
+SHIM
+	chmod +x "$ghdir/gh"
+	view() { # <b1 isMerged>
+		printf '{"trunk":"main","branches":[{"name":"b1","isMerged":%s},{"name":"b2","isMerged":false}]}\n' \
+			"$1" >"$work/gh-view.json"
+	}
+	view false
+	oldpath=$PATH
+	PATH="$ghdir:$PATH"
+
+	run_split --target
+	assert_eq "origin/main" "$out_stdout" "with no catalog the stack is not consulted"
+	assert_eq "" "$(cat "$work/gh-calls" 2>/dev/null)" "and gh is never run"
+	touch "$(git rev-parse --git-common-dir)/gh-stack"
+
+	run_split --target
+	assert_eq "0" "$run_status" "a parent never pushed: the run completes"
+	assert_eq "b1" "$out_stdout" "and targets the local parent, whose work origin lacks"
+	assert_file_nonempty "$work/gh-calls" "having asked the shimmed gh"
+	git update-ref refs/remotes/origin/b1 "$(git rev-parse b1)"
+	run_split --target
+	assert_eq "origin/b1" "$out_stdout" "a pushed parent is targeted on origin"
+	run
+	assert_contains "$out" "MODE: unpublished (origin/b1...HEAD)" "and auto mode diffs from it"
+	assert_eq "$(git rev-parse 'b1^{tree}')" "$(meta FROM "$out")" "so only b2's own work is reviewed"
+
+	# The parent gains a commit it has not pushed and b2 is rebased onto it: origin/b1 is
+	# still under HEAD, but the parent's new work is not b2's.
+	git checkout -q b1 && echo more >>one.md && git commit -qam more
+	git checkout -q b2 && git rebase -q b1
+	run_split --target
+	assert_eq "b1" "$out_stdout" "a parent with unpushed commits under HEAD is targeted locally"
+
+	# origin/b1 moves ahead of the local b1 (someone else pushed) and the stack is not
+	# rebased: the local b1 holds nothing origin lacks.
+	git update-ref refs/remotes/origin/b1 "$(git commit-tree 'b1^{tree}' -p b1 -m remote)"
+	run_split --target
+	assert_eq "origin/b1" "$out_stdout" "a local parent merely behind origin is targeted on origin"
+	assert_eq "" "$out_stderr" "without a warning"
+
+	# The parent is rewritten and b2 not rebased onto it.
+	git checkout -q b1 && git commit -q --amend -m amended && git checkout -q b2
+	git update-ref refs/remotes/origin/b1 "$(git rev-parse b1)"
+	run_split --target
+	assert_eq "origin/main" "$out_stdout" "a parent HEAD no longer contains falls back to the default branch"
+	assert_contains "$out_stderr" "HEAD contains neither b1 nor origin/b1, its stack parent" "and warns"
+	git rebase -q b1 2>/dev/null
+
+	# The bottom branch, never pushed: its parent is the trunk, and a local main that lags
+	# origin/main must not read as a parent with unpushed work.
+	git update-ref -d refs/remotes/origin/b1
+	git checkout -q b1
+	git update-ref refs/remotes/origin/main "$(git commit-tree 'main^{tree}' -p main -m upstream)"
+	run_split --target
+	assert_eq "origin/main" "$out_stdout" "the bottom branch targets origin's trunk, not the stale local one"
+	git checkout -q b2
+	view true
+	run_split --target
+	assert_eq "origin/main" "$out_stdout" "with every branch below merged, the parent is the trunk"
+	view false
+
+	run_split --stack-parent
+	assert_eq "0" "$run_status" "--stack-parent exits 0 in a stack"
+	assert_eq "b1" "$out_stdout" "and prints only the parent"
+	git update-ref refs/remotes/origin/b2 "$(git rev-parse HEAD)"
+	run_split --target
+	assert_eq "origin/b2" "$out_stdout" "a pushed stacked branch is measured from its own origin ref"
+	run_split --stack-parent
+	assert_eq "b1" "$out_stdout" "while --stack-parent still names its parent"
+	git update-ref -d refs/remotes/origin/b2
+
+	printf 'b2 is not part of a stack\n' >"$work/gh-fail"
+	run_split --target
+	assert_eq "origin/main" "$out_stdout" "a branch in no stack falls back to the default branch"
+	assert_eq "" "$out_stderr" "silently"
+	run_split --stack-parent
+	assert_eq "1" "$run_status" "and --stack-parent exits 1"
+	assert_contains "$out_stderr" "found no gh stack parent for this branch" "saying so"
+	printf 'boom\nsecond line\n' >"$work/gh-fail"
+	run_split --target
+	assert_eq "origin/main" "$out_stdout" "a failing gh stack view falls back to the default branch"
+	assert_eq "review-diff.sh: warning: gh stack view failed, not looking for a stack parent: boom" \
+		"$out_stderr" "warning with its first line only"
+	rm -f "$work/gh-fail"
+	PATH=$oldpath
+else
+	skipped=$((skipped + 1))
+	echo "SKIP: jq not found — the stacked-branch target cases were not exercised" >&2
+fi
+
 # --- every remaining exit of the argument dispatch -----------------------------------
 case_name="argument dispatch exits"
 new_repo dispatch
 echo work >>base.md
 t=$(tree_of)
 for bad in "--tree junk" "--since" "--since $t junk" "--since deadbeef" "--since=deadbeef" "--since=$t junk" "--help junk" \
-	"--base" "--base HEAD junk" "--base deadbeef" "--base=deadbeef" "--base=HEAD junk" "--base $t" "--target junk" \
+	"--base" "--base HEAD junk" "--base deadbeef" "--base=deadbeef" "--base=HEAD junk" "--base $t" "--target junk" "--stack-parent junk" \
 	"--transient" "--transient deadbeef" "--transient HEAD junk"; do
 	# shellcheck disable=SC2086
 	sh "$script" $bad >/dev/null 2>&1
@@ -1028,7 +1138,7 @@ done
 run_split -h
 assert_eq "0" "$run_status" "-h exits 0"
 assert_contains "$out_stdout" "usage: review-diff.sh" "-h prints the usage on stdout"
-for form in "--since <tree>" "--since=<tree>" "--base <commit>" "--base=<commit>" "--target" "--transient <commit>" "--tree" "-h, --help"; do
+for form in "--since <tree>" "--since=<tree>" "--base <commit>" "--base=<commit>" "--target" "--stack-parent" "--transient <commit>" "--tree" "-h, --help"; do
 	assert_contains "$out_stdout" "$form" "the usage lists $form"
 done
 assert_eq "" "$out_stderr" "and nothing on stderr"

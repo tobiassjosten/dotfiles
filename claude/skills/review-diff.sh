@@ -11,6 +11,7 @@
 #   review-diff.sh --base <commit> # full: everything since merge-base(<commit>, HEAD)
 #   review-diff.sh --base=<commit> # the same, = form
 #   review-diff.sh --target        # print the publish target auto mode uses, and exit
+#   review-diff.sh --stack-parent  # print the branch below this one in its gh stack, and exit
 #   review-diff.sh --transient <commit>  # print paths an unpublished commit (one no origin/ ref
 #                                  # holds) since merge-base(<commit>, HEAD) touched that the
 #                                  # net diff does not show, and exit
@@ -22,11 +23,11 @@
 # only the uncommitted part would let them out unread. So auto mode first names the
 # **publish target** — origin/<branch> when that ref exists and HEAD contains it (a branch
 # already pushed and not rewritten since); else, for a branch in a gh stack stack, its
-# parent (the nearest unmerged branch below it, or the stack's trunk) as origin/<parent>
-# when HEAD contains that, or as the local <parent> when only that is contained (the stack
-# was rebased and the parent not yet pushed); otherwise the default branch's origin/ ref
-# (whatever origin/HEAD names, then origin/main, master, trunk, taking the first that
-# resolves, so a stale origin/HEAD falls through) — and diffs from where HEAD meets it.
+# parent (the nearest unmerged branch below it, else the stack's trunk) as stack_target
+# picks it — origin/<trunk> for the trunk, the local <parent> when that holds commits
+# origin lacks, else origin/<parent>; otherwise the default branch's origin/ ref (whatever
+# origin/HEAD names, then origin/main, master, trunk, taking the first that resolves, so a
+# stale origin/HEAD falls through) — and diffs from where HEAD meets it.
 #   - unpublished — HEAD holds commits the target lacks: merge-base(<target>, HEAD) → the
 #                   working tree, committed and uncommitted alike. FROM is the merge base's
 #                   tree, as in base mode. No merge base: the empty tree.
@@ -41,9 +42,10 @@
 #   - initial     — a repo with no commits yet: the empty tree → the working tree.
 #   - base        — with --base: merge-base(<commit>, HEAD) → the working tree, committed and
 #                   uncommitted alike. /ship uses it to review exactly what it is about to
-#                   publish (origin/<default> or the branch's own origin/ ref). FROM is the
-#                   merge base's *tree*, not the commit, so it compares directly with the
-#                   HEAD^{tree} an outstanding run printed — the base= a ledger entry carries.
+#                   publish (origin/<default>, the branch's own origin/ ref, or a stacked
+#                   branch's parent as --target prints it). FROM is the merge base's
+#                   *tree*, not the commit, so it compares directly with the HEAD^{tree} an
+#                   outstanding run printed — the base= a ledger entry carries.
 #                   No merge base (unrelated histories, an unborn HEAD): the empty tree.
 #   - none        — nothing to review: a clean tree whose HEAD the target already holds, a
 #                   clean tree on the main branch with no target (or no main branch found),
@@ -113,13 +115,16 @@ umask 077
 
 usage() {
 	cat <<-'EOF'
-	usage: review-diff.sh [--since <tree> | --since=<tree> | --base <commit> | --base=<commit> | --target | --tree | -h | --help]
+	usage: review-diff.sh [--since <tree> | --since=<tree> | --base <commit> | --base=<commit> | --target | --stack-parent | --transient <commit> | --tree | -h | --help]
 	  (no arguments)      prepare everything unpublished (or the outstanding, branch or initial diff)
 	  --since <tree>      prepare only what changed since an earlier snapshot
 	  --since=<tree>      the same, = form
 	  --base <commit>     prepare everything since the merge base of <commit> and HEAD
 	  --base=<commit>     the same, = form
 	  --target            print the publish target auto mode diffs from, and exit
+	  --stack-parent      print the branch below this one in its gh stack (or its trunk), and
+	                      exit; exits 1 when it finds none — no stack, or gh stack could
+	                      not answer (with a warning)
 	  --transient <commit>
 	                      print paths an unpublished commit since merge-base(<commit>, HEAD)
 	                      touched that the net diff to HEAD does not show, and exit
@@ -162,12 +167,13 @@ snapshot_tree() {
 	GIT_INDEX_FILE=$idx git write-tree
 }
 
-# The branch below the current branch <branch> in its gh stack (github/gh-stack) stack: the
-# nearest one not yet merged, else the stack's trunk. Exits 1 when the repo has no stack,
-# the branch is in none, or gh stack cannot answer — the last with a warning, since the
-# caller then falls back to the default branch. Asks gh stack itself rather than reading
-# its catalog file, whose format is the extension's. gh stack view answers for the
-# current branch only, and outside a stack fails with "… is not part of a stack".
+# The branch below the current branch <branch> in its gh stack (github/gh-stack) stack —
+# the nearest one not yet merged, else the stack's trunk — printed on one line, and the
+# trunk on the next. Returns non-zero when the repo has no stack, the branch is in none,
+# or gh stack cannot answer — the last with a warning, since the caller then falls back
+# to the default branch. Asks gh stack itself rather than reading its catalog file, whose
+# format is the extension's. gh stack view answers for the current branch only, and
+# outside a stack fails with "… is not part of a stack".
 stack_parent() { # <branch>
 	[ -f "$(git rev-parse --git-common-dir)/gh-stack" ] || return 1
 	if ! command -v gh >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
@@ -185,12 +191,50 @@ stack_parent() { # <branch>
 	printf '%s\n' "$view" | jq -er --arg b "$1" '
 		. as $s | ([.branches[].name] | index($b)) as $i
 		| if $i == null then empty
-		  else ([$s.branches[:$i][] | select(.isMerged | not) | .name] | last) // $s.trunk
+		  else (([$s.branches[:$i][] | select(.isMerged | not) | .name] | last) // $s.trunk),
+		    $s.trunk
 		  end'
 }
 
-# The publish target (see the header): printed, or exit 1 when there is no origin/ ref to
-# publish to. Needs a HEAD; the caller checks that.
+# The publish target of a stacked branch whose parent is <parent> in a stack on <trunk>:
+# printed, or non-zero for none, and the caller falls back to the default branch.
+#   - the trunk itself: origin/<trunk>, as for a branch in no stack. Never the local
+#     trunk, which may only lag origin: as the target, an unpulled trunk would read as a
+#     parent with unpushed work.
+#   - the local <parent>, when HEAD contains it and it holds commits origin/<parent> lacks
+#     (or there is no origin/<parent>): the parent has unpushed work under this branch,
+#     which /ship stops on rather than publish this branch's pull request with it.
+#   - origin/<parent> when HEAD contains the local <parent> and that holds nothing origin
+#     lacks — it may be behind, the stack not yet rebased — or HEAD contains origin/<parent>.
+#   - nothing, with a warning, when HEAD contains neither: the parent was rewritten and this
+#     branch not rebased onto it, so no ref marks where this branch's own work starts.
+stack_target() { # <parent> <trunk>
+	if [ "$1" = "$2" ]; then
+		git show-ref -q --verify "refs/remotes/origin/$2" || return 1
+		printf 'origin/%s\n' "$2"
+		return 0
+	fi
+	if git show-ref -q --verify "refs/heads/$1" &&
+		git merge-base --is-ancestor "refs/heads/$1" HEAD 2>/dev/null; then
+		if git show-ref -q --verify "refs/remotes/origin/$1" &&
+			[ -z "$(git rev-list -n 1 "refs/remotes/origin/$1..refs/heads/$1")" ]; then
+			printf 'origin/%s\n' "$1"
+		else
+			printf '%s\n' "$1"
+		fi
+		return 0
+	fi
+	if git show-ref -q --verify "refs/remotes/origin/$1" &&
+		git merge-base --is-ancestor "refs/remotes/origin/$1" HEAD 2>/dev/null; then
+		printf 'origin/%s\n' "$1"
+		return 0
+	fi
+	printf 'review-diff.sh: warning: HEAD contains neither %s nor origin/%s, its stack parent; rebase the stack (gh stack rebase) — falling back to the default branch\n' "$1" "$1" >&2
+	return 1
+}
+
+# The publish target (see the header): printed, or returns 1 when there is none — no
+# origin/ ref to publish to and no stack parent. Needs a HEAD; the caller checks that.
 publish_target() {
 	cur=$(git branch --show-current)
 	if [ -n "$cur" ] && git show-ref -q --verify "refs/remotes/origin/$cur" &&
@@ -200,16 +244,10 @@ publish_target() {
 	fi
 	# A stacked branch publishes onto its parent: measured from the default branch, the
 	# review would take in the work of every branch below it, and /polish would fix that
-	# work on the wrong branch. The local parent is the fallback for a stack just rebased,
-	# whose origin/<parent> still points at the parent's old tip.
-	if [ -n "$cur" ] && parent=$(stack_parent "$cur"); then
-		for p in "origin/$parent" "$parent"; do
-			if git rev-parse -q --verify "$p^{commit}" >/dev/null &&
-				git merge-base --is-ancestor "$p" HEAD 2>/dev/null; then
-				printf '%s\n' "$p"
-				return 0
-			fi
-		done
+	# work on the wrong branch.
+	if [ -n "$cur" ] && parent=$(stack_parent "$cur") &&
+		stack_target "$(printf '%s\n' "$parent" | sed -n 1p)" "$(printf '%s\n' "$parent" | sed -n 2p)"; then
+		return 0
 	fi
 	head_name=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
 	for b in "${head_name#origin/}" main master trunk; do
@@ -274,6 +312,14 @@ case ${1:-} in
 			{ printf '%s\n' "review-diff.sh: no commits yet, so nothing to publish" >&2; exit 1; }
 		publish_target ||
 			{ printf '%s\n' "review-diff.sh: no origin/ ref to publish to" >&2; exit 1; }
+		exit 0
+		;;
+	--stack-parent)
+		[ $# -eq 1 ] || { printf '%s\n' "review-diff.sh: --stack-parent takes no arguments" >&2; usage >&2; exit 2; }
+		cur=$(git branch --show-current)
+		[ -n "$cur" ] && parent=$(stack_parent "$cur") ||
+			{ printf '%s\n' "review-diff.sh: found no gh stack parent for this branch" >&2; exit 1; }
+		printf '%s\n' "$parent" | sed -n 1p
 		exit 0
 		;;
 	--transient)
