@@ -28,9 +28,9 @@
 #
 # Exit status: 0 with the runs, none, or the run's line; 1 on a usage error
 # or an unknown commit; 2 when gh failed — on a lookup's poll before any run
-# was found, or on every poll of a watch — with its message on stderr. A
-# failure here never stops a ship: the caller reports the runs as not watched
-# and goes on.
+# was found, or on every poll of a watch — with its message on stderr. A failure
+# here never stops a ship: the caller reports the runs as not watched and goes
+# on.
 set -u
 
 usage() {
