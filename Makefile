@@ -11,13 +11,15 @@ endef
 .PHONY: all
 all: files brews fish vim
 
-# The three scripts here with behavioural tests: the review skills' diff preparation, which
-# /review, /polish, /ship and the code-reviewer agent depend on, the review directory and
-# ledger they write through, and the task marker, which /next writes and /ship resolves its
-# Finish gate from. The repo's other
-# first-party scripts (claude/statusline-command.sh, claude/rtk-hook.sh,
-# claude/skills/review-pr/gh-pr.sh, tmux/scripts/minimize-sibling-pane.sh) have none — they are checked by running the tool
-# that calls them. Not part of `all`.
+# The four scripts here with behavioural tests: the review skills' diff
+# preparation, which /review, /polish, /ship and the code-reviewer agent depend
+# on, the review directory and ledger they write through, the task marker, which
+# /next writes and /ship resolves its Finish gate from, and the lookup and watch
+# of the workflow runs a /ship push started. The repo's other first-party
+# scripts (claude/statusline-command.sh, claude/rtk-hook.sh,
+# claude/skills/review-pr/gh-pr.sh, tmux/scripts/minimize-sibling-pane.sh) have
+# none — they are checked by running the tool that calls them. Not part of
+# `all`.
 .PHONY: check
 check:
 	sh -n $(DIR)/claude/skills/review-diff.sh
