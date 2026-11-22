@@ -107,6 +107,8 @@ echo x >x
 git add -A
 git -c user.name=t -c user.email=t@t commit -qm init
 sha=$(git rev-parse HEAD)
+origin=https://github.com/o/r.git
+git remote add origin "$origin"
 
 ci='{"databaseId": 1, "workflowName": "CI", "event": "push",
 	"url": "https://x/1", "status": "queued"}'
@@ -115,82 +117,123 @@ deploy='{"databaseId": 2, "workflowName": "Deploy", "event": "push",
 tab=$(printf '\t')
 
 # Runs appear on the third poll; the extra poll after them is what is printed,
-# picking up a workflow that registered later. The commit asked about is the
-# one given, which a repo without .github/workflows is polled for all the
-# same.
+# picking up a workflow that registered later. The commit and branch asked
+# about are the ones given, which a repo without .github/workflows is polled
+# for all the same, in the repository origin names.
 reset_gh
 echo "[$ci]" | answer 3.json
 echo "[$ci, $deploy]" | answer 4.json
-run "$sha" 5
+run "$sha" master 5
 [ $status -eq 0 ] || fail "runs: exit $status"
 expected="1${tab}CI${tab}push${tab}https://x/1
 2${tab}Deploy${tab}push${tab}https://x/2"
 [ "$out" = "$expected" ] || fail "runs: printed '$out'"
 [ "$(calls)" -eq 4 ] || fail "runs: gh called $(calls) times, expected 4"
-grep -q "^run list --commit $sha " "$tmp/args" ||
-	fail "runs: gh not asked about $sha: $(head -1 "$tmp/args")"
+grep -q "^run list --repo $origin --commit $sha --branch master " "$tmp/args" ||
+	fail "runs: gh not asked about $sha on master: $(head -1 "$tmp/args")"
+
+# A run with no workflow name is named by its id.
+reset_gh
+echo '[{"databaseId": 3, "workflowName": "", "event": "push",
+	"url": "https://x/3"}]' | answer 1.json
+run "$sha" master
+[ "$out" = "3${tab}run 3${tab}push${tab}https://x/3" ] ||
+	fail "unnamed run: printed '$out'"
 
 # The follow-up poll failing keeps what the first one found.
 reset_gh
 echo "[$ci]" | answer 1.json
 touch "$tmp/answers/2.fail"
-run "$sha"
+run "$sha" master
 [ $status -eq 0 ] || fail "follow-up failure: exit $status"
 [ "$out" = "1${tab}CI${tab}push${tab}https://x/1" ] ||
 	fail "follow-up failure: printed '$out'"
 
+# So does the follow-up poll finding none.
+reset_gh
+echo "[$ci]" | answer 1.json
+run "$sha" master
+[ $status -eq 0 ] || fail "follow-up empty: exit $status"
+[ "$out" = "1${tab}CI${tab}push${tab}https://x/1" ] ||
+	fail "follow-up empty: printed '$out'"
+[ "$(calls)" -eq 2 ] || fail "follow-up empty: $(calls) calls"
+
 # No run within the window: nothing printed, exit 0, and the window is what
 # bounds the polling — a 1 s window at a 1 s interval polls at most twice.
 reset_gh
-run_env PUSH_RUNS_INTERVAL=1 "$sha" 1
+run_env PUSH_RUNS_INTERVAL=1 "$sha" master 1
 [ $status -eq 0 ] || fail "timeout: exit $status"
 [ -z "$out" ] || fail "timeout: printed '$out'"
-[ "$(calls)" -ge 1 ] && [ "$(calls)" -le 3 ] ||
-	fail "timeout: gh called $(calls) times, expected 1 to 3"
+[ "$(calls)" -ge 1 ] && [ "$(calls)" -le 2 ] ||
+	fail "timeout: gh called $(calls) times, expected 1 or 2"
 
 # gh failing on the first poll is exit 2, with its message passed through.
 reset_gh
 touch "$tmp/answers/fail"
-run "$sha"
+run "$sha" master
 [ $status -eq 2 ] || fail "gh failure: exit $status"
 [ -z "$out" ] || fail "gh failure: printed '$out'"
 grep -q "not logged in" "$tmp/err" || fail "gh failure: message lost"
 
-# Usage errors and unknown commits are exit 1, without asking gh.
+# Usage errors, unknown commits and a repo with no origin are exit 1, without
+# asking gh.
 reset_gh
-for args in "" "$sha soon" "$sha 5 extra" "--watch" "--watch abc" \
-	"--watch 7 soon" "--watch 7 5 extra" \
-	0000000000000000000000000000000000000000; do
+for args in "" "$sha" "$sha master soon" "$sha master 5 extra" "--watch" \
+	"--watch abc" "--watch 7 soon" "--watch 7 5 extra" \
+	"0000000000000000000000000000000000000000 master"; do
 	# shellcheck disable=SC2086 # the cases are split on purpose
 	run $args
 	[ $status -eq 1 ] || fail "usage '$args': exit $status"
 done
-run_env PUSH_RUNS_INTERVAL=x "$sha"
+run "$sha" ""
+[ $status -eq 1 ] || fail "empty branch: exit $status"
+run_env PUSH_RUNS_INTERVAL=x "$sha" master
 [ $status -eq 1 ] || fail "bad interval: exit $status"
 run_env PUSH_RUNS_WATCH_INTERVAL=x --watch 7
 [ $status -eq 1 ] || fail "bad watch interval: exit $status"
+git remote remove origin
+for args in "$sha master" "--watch 7"; do
+	# shellcheck disable=SC2086 # the cases are split on purpose
+	run $args
+	[ $status -eq 1 ] || fail "no origin '$args': exit $status"
+	grep -q "no origin remote" "$tmp/err" ||
+		fail "no origin '$args': said '$(cat "$tmp/err")'"
+done
+git remote add origin "$origin"
 [ "$(calls)" -eq 0 ] || fail "usage errors: gh called $(calls) times"
 
 # A watched run is polled until it completes, then reported with its
-# workflow, branch, short commit and conclusion — a failure as such.
+# workflow, branch, short commit and conclusion — a failure as such. Its
+# temporary file for gh's messages is gone afterwards.
 run_json() {
-	printf '{"status": "%s", "conclusion": "%s", "workflowName": "Deploy",
-		"headBranch": "master", "headSha": "abcdef1234567890",
-		"url": "https://x/7"}\n' "$1" "$2"
+	printf '{"databaseId": 7, "status": "%s", "conclusion": "%s",
+		"workflowName": "%s", "headBranch": "master",
+		"headSha": "abcdef1234567890", "url": "https://x/7"}\n' \
+		"$1" "$2" "${3-Deploy}"
 }
+mkdir "$tmp/scratch"
 for conclusion in success failure; do
 	reset_gh
 	run_json in_progress "" | answer 1.json
 	touch "$tmp/answers/2.fail"
 	run_json completed "$conclusion" | answer 3.json
-	run --watch 7
+	run_env TMPDIR="$tmp/scratch" --watch 7
 	[ $status -eq 0 ] || fail "watch $conclusion: exit $status"
 	[ "$out" = "Deploy on master @ abcdef1: $conclusion — https://x/7" ] ||
 		fail "watch $conclusion: printed '$out'"
 	[ "$(calls)" -eq 3 ] || fail "watch $conclusion: $(calls) calls"
-	grep -q "^run view 7 " "$tmp/args" ||
+	grep -q "^run view 7 --repo $origin " "$tmp/args" ||
 		fail "watch $conclusion: gh not asked about run 7"
+	[ -z "$(ls -A "$tmp/scratch")" ] ||
+		fail "watch $conclusion: left $(ls -A "$tmp/scratch")"
 done
+
+# A run with no workflow name is named by its id.
+reset_gh
+run_json completed success "" | answer 1.json
+run --watch 7
+[ "$out" = "run 7 on master @ abcdef1: success — https://x/7" ] ||
+	fail "watch unnamed: printed '$out'"
 
 # A run still going when the time is up is reported with its last status.
 reset_gh
@@ -199,7 +242,28 @@ run_env PUSH_RUNS_WATCH_INTERVAL=1 --watch 7 1
 [ $status -eq 0 ] || fail "watch timeout: exit $status"
 [ "$out" = "Deploy on master @ abcdef1: still waiting after 1 s — https://x/7" ] ||
 	fail "watch timeout: printed '$out'"
-[ "$(calls)" -le 3 ] || fail "watch timeout: $(calls) calls"
+[ "$(calls)" -le 2 ] || fail "watch timeout: $(calls) calls"
+
+# The time is given in minutes when it is whole minutes, as /ship's default
+# of 1800 s is; 0 s is, and gives up after the first poll.
+reset_gh
+run_json waiting "" | answer default.json
+run --watch 7 0
+[ $status -eq 0 ] || fail "watch minutes: exit $status"
+[ "$out" = "Deploy on master @ abcdef1: still waiting after 0 min — https://x/7" ] ||
+	fail "watch minutes: printed '$out'"
+[ "$(calls)" -eq 1 ] || fail "watch minutes: $(calls) calls"
+
+# A run read once and then lost to gh failing until the time is up is
+# reported as last seen, not as still going, with gh's message and exit 2.
+reset_gh
+run_json in_progress "" | answer 1.json
+for n in 2 3 4; do touch "$tmp/answers/$n.fail"; done
+run_env PUSH_RUNS_WATCH_INTERVAL=1 --watch 7 2
+[ $status -eq 2 ] || fail "watch lost: exit $status"
+[ "$out" = "Deploy on master @ abcdef1: last seen in_progress, then gh failed — https://x/7" ] ||
+	fail "watch lost: printed '$out'"
+grep -q "not logged in" "$tmp/err" || fail "watch lost: message lost"
 
 # A run never read is exit 2, with gh's message.
 reset_gh
