@@ -65,6 +65,7 @@
       "Bash(direnv exec . terraform state list:*)",
       "Bash(direnv exec . terraform fmt:*)",
       "Bash(direnv exec . terraform providers:*)",
+      "Bash(direnv exec . printenv CLOUDSDK_CONFIG)",
       "Bash(fly:*)",
       "Bash(sqlfluff:*)",
       "WebFetch(domain:developers.cloudflare.com)",
